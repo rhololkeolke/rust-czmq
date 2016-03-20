@@ -126,13 +126,22 @@ impl ZCert {
         }
     }
 
-    pub fn apply(&self, sock: Socket) {
-        unsafe { czmq_sys::zcert_apply(self.zcert, sock.sock) };
+    pub fn apply(&self, sock: &mut Socket) {
+        unsafe { czmq_sys::zcert_apply(self.zcert, sock.borrow_raw()) };
     }
 
-    pub fn dup(&self) {}
+    pub fn dup(&self) -> ZCert {
+        let ptr = unsafe { czmq_sys::zcert_dup(self.zcert) };
 
-    pub fn eq(&self) {}
+        ZCert {
+            zcert: ptr,
+        }
+    }
+
+    pub fn eq(&self, cert: &ZCert) -> bool {
+        let result = unsafe { czmq_sys::zcert_eq(self.zcert, cert.zcert) };
+        result == 1
+    }
 
     pub fn print(&self) {
         unsafe { czmq_sys::zcert_print(self.zcert) };
@@ -199,6 +208,30 @@ mod tests {
         cert.set_meta("moo", "cow");
         let keys = cert.meta_keys();
         assert_eq!(keys.to_vec().first().unwrap(), &"moo");
+    }
+
+    #[test]
+    fn test_apply() {
+        let cert = create_cert();
+        let mut ctx = zmq::Context::new();
+        let mut sock = ctx.socket(zmq::REQ).unwrap();
+        cert.apply(&mut sock);
+        assert_eq!(sock.get_curve_publickey().unwrap().unwrap(), PUBLIC_TXT);
+        assert_eq!(sock.get_curve_secretkey().unwrap().unwrap(), SECRET_TXT);
+    }
+
+    #[test]
+    fn test_dup() {
+        let cert = create_cert();
+        let dup = cert.dup();
+        assert_eq!(cert.secret_txt(), dup.secret_txt());
+    }
+
+    #[test]
+    fn test_eq() {
+        let c1 = create_cert();
+        let c2 = create_cert();
+        assert!(c1.eq(&c2));
     }
 
     fn create_cert() -> ZCert {

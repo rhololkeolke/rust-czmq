@@ -9,4 +9,4 @@ repository = "https://github.com/petehayes102/rust-czmq"
 [dependencies]
 libc = "0.2.*"
 czmq-sys = { path = "czmq-sys" }
-zmq = { git = "https://github.com/petehayes102/rust-zmq.git", branch = "update-binding" }
+zmq = { git = "https://github.com/petehayes102/rust-zmq.git", branch = "tmp-master" }
