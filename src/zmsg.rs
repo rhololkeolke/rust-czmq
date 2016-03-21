@@ -86,11 +86,11 @@ impl ZMsg {
         let ptr = unsafe { czmq_sys::zmsg_popstr(self.zmsg) };
 
         if ptr == ptr::null_mut() {
-            return Err(());
+            Err(())
+        } else {
+            let c_str = unsafe { CStr::from_ptr(ptr) };
+            Ok(c_str.to_str())
         }
-
-        let c_str = unsafe { CStr::from_ptr(ptr) };
-        Ok(c_str.to_str())
     }
 
     // pub fn zmsg_addmsg(_self: *mut zmsg_t, msg_p: *mut *mut zmsg_t)
@@ -144,4 +144,15 @@ mod tests {
         let msg = ZMsg::recv(&mut server).unwrap();
         assert_eq!(msg.popstr().unwrap().unwrap(), "Hello world!");
     }
+
+    // #[test]
+    // fn test_zrecv() {
+    //     let mut server = ZSock::new_rep("inproc://test").unwrap();
+    //     let mut client = ZSock::new_req("inproc://test").unwrap();
+    //
+    //     client.send_str("Hello world!", 0).unwrap();
+    //
+    //     let msg = ZMsg::zrecv(&mut server).unwrap();
+    //     assert_eq!(msg.popstr().unwrap().unwrap(), "Hello world!");
+    // }
 }

@@ -55,18 +55,26 @@ pub use ffi::{
     zcertstore_test,
 
     //
-    // ZCtx
+    // ZFrame
     //
-    zctx_t,
-    zctx_new,
-    zctx_destroy,
-    zctx_shadow,
-    zctx_set_iothreads,
-    zctx_set_linger,
-    zctx_set_pipehwm,
-    zctx_set_sndhwm,
-    zctx_set_rcvhwm,
-    zctx_underlying,
+    zframe_t,
+    zframe_new,
+    zframe_new_empty,
+    zframe_from,
+    zframe_recv,
+    zframe_destroy,
+    zframe_send,
+    zframe_size,
+    zframe_data,
+    zframe_dup,
+    zframe_strhex,
+    zframe_strdup,
+    zframe_streq,
+    zframe_more,
+    zframe_set_more,
+    zframe_eq,
+    zframe_reset,
+    zframe_print,
 
     //
     // ZList
@@ -149,9 +157,7 @@ pub use ffi::{
     zsock_attach,
     zsock_type_str,
     zsock_send,
-    zsock_vsend,
     zsock_recv,
-    zsock_vrecv,
     zsock_bsend,
     zsock_brecv,
     zsock_set_unbounded,
@@ -254,25 +260,6 @@ pub use ffi::{
     zsock_fd,
     zsock_events,
     zsock_last_endpoint,
-    zsock_test,
-    zsock_new_checked,
-    zsock_destroy_checked,
-    zsock_new_pub_checked,
-    zsock_new_sub_checked,
-    zsock_new_req_checked,
-    zsock_new_rep_checked,
-    zsock_new_dealer_checked,
-    zsock_new_router_checked,
-    zsock_new_push_checked,
-    zsock_new_pull_checked,
-    zsock_new_xpub_checked,
-    zsock_new_xsub_checked,
-    zsock_new_pair_checked,
-    zsock_new_stream_checked,
-    zsock_new_server_checked,
-    zsock_new_client_checked,
-    zsock_new_radio_checked,
-    zsock_new_dish_checked,
 
     //
     // ZStr
@@ -287,6 +274,11 @@ pub use ffi::{
     zstr_sendx,
     zstr_free,
     zstr_recv_nowait,
+
+    //
+    // ZSys
+    //
+    zsys_init,
 };
 
 #[allow(dead_code, non_camel_case_types, non_snake_case)]

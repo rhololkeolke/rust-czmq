@@ -1,7 +1,10 @@
 //! Module: czmq-zsock
 
 use czmq_sys;
-use std::result;
+use std::{ptr, result};
+use std::ffi::{CStr, CString};
+use std::os::raw::c_void;
+use std::str::Utf8Error;
 use zmq;
 
 // Generic error code "-1" doesn't map to an error message, so just
@@ -25,63 +28,215 @@ impl ZSock {
         }
     }
 
-    // pub fn zsock_new_pub(endpoint: *const ::std::os::raw::c_char)
-    //  -> *mut zsock_t;
-    // pub fn zsock_new_sub(endpoint: *const ::std::os::raw::c_char,
-    //                      subscribe: *const ::std::os::raw::c_char)
-    //  -> *mut zsock_t;
-    // pub fn zsock_new_req(endpoint: *const ::std::os::raw::c_char)
-    //  -> *mut zsock_t;
-    // pub fn zsock_new_rep(endpoint: *const ::std::os::raw::c_char)
-    //  -> *mut zsock_t;
-    // pub fn zsock_new_dealer(endpoint: *const ::std::os::raw::c_char)
-    //  -> *mut zsock_t;
-    // pub fn zsock_new_router(endpoint: *const ::std::os::raw::c_char)
-    //  -> *mut zsock_t;
-    // pub fn zsock_new_push(endpoint: *const ::std::os::raw::c_char)
-    //  -> *mut zsock_t;
-    // pub fn zsock_new_pull(endpoint: *const ::std::os::raw::c_char)
-    //  -> *mut zsock_t;
-    // pub fn zsock_new_xpub(endpoint: *const ::std::os::raw::c_char)
-    //  -> *mut zsock_t;
-    // pub fn zsock_new_xsub(endpoint: *const ::std::os::raw::c_char)
-    //  -> *mut zsock_t;
-    // pub fn zsock_new_pair(endpoint: *const ::std::os::raw::c_char)
-    //  -> *mut zsock_t;
-    // pub fn zsock_new_stream(endpoint: *const ::std::os::raw::c_char)
-    //  -> *mut zsock_t;
-    // pub fn zsock_destroy(self_p: *mut *mut zsock_t);
-    // pub fn zsock_bind(_self: *mut zsock_t,
-    //                   format: *const ::std::os::raw::c_char, ...)
-    //  -> ::std::os::raw::c_int;
-    // pub fn zsock_endpoint(_self: *mut zsock_t)
-    //  -> *const ::std::os::raw::c_char;
-    // pub fn zsock_unbind(_self: *mut zsock_t,
-    //                     format: *const ::std::os::raw::c_char, ...)
-    //  -> ::std::os::raw::c_int;
-    // pub fn zsock_connect(_self: *mut zsock_t,
-    //                      format: *const ::std::os::raw::c_char, ...)
-    //  -> ::std::os::raw::c_int;
-    // pub fn zsock_disconnect(_self: *mut zsock_t,
-    //                         format: *const ::std::os::raw::c_char, ...)
-    //  -> ::std::os::raw::c_int;
-    // pub fn zsock_attach(_self: *mut zsock_t,
-    //                     endpoints: *const ::std::os::raw::c_char,
-    //                     serverish: u8) -> ::std::os::raw::c_int;
-    // pub fn zsock_type_str(_self: *mut zsock_t)
-    //  -> *const ::std::os::raw::c_char;
-    // pub fn zsock_send(_self: *mut ::std::os::raw::c_void,
-    //                   picture: *const ::std::os::raw::c_char, ...)
-    //  -> ::std::os::raw::c_int;
-    // pub fn zsock_vsend(_self: *mut ::std::os::raw::c_void,
-    //                    picture: *const ::std::os::raw::c_char,
-    //                    argptr: va_list) -> ::std::os::raw::c_int;
+    pub fn new_pub(endpoint: &str) -> Result<ZSock> {
+        let zsock = unsafe { czmq_sys::zsock_new_pub(endpoint.as_ptr() as *const i8) };
+
+        if zsock == ptr::null_mut() {
+            Err(())
+        } else {
+            Ok(ZSock {
+                zsock: zsock,
+            })
+        }
+    }
+
+    pub fn new_sub(endpoint: &str, subscribe: Option<&str>) -> Result<ZSock> {
+        let subscribe_ptr = match subscribe {
+            Some(p) => CString::new(p).unwrap_or(CString::new("").unwrap()).as_ptr(),
+            None => ptr::null(),
+        };
+        let zsock = unsafe { czmq_sys::zsock_new_sub(endpoint.as_ptr() as *const i8, subscribe_ptr) };
+
+        if zsock == ptr::null_mut() {
+            Err(())
+        } else {
+            Ok(ZSock {
+                zsock: zsock,
+            })
+        }
+    }
+
+    pub fn new_req(endpoint: &str) -> Result<ZSock> {
+        let zsock = unsafe { czmq_sys::zsock_new_req(endpoint.as_ptr() as *const i8) };
+
+        if zsock == ptr::null_mut() {
+            Err(())
+        } else {
+            Ok(ZSock {
+                zsock: zsock,
+            })
+        }
+    }
+
+    pub fn new_rep(endpoint: &str) -> Result<ZSock> {
+        let zsock = unsafe { czmq_sys::zsock_new_rep(endpoint.as_ptr() as *const i8) };
+
+        if zsock == ptr::null_mut() {
+            Err(())
+        } else {
+            Ok(ZSock {
+                zsock: zsock,
+            })
+        }
+    }
+
+    pub fn new_dealer(endpoint: &str) -> Result<ZSock> {
+        let zsock = unsafe { czmq_sys::zsock_new_dealer(endpoint.as_ptr() as *const i8) };
+
+        if zsock == ptr::null_mut() {
+            Err(())
+        } else {
+            Ok(ZSock {
+                zsock: zsock,
+            })
+        }
+    }
+
+    pub fn new_router(endpoint: &str) -> Result<ZSock> {
+        let zsock = unsafe { czmq_sys::zsock_new_router(endpoint.as_ptr() as *const i8) };
+
+        if zsock == ptr::null_mut() {
+            Err(())
+        } else {
+            Ok(ZSock {
+                zsock: zsock,
+            })
+        }
+    }
+
+    pub fn new_push(endpoint: &str) -> Result<ZSock> {
+        let zsock = unsafe { czmq_sys::zsock_new_push(endpoint.as_ptr() as *const i8) };
+
+        if zsock == ptr::null_mut() {
+            Err(())
+        } else {
+            Ok(ZSock {
+                zsock: zsock,
+            })
+        }
+    }
+
+    pub fn new_pull(endpoint: &str) -> Result<ZSock> {
+        let zsock = unsafe { czmq_sys::zsock_new_pull(endpoint.as_ptr() as *const i8) };
+
+        if zsock == ptr::null_mut() {
+            Err(())
+        } else {
+            Ok(ZSock {
+                zsock: zsock,
+            })
+        }
+    }
+
+    pub fn new_xpub(endpoint: &str) -> Result<ZSock> {
+        let zsock = unsafe { czmq_sys::zsock_new_xpub(endpoint.as_ptr() as *const i8) };
+
+        if zsock == ptr::null_mut() {
+            Err(())
+        } else {
+            Ok(ZSock {
+                zsock: zsock,
+            })
+        }
+    }
+
+    pub fn new_xsub(endpoint: &str) -> Result<ZSock> {
+        let zsock = unsafe { czmq_sys::zsock_new_xsub(endpoint.as_ptr() as *const i8) };
+
+        if zsock == ptr::null_mut() {
+            Err(())
+        } else {
+            Ok(ZSock {
+                zsock: zsock,
+            })
+        }
+    }
+
+    pub fn new_pair(endpoint: &str) -> Result<ZSock> {
+        let zsock = unsafe { czmq_sys::zsock_new_pair(endpoint.as_ptr() as *const i8) };
+
+        if zsock == ptr::null_mut() {
+            Err(())
+        } else {
+            Ok(ZSock {
+                zsock: zsock,
+            })
+        }
+    }
+
+    pub fn new_stream(endpoint: &str) -> Result<ZSock> {
+        let zsock = unsafe { czmq_sys::zsock_new_stream(endpoint.as_ptr() as *const i8) };
+
+        if zsock == ptr::null_mut() {
+            Err(())
+        } else {
+            Ok(ZSock {
+                zsock: zsock,
+            })
+        }
+    }
+
+    pub fn bind(&self, endpoint: &str) -> Result<i32> {
+        let rc = unsafe { czmq_sys::zsock_bind(self.zsock, "%s".as_ptr() as *const i8, endpoint.as_ptr() as *const i8) };
+        if rc == -1i32 { Err(()) } else { Ok(rc) }
+    }
+
+    pub fn endpoint<'a>(&'a self) -> result::Result<&'a str, Utf8Error> {
+        let endpoint_c = unsafe { czmq_sys::zsock_endpoint(self.zsock) };
+
+        if endpoint_c == ptr::null() {
+            Ok("")
+        } else {
+            unsafe { CStr::from_ptr(endpoint_c) }.to_str()
+        }
+    }
+
+    pub fn unbind(&self, endpoint: &str) -> Result<()> {
+        let rc = unsafe { czmq_sys::zsock_unbind(self.zsock, "%s".as_ptr() as *const i8, endpoint.as_ptr() as *const i8) };
+        if rc == -1i32 { Err(()) } else { Ok(()) }
+    }
+
+    pub fn connect(&self, endpoint: &str) -> Result<()> {
+        let rc = unsafe { czmq_sys::zsock_connect(self.zsock, "%s".as_ptr() as *const i8, endpoint.as_ptr() as *const i8) };
+        if rc == -1i32 { Err(()) } else { Ok(()) }
+    }
+
+    pub fn disconnect(&self, endpoint: &str) -> Result<()> {
+        let rc = unsafe { czmq_sys::zsock_disconnect(self.zsock, "%s".as_ptr() as *const i8, endpoint.as_ptr() as *const i8) };
+        if rc == -1i32 { Err(()) } else { Ok(()) }
+    }
+
+    pub fn attach(&self, endpoints: &[&str], serverish: bool) -> Result<()> {
+        let endpoints_c = CString::new(Self::concat_endpoints(endpoints)).unwrap_or(CString::new("").unwrap());
+
+        let rc = unsafe { czmq_sys::zsock_attach(self.zsock, endpoints_c.as_ptr(), if serverish { 1 } else { 0 }) };
+        if rc == -1i32 { Err(()) } else { Ok(()) }
+    }
+
+    pub fn type_str<'a>(&'a self) -> Result<result::Result<&'a str, Utf8Error>> {
+        let ptr = unsafe { czmq_sys::zsock_type_str(self.zsock) };
+
+        if ptr == ptr::null_mut() {
+            Err(())
+        } else {
+            let type_str = unsafe { CStr::from_ptr(ptr) };
+            Ok(type_str.to_str())
+        }
+    }
+
+    pub fn send(&self, picture: &str, data: &str) -> Result<()> {
+        let picture_c = CString::new(picture).unwrap_or(CString::new("").unwrap());
+        let data_c = CString::new(data).unwrap_or(CString::new("").unwrap());
+
+        let rc = unsafe { czmq_sys::zsock_send(self.zsock as *mut c_void, picture_c.as_ptr(), data_c.as_ptr()) };
+        if rc == -1i32 { Err(()) } else { Ok(()) }
+    }
+
     // pub fn zsock_recv(_self: *mut ::std::os::raw::c_void,
     //                   picture: *const ::std::os::raw::c_char, ...)
     //  -> ::std::os::raw::c_int;
-    // pub fn zsock_vrecv(_self: *mut ::std::os::raw::c_void,
-    //                    picture: *const ::std::os::raw::c_char,
-    //                    argptr: va_list) -> ::std::os::raw::c_int;
+    // pub fn recv(&self, picture: &str, d)
+
     // pub fn zsock_bsend(_self: *mut ::std::os::raw::c_void,
     //                    picture: *const ::std::os::raw::c_char, ...)
     //  -> ::std::os::raw::c_int;
@@ -301,70 +456,209 @@ impl ZSock {
     //  -> ::std::os::raw::c_int;
     // pub fn zsock_last_endpoint(_self: *mut ::std::os::raw::c_void)
     //  -> *mut ::std::os::raw::c_char;
-    // pub fn zsock_test(verbose: u8);
-    // pub fn zsock_new_checked(_type: ::std::os::raw::c_int,
-    //                          filename: *const ::std::os::raw::c_char,
-    //                          line_nbr: size_t) -> *mut zsock_t;
-    // pub fn zsock_destroy_checked(self_p: *mut *mut zsock_t,
-    //                              filename: *const ::std::os::raw::c_char,
-    //                              line_nbr: size_t);
-    // pub fn zsock_new_pub_checked(endpoint: *const ::std::os::raw::c_char,
-    //                              filename: *const ::std::os::raw::c_char,
-    //                              line_nbr: size_t) -> *mut zsock_t;
-    // pub fn zsock_new_sub_checked(endpoint: *const ::std::os::raw::c_char,
-    //                              subscribe: *const ::std::os::raw::c_char,
-    //                              filename: *const ::std::os::raw::c_char,
-    //                              line_nbr: size_t) -> *mut zsock_t;
-    // pub fn zsock_new_req_checked(endpoint: *const ::std::os::raw::c_char,
-    //                              filename: *const ::std::os::raw::c_char,
-    //                              line_nbr: size_t) -> *mut zsock_t;
-    // pub fn zsock_new_rep_checked(endpoint: *const ::std::os::raw::c_char,
-    //                              filename: *const ::std::os::raw::c_char,
-    //                              line_nbr: size_t) -> *mut zsock_t;
-    // pub fn zsock_new_dealer_checked(endpoint: *const ::std::os::raw::c_char,
-    //                                 filename: *const ::std::os::raw::c_char,
-    //                                 line_nbr: size_t) -> *mut zsock_t;
-    // pub fn zsock_new_router_checked(endpoint: *const ::std::os::raw::c_char,
-    //                                 filename: *const ::std::os::raw::c_char,
-    //                                 line_nbr: size_t) -> *mut zsock_t;
-    // pub fn zsock_new_push_checked(endpoint: *const ::std::os::raw::c_char,
-    //                               filename: *const ::std::os::raw::c_char,
-    //                               line_nbr: size_t) -> *mut zsock_t;
-    // pub fn zsock_new_pull_checked(endpoint: *const ::std::os::raw::c_char,
-    //                               filename: *const ::std::os::raw::c_char,
-    //                               line_nbr: size_t) -> *mut zsock_t;
-    // pub fn zsock_new_xpub_checked(endpoint: *const ::std::os::raw::c_char,
-    //                               filename: *const ::std::os::raw::c_char,
-    //                               line_nbr: size_t) -> *mut zsock_t;
-    // pub fn zsock_new_xsub_checked(endpoint: *const ::std::os::raw::c_char,
-    //                               filename: *const ::std::os::raw::c_char,
-    //                               line_nbr: size_t) -> *mut zsock_t;
-    // pub fn zsock_new_pair_checked(endpoint: *const ::std::os::raw::c_char,
-    //                               filename: *const ::std::os::raw::c_char,
-    //                               line_nbr: size_t) -> *mut zsock_t;
-    // pub fn zsock_new_stream_checked(endpoint: *const ::std::os::raw::c_char,
-    //                                 filename: *const ::std::os::raw::c_char,
-    //                                 line_nbr: size_t) -> *mut zsock_t;
-    // pub fn zsock_new_server_checked(endpoint: *const ::std::os::raw::c_char,
-    //                                 filename: *const ::std::os::raw::c_char,
-    //                                 line_nbr: size_t) -> *mut zsock_t;
-    // pub fn zsock_new_client_checked(endpoint: *const ::std::os::raw::c_char,
-    //                                 filename: *const ::std::os::raw::c_char,
-    //                                 line_nbr: size_t) -> *mut zsock_t;
-    // pub fn zsock_new_radio_checked(endpoint: *const ::std::os::raw::c_char,
-    //                                filename: *const ::std::os::raw::c_char,
-    //                                line_nbr: size_t) -> *mut zsock_t;
-    // pub fn zsock_new_dish_checked(endpoint: *const ::std::os::raw::c_char,
-    //                               filename: *const ::std::os::raw::c_char,
-    //                               line_nbr: size_t) -> *mut zsock_t;
 
     pub fn borrow_raw(&self) -> *mut czmq_sys::zsock_t {
         self.zsock
     }
+
+    fn concat_endpoints(endpoints: &[&str]) -> String {
+        let mut endpoint_str = String::new();
+        let mut iter = 0;
+        for e in endpoints {
+            endpoint_str.push_str(e);
+
+            if iter < endpoints.len() {
+                endpoint_str.push_str(",");
+            }
+
+            iter += 1;
+        }
+
+        endpoint_str
+    }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use zmq;
-// }
+#[cfg(test)]
+mod tests {
+    use czmq_sys;
+    use std::sync::{Once, ONCE_INIT};
+    use super::*;
+    use zmq;
+
+    static INIT_ZSYS: Once = ONCE_INIT;
+
+    #[test]
+    fn test_new_pub() {
+        zsys_init();
+
+        let zsock = ZSock::new_pub("inproc://test_pub");
+        assert!(zsock.is_ok());
+    }
+
+    #[test]
+    fn test_new_sub() {
+        zsys_init();
+
+        let zsock = ZSock::new_sub("inproc://test_sub1", None);
+        assert!(zsock.is_ok());
+        let zsock = ZSock::new_sub("inproc://test_sub2", Some("moo"));
+        assert!(zsock.is_ok());
+    }
+
+    #[test]
+    fn test_new_req() {
+        zsys_init();
+
+        let zsock = ZSock::new_req("inproc://test_req");
+        assert!(zsock.is_ok());
+    }
+
+    #[test]
+    fn test_new_rep() {
+        zsys_init();
+
+        let zsock = ZSock::new_rep("inproc://test_rep");
+        assert!(zsock.is_ok());
+    }
+
+    #[test]
+    fn test_new_dealer() {
+        zsys_init();
+
+        let zsock = ZSock::new_dealer("inproc://test_dealer");
+        assert!(zsock.is_ok());
+    }
+
+    #[test]
+    fn test_new_router() {
+        zsys_init();
+
+        let zsock = ZSock::new_router("inproc://test_router");
+        assert!(zsock.is_ok());
+    }
+
+    #[test]
+    fn test_new_push() {
+        zsys_init();
+
+        let zsock = ZSock::new_push("inproc://test_push");
+        assert!(zsock.is_ok());
+    }
+
+    #[test]
+    fn test_new_pull() {
+        zsys_init();
+
+        let zsock = ZSock::new_pull("inproc://test_pull");
+        assert!(zsock.is_ok());
+    }
+
+    #[test]
+    fn test_new_xpub() {
+        zsys_init();
+
+        let zsock = ZSock::new_xpub("inproc://test_xpub");
+        assert!(zsock.is_ok());
+    }
+
+    #[test]
+    fn test_new_xsub() {
+        zsys_init();
+
+        let zsock = ZSock::new_xsub("inproc://test_xsub");
+        assert!(zsock.is_ok());
+    }
+
+    #[test]
+    fn test_new_pair() {
+        zsys_init();
+
+        let zsock = ZSock::new_pair("inproc://test_pair");
+        assert!(zsock.is_ok());
+    }
+
+    #[test]
+    fn test_new_stream() {
+        zsys_init();
+
+        let zsock = ZSock::new_stream("inproc://test_stream");
+        assert!(zsock.is_ok());
+    }
+
+    #[test]
+    fn test_bind() {
+        zsys_init();
+
+        let zsock = ZSock::new(zmq::REQ);
+        assert!(zsock.bind("inproc://test_").is_ok());
+    }
+
+    #[test]
+    fn test_endpoint() {
+        zsys_init();
+
+        let zsock = ZSock::new_rep("inproc://test_endpoint").unwrap();
+        assert_eq!(zsock.endpoint().unwrap(), "inproc://test_endpoint");
+    }
+
+    #[test]
+    fn test_unbind() {
+        zsys_init();
+
+        let zsock = ZSock::new_rep("inproc://test_unbind").unwrap();
+        assert!(zsock.unbind("inproc://test_unbind").is_ok());
+    }
+
+    #[test]
+    fn test_connect() {
+        zsys_init();
+
+        ZSock::new_rep("inproc://test_connect").unwrap();
+        let client = ZSock::new(zmq::REQ);
+        assert!(client.connect("inproc://test_connect").is_ok());
+    }
+
+    #[test]
+    fn test_disconnect() {
+        zsys_init();
+
+        let zsock = ZSock::new_rep("inproc://test_disconnect").unwrap();
+        assert!(zsock.disconnect("inproc://test_disconnect").is_ok());
+    }
+
+    #[test]
+    fn test_attach() {
+        zsys_init();
+
+        let zsock = ZSock::new(zmq::REP);
+        let result = zsock.attach(&["inproc://test_attach1", "inproc://test_attach2", "inproc://test_attach3"], true);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_type_str() {
+        zsys_init();
+
+        let zsock = ZSock::new(zmq::PUB);
+        assert_eq!(zsock.type_str().unwrap().unwrap(), "PUB");
+    }
+
+    #[test]
+    fn test_sendrecv() {
+        zsys_init();
+
+        let server = ZSock::new_rep("inproc://test_send").unwrap();
+        let client = ZSock::new_req("inproc://test_send").unwrap();
+
+        assert!(client.send("s", "This is a test string.").is_ok());
+        // assert_eq!(server.recv("s"));
+    }
+
+    // Each new ZSock calls zsys_init(), which is a non-threadsafe
+    // fn. To mitigate the race condition, wrap it in a Once struct.
+    fn zsys_init() {
+        INIT_ZSYS.call_once(|| {
+            unsafe { czmq_sys::zsys_init() };
+        });
+    }
+}
