@@ -224,11 +224,9 @@ impl ZSock {
         }
     }
 
-    pub fn send(&self, picture: &str, data: &str) -> Result<()> {
-        let picture_c = CString::new(picture).unwrap_or(CString::new("").unwrap());
+    pub fn send_str(&self, data: &str) -> Result<()> {
         let data_c = CString::new(data).unwrap_or(CString::new("").unwrap());
-
-        let rc = unsafe { czmq_sys::zsock_send(self.zsock as *mut c_void, picture_c.as_ptr(), data_c.as_ptr()) };
+        let rc = unsafe { czmq_sys::zsock_send(self.zsock as *mut c_void, "s\0".as_ptr() as *const i8, data_c.as_ptr()) };
         if rc == -1i32 { Err(()) } else { Ok(()) }
     }
 
@@ -480,12 +478,9 @@ impl ZSock {
 
 #[cfg(test)]
 mod tests {
-    use czmq_sys;
-    use std::sync::{Once, ONCE_INIT};
+    use zsys_init;
     use super::*;
     use zmq;
-
-    static INIT_ZSYS: Once = ONCE_INIT;
 
     #[test]
     fn test_new_pub() {
@@ -647,18 +642,10 @@ mod tests {
     fn test_sendrecv() {
         zsys_init();
 
-        let server = ZSock::new_rep("inproc://test_send").unwrap();
+        // let server = ZSock::new_rep("inproc://test_send").unwrap();
         let client = ZSock::new_req("inproc://test_send").unwrap();
 
-        assert!(client.send("s", "This is a test string.").is_ok());
+        assert!(client.send_str("This is a test string.").is_ok());
         // assert_eq!(server.recv("s"));
-    }
-
-    // Each new ZSock calls zsys_init(), which is a non-threadsafe
-    // fn. To mitigate the race condition, wrap it in a Once struct.
-    fn zsys_init() {
-        INIT_ZSYS.call_once(|| {
-            unsafe { czmq_sys::zsys_init() };
-        });
     }
 }

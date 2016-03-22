@@ -1,8 +1,8 @@
 //! Module: czmq-zmsg
 
-use {czmq_sys, ZSock};
+use {czmq_sys, ZFrame, ZSock};
 use std::{ptr, result};
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 use std::str::Utf8Error;
 use zmq;
@@ -28,6 +28,12 @@ impl ZMsg {
         }
     }
 
+    pub fn from_raw(zmsg: *mut czmq_sys::zmsg_t) -> ZMsg {
+        ZMsg {
+            zmsg: zmsg,
+        }
+    }
+
     pub fn recv(source: &mut zmq::Socket) -> Result<ZMsg> {
         Self::do_recv(source.borrow_raw())
     }
@@ -40,20 +46,58 @@ impl ZMsg {
         let zmsg = unsafe { czmq_sys::zmsg_recv(source) };
 
         if zmsg == ptr::null_mut() {
-            return Err(());
+            Err(())
+        } else {
+            Ok(ZMsg {
+                zmsg: zmsg,
+            })
         }
-
-        Ok(ZMsg {
-            zmsg: zmsg,
-        })
     }
+
+    // XXX We'll have to roll our own here as we can't imitate a C
+    // file handle.
     // pub fn zmsg_load(file: *mut FILE) -> *mut zmsg_t;
-    // pub fn zmsg_decode(frame: *mut zframe_t) -> *mut zmsg_t;
-    // pub fn zmsg_new_signal(status: byte) -> *mut zmsg_t;
-    // pub fn zmsg_destroy(self_p: *mut *mut zmsg_t);
+
+    pub fn encode(&self) -> Result<ZFrame> {
+        let zframe = unsafe { czmq_sys::zmsg_encode(self.zmsg) };
+
+        if zframe == ptr::null_mut() {
+            Err(())
+        } else {
+            Ok(ZFrame::from_raw(zframe))
+        }
+    }
+
+    pub fn decode(frame: &ZFrame) -> Result<ZMsg> {
+        let zmsg = unsafe { czmq_sys::zmsg_decode(frame.borrow_raw()) };
+
+        if zmsg == ptr::null_mut() {
+            Err(())
+        } else {
+            Ok(ZMsg {
+                zmsg: zmsg,
+            })
+        }
+    }
+
+    pub fn new_signal(status: u8) -> Result<ZMsg> {
+        let zmsg = unsafe { czmq_sys::zmsg_new_signal(status) };
+
+        if zmsg == ptr::null_mut() {
+            Err(())
+        } else {
+            Ok(ZMsg {
+                zmsg: zmsg,
+            })
+        }
+    }
+
     // pub fn zmsg_send(self_p: *mut *mut zmsg_t,
     //                  dest: *mut ::std::os::raw::c_void)
     //  -> ::std::os::raw::c_int;
+    pub fn send(&self, sock: &mut zmq::Socket) -> Result<()> {
+        Ok(())
+    }
     // pub fn zmsg_sendm(self_p: *mut *mut zmsg_t,
     //                   dest: *mut ::std::os::raw::c_void)
     //  -> ::std::os::raw::c_int;
@@ -74,6 +118,11 @@ impl ZMsg {
     //  -> ::std::os::raw::c_int;
     // pub fn zmsg_addstr(_self: *mut zmsg_t,
     //                    string: *const ::std::os::raw::c_char)
+    pub fn addstr(&self, string: &str) -> Result<()> {
+        let string_c = CString::new(string).unwrap_or(CString::new("").unwrap());
+        let rc = unsafe { czmq_sys::zmsg_addstr(self.zmsg, string_c.as_ptr()) };
+        if rc == -1 { Err(()) } else { Ok(()) }
+    }
     //  -> ::std::os::raw::c_int;
     // pub fn zmsg_pushstrf(_self: *mut zmsg_t,
     //                      format: *const ::std::os::raw::c_char, ...)
@@ -102,7 +151,6 @@ impl ZMsg {
     // pub fn zmsg_last(_self: *mut zmsg_t) -> *mut zframe_t;
     // pub fn zmsg_save(_self: *mut zmsg_t, file: *mut FILE)
     //  -> ::std::os::raw::c_int;
-    // pub fn zmsg_encode(_self: *mut zmsg_t) -> *mut zframe_t;
     // pub fn zmsg_dup(_self: *mut zmsg_t) -> *mut zmsg_t;
     // pub fn zmsg_print(_self: *mut zmsg_t);
     // pub fn zmsg_eq(_self: *mut zmsg_t, other: *mut zmsg_t) -> u8;
@@ -126,6 +174,7 @@ impl ZMsg {
 
 #[cfg(test)]
 mod tests {
+    use {ZSock, zsys_init};
     use super::*;
     use zmq;
 
@@ -145,14 +194,30 @@ mod tests {
         assert_eq!(msg.popstr().unwrap().unwrap(), "Hello world!");
     }
 
-    // #[test]
-    // fn test_zrecv() {
-    //     let mut server = ZSock::new_rep("inproc://test").unwrap();
-    //     let mut client = ZSock::new_req("inproc://test").unwrap();
-    //
-    //     client.send_str("Hello world!", 0).unwrap();
-    //
-    //     let msg = ZMsg::zrecv(&mut server).unwrap();
-    //     assert_eq!(msg.popstr().unwrap().unwrap(), "Hello world!");
-    // }
+    #[test]
+    fn test_zrecv() {
+        zsys_init();
+
+        let mut server = ZSock::new_rep("inproc://test").unwrap();
+        let client = ZSock::new_req("inproc://test").unwrap();
+
+        client.send_str("Hello world!").unwrap();
+
+        let msg = ZMsg::zrecv(&mut server).unwrap();
+        assert_eq!(msg.popstr().unwrap().unwrap(), "Hello world!");
+    }
+
+    #[test]
+    fn test_encode_decode() {
+        let msg = ZMsg::new();
+        msg.addstr("moo").unwrap();
+        let msg_decoded = ZMsg::decode(&msg.encode().unwrap()).unwrap();
+        assert_eq!(msg_decoded.popstr().unwrap().unwrap(), "moo");
+    }
+
+    #[test]
+    fn test_new_signal() {
+        let msg = ZMsg::new_signal(123).unwrap();
+        assert_eq!(msg.popstr().unwrap().unwrap(), "123");
+    }
 }

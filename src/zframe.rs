@@ -61,6 +61,12 @@ impl ZFrame {
         Self::new(frame.as_bytes())
     }
 
+    pub fn from_raw(zframe: *mut czmq_sys::zframe_t) -> ZFrame {
+        ZFrame {
+            zframe: zframe,
+        }
+    }
+
     pub fn recv(source: &mut zmq::Socket) -> Result<ZFrame> {
         Self::do_recv(source.borrow_raw())
     }
@@ -194,6 +200,10 @@ impl ZFrame {
             None => ptr::null(),
         };
         unsafe { czmq_sys::zframe_print(self.zframe, prefix_ptr) };
+    }
+
+    pub fn borrow_raw(&self) -> *mut czmq_sys::zframe_t {
+        self.zframe
     }
 }
 
