@@ -42,8 +42,16 @@ before_script:
   tar zxf v4.1.4.tar.gz &&
   cd zeromq4-1-4.1.4 &&
   ./autogen.sh && ./configure --prefix=$HOME --with-libsodium && make && make install &&
+  cd .. &&
+  wget https://github.com/zeromq/czmq/archive/v3.0.2.tar.gz &&
+  tar zxf v3.0.2.tar.gz &&
+  cd czmq-3.0.2 &&
+  ./autogen.sh && ./configure --prefix=$HOME && make && make install &&
   cd ..
 script:
 - travis-cargo build
 - travis-cargo test
 - travis-cargo bench
+env:
+  global:
+  - TRAVIS_CARGO_NIGHTLY_FEATURE=""
