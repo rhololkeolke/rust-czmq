@@ -31,7 +31,9 @@ impl Drop for ZFrame {
 
 impl ZFrame {
     pub fn new(data: &[u8]) -> Result<ZFrame> {
-        let zframe = unsafe { czmq_sys::zframe_new(data.as_ptr() as *const c_void, data.len() as u64) };
+        let data_c = CString::new(data).unwrap().into_raw();
+        let zframe = unsafe { czmq_sys::zframe_new(data_c as *const c_void, data.len() as u64) };
+        unsafe { CString::from_raw(data_c) };
 
         if zframe == ptr::null_mut() {
             return Err(());
@@ -210,7 +212,7 @@ impl ZFrame {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use zmq;
+    use {zmq, ZSock, zsys_init};
 
     #[test]
     fn test_sendrecv() {
@@ -232,20 +234,22 @@ mod tests {
         }
     }
 
-    // #[test]
-    // fn test_zsendrecv() {
-    //     let mut server = ZSock::new_rep("inproc://test").unwrap();
-    //     let mut client = ZSock.new_req("inproc://test").unwrap();
-    //
-    //     let mut zframe1 = ZFrame::from("Hello world!").unwrap();
-    //     zframe1.zsend_reuse(&mut client, Some(ZFRAME_MORE)).unwrap();
-    //     zframe1.zsend(&mut client, None).unwrap();
-    //
-    //     for _ in 1..2 {
-    //         let zframe = ZFrame::zrecv(&mut server).unwrap();
-    //         assert_eq!(zframe.data().unwrap().unwrap(), "Hello world!");
-    //     }
-    // }
+    #[test]
+    fn test_zsendrecv() {
+        zsys_init();
+
+        let mut server = ZSock::new_rep("inproc://zframe_zsendrecv").unwrap();
+        let mut client = ZSock::new_req("inproc://zframe_zsendrecv").unwrap();
+
+        let mut zframe1 = ZFrame::from("Hello world!").unwrap();
+        zframe1.zsend_reuse(&mut client, Some(ZFRAME_MORE)).unwrap();
+        zframe1.zsend(&mut client, None).unwrap();
+
+        for _ in 1..2 {
+            let zframe = ZFrame::zrecv(&mut server).unwrap();
+            assert_eq!(zframe.data().unwrap().unwrap(), "Hello world!");
+        }
+    }
 
     #[test]
     fn test_dup() {

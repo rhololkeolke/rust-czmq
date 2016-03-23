@@ -80,9 +80,8 @@ impl ZCert {
     pub fn set_meta(&self, key: &str, value: &str) {
         let key_c = CString::new(key).unwrap_or(CString::new("").unwrap());
         let value_c = CString::new(value).unwrap_or(CString::new("").unwrap());
-        let format_c = CString::new("%s").unwrap();
 
-        unsafe { czmq_sys::zcert_set_meta(self.zcert, key_c.as_ptr(), format_c.as_ptr(), value_c.as_ptr()) };
+        unsafe { czmq_sys::zcert_set_meta(self.zcert, key_c.as_ptr(), "%s\0".as_ptr() as *const i8, value_c.as_ptr()) };
     }
 
     pub fn meta<'a>(&'a self, key: &str) -> &'a str {
