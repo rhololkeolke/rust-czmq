@@ -22,6 +22,7 @@ addons:
     - pkg-config
     - libtool
     - git
+    - ca-certificates
 before_script:
 - |
   pip install 'travis-cargo<0.2' --user &&
@@ -29,6 +30,7 @@ before_script:
   export LIBRARY_PATH=$HOME/lib &&
   export LD_LIBRARY_PATH=$HOME/lib &&
   export PKG_CONFIG_PATH=$HOME/lib/pkgconfig &&
+  echo 'capath="/etc/ssl/certs/:$capath"' > $HOME/.curlrc &&
   curl -O https://download.libsodium.org/libsodium/releases/libsodium-1.0.8.tar.gz &&
   curl -O https://download.libsodium.org/libsodium/releases/libsodium-1.0.8.tar.gz.sig &&
   curl -O https://download.libsodium.org/jedi.gpg.asc &&
