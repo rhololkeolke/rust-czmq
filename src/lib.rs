@@ -3,6 +3,10 @@
 #[macro_use]
 extern crate bitflags;
 extern crate czmq_sys;
+#[cfg(test)]
+extern crate tempdir;
+#[cfg(test)]
+extern crate tempfile;
 extern crate zmq;
 
 mod zactor;
@@ -10,6 +14,7 @@ mod zauth;
 mod zcert;
 mod zframe;
 mod zlist;
+mod zmonitor;
 mod zmsg;
 mod zsock;
 
@@ -18,6 +23,7 @@ pub use zauth::ZAuth;
 pub use zcert::ZCert;
 pub use zframe::{ZFrame, ZFRAME_MORE, ZFRAME_REUSE, ZFRAME_DONTWAIT};
 pub use zlist::ZList;
+pub use zmonitor::{ZMonitor, ZMonitorEvents};
 pub use zmsg::ZMsg;
 pub use zsock::ZSock;
 

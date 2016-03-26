@@ -87,6 +87,11 @@ pub use ffi::{
     zlist_size,
 
     //
+    // ZMonitor
+    //
+    zmonitor,
+
+    //
     // ZMsg
     //
     zmsg_t,

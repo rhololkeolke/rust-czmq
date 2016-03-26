@@ -4,7 +4,8 @@ use czmq_sys;
 use std::{ptr, result};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
-use std::str::Utf8Error;
+use std::str::{Utf8Error};
+use zmsg::ZMsgable;
 use zmq;
 
 // Generic error code "-1" doesn't map to an error message, so just
@@ -13,11 +14,16 @@ pub type Result<T> = result::Result<T, ()>;
 
 pub struct ZSock {
     zsock: *mut czmq_sys::zsock_t,
+    closed: bool,
 }
+
+unsafe impl Send for ZSock {}
 
 impl Drop for ZSock {
     fn drop(&mut self) {
-        unsafe { czmq_sys::zsock_destroy(&mut self.zsock) };
+        if !self.closed {
+            unsafe { czmq_sys::zsock_destroy(&mut self.zsock) };
+        }
     }
 }
 
@@ -25,23 +31,19 @@ impl ZSock {
     pub fn new(sock_type: zmq::SocketType) -> ZSock {
         ZSock {
             zsock: unsafe { czmq_sys::zsock_new(sock_type as i32) },
+            closed: false,
         }
     }
 
     pub fn new_pub(endpoint: &str) -> Result<ZSock> {
-        let endpoint_ptr = CString::new(endpoint).unwrap().into_raw();
-
-        let zsock = unsafe {
-            let p = czmq_sys::zsock_new_pub(endpoint_ptr);
-            CString::from_raw(endpoint_ptr);
-            p
-        };
+        let zsock = unsafe { czmq_sys::zsock_new_pub(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
             Err(())
         } else {
             Ok(ZSock {
                 zsock: zsock,
+                closed: false,
             })
         }
     }
@@ -52,206 +54,152 @@ impl ZSock {
             None => ptr::null(),
         };
 
-        let endpoint_ptr = CString::new(endpoint).unwrap().into_raw();
-
-        let zsock = unsafe {
-            let p = czmq_sys::zsock_new_sub(endpoint_ptr, subscribe_ptr);
-            CString::from_raw(endpoint_ptr);
-            p
-        };
+        let zsock = unsafe { czmq_sys::zsock_new_sub(CString::new(endpoint).unwrap().as_ptr(), subscribe_ptr) };
 
         if zsock == ptr::null_mut() {
             Err(())
         } else {
             Ok(ZSock {
                 zsock: zsock,
+                closed: false,
             })
         }
     }
 
     pub fn new_req(endpoint: &str) -> Result<ZSock> {
-        let endpoint_ptr = CString::new(endpoint).unwrap().into_raw();
-
-        let zsock = unsafe {
-            let p = czmq_sys::zsock_new_req(endpoint_ptr);
-            CString::from_raw(endpoint_ptr);
-            p
-        };
+        let zsock = unsafe { czmq_sys::zsock_new_req(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
             Err(())
         } else {
             Ok(ZSock {
                 zsock: zsock,
+                closed: false,
             })
         }
     }
 
     pub fn new_rep(endpoint: &str) -> Result<ZSock> {
-        let endpoint_ptr = CString::new(endpoint).unwrap().into_raw();
-
-        let zsock = unsafe {
-            let p = czmq_sys::zsock_new_rep(endpoint_ptr);
-            CString::from_raw(endpoint_ptr);
-            p
-        };
+        let zsock = unsafe { czmq_sys::zsock_new_rep(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
             Err(())
         } else {
             Ok(ZSock {
                 zsock: zsock,
+                closed: false,
             })
         }
     }
 
     pub fn new_dealer(endpoint: &str) -> Result<ZSock> {
-        let endpoint_ptr = CString::new(endpoint).unwrap().into_raw();
-
-        let zsock = unsafe {
-            let p = czmq_sys::zsock_new_dealer(endpoint_ptr);
-            CString::from_raw(endpoint_ptr);
-            p
-        };
+        let zsock = unsafe { czmq_sys::zsock_new_dealer(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
             Err(())
         } else {
             Ok(ZSock {
                 zsock: zsock,
+                closed: false,
             })
         }
     }
 
     pub fn new_router(endpoint: &str) -> Result<ZSock> {
-        let endpoint_ptr = CString::new(endpoint).unwrap().into_raw();
-
-        let zsock = unsafe {
-            let p = czmq_sys::zsock_new_router(endpoint_ptr);
-            CString::from_raw(endpoint_ptr);
-            p
-        };
+        let zsock = unsafe { czmq_sys::zsock_new_router(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
             Err(())
         } else {
             Ok(ZSock {
                 zsock: zsock,
+                closed: false,
             })
         }
     }
 
     pub fn new_push(endpoint: &str) -> Result<ZSock> {
-        let endpoint_ptr = CString::new(endpoint).unwrap().into_raw();
-
-        let zsock = unsafe {
-            let p = czmq_sys::zsock_new_push(endpoint_ptr);
-            CString::from_raw(endpoint_ptr);
-            p
-        };
+        let zsock = unsafe { czmq_sys::zsock_new_push(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
             Err(())
         } else {
             Ok(ZSock {
                 zsock: zsock,
+                closed: false,
             })
         }
     }
 
     pub fn new_pull(endpoint: &str) -> Result<ZSock> {
-        let endpoint_ptr = CString::new(endpoint).unwrap().into_raw();
-
-        let zsock = unsafe {
-            let p = czmq_sys::zsock_new_pull(endpoint_ptr);
-            CString::from_raw(endpoint_ptr);
-            p
-        };
+        let zsock = unsafe { czmq_sys::zsock_new_pull(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
             Err(())
         } else {
             Ok(ZSock {
                 zsock: zsock,
+                closed: false,
             })
         }
     }
 
     pub fn new_xpub(endpoint: &str) -> Result<ZSock> {
-        let endpoint_ptr = CString::new(endpoint).unwrap().into_raw();
-
-        let zsock = unsafe {
-            let p = czmq_sys::zsock_new_xpub(endpoint_ptr);
-            CString::from_raw(endpoint_ptr);
-            p
-        };
+        let zsock = unsafe { czmq_sys::zsock_new_xpub(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
             Err(())
         } else {
             Ok(ZSock {
                 zsock: zsock,
+                closed: false,
             })
         }
     }
 
     pub fn new_xsub(endpoint: &str) -> Result<ZSock> {
-        let endpoint_ptr = CString::new(endpoint).unwrap().into_raw();
-
-        let zsock = unsafe {
-            let p = czmq_sys::zsock_new_xsub(endpoint_ptr);
-            CString::from_raw(endpoint_ptr);
-            p
-        };
+        let zsock = unsafe { czmq_sys::zsock_new_xsub(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
             Err(())
         } else {
             Ok(ZSock {
                 zsock: zsock,
+                closed: false,
             })
         }
     }
 
     pub fn new_pair(endpoint: &str) -> Result<ZSock> {
-        let endpoint_ptr = CString::new(endpoint).unwrap().into_raw();
-
-        let zsock = unsafe {
-            let p = czmq_sys::zsock_new_pair(endpoint_ptr);
-            CString::from_raw(endpoint_ptr);
-            p
-        };
+        let zsock = unsafe { czmq_sys::zsock_new_pair(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
             Err(())
         } else {
             Ok(ZSock {
                 zsock: zsock,
+                closed: false,
             })
         }
     }
 
     pub fn new_stream(endpoint: &str) -> Result<ZSock> {
-        let endpoint_ptr = CString::new(endpoint).unwrap().into_raw();
-
-        let zsock = unsafe {
-            let p = czmq_sys::zsock_new_stream(endpoint_ptr);
-            CString::from_raw(endpoint_ptr);
-            p
-        };
+        let zsock = unsafe { czmq_sys::zsock_new_stream(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
             Err(())
         } else {
             Ok(ZSock {
                 zsock: zsock,
+                closed: false,
             })
         }
     }
 
-    pub fn from_raw(zsock: *mut czmq_sys::zsock_t) -> ZSock {
+    pub fn from_raw(zsock: *mut czmq_sys::zsock_t, persistent: bool) -> ZSock {
         ZSock {
             zsock: zsock,
+            closed: persistent,
         }
     }
 
@@ -289,7 +237,7 @@ impl ZSock {
         let endpoints_c = CString::new(Self::concat_endpoints(endpoints)).unwrap_or(CString::new("").unwrap());
 
         let rc = unsafe { czmq_sys::zsock_attach(self.zsock, endpoints_c.as_ptr(), if serverish { 1 } else { 0 }) };
-        if rc == -1i32 { Err(()) } else { Ok(()) }
+        if rc == -1 { Err(()) } else { Ok(()) }
     }
 
     pub fn type_str<'a>(&'a self) -> Result<result::Result<&'a str, Utf8Error>> {
@@ -306,13 +254,26 @@ impl ZSock {
     pub fn send_str(&self, data: &str) -> Result<()> {
         let data_c = CString::new(data).unwrap_or(CString::new("").unwrap());
         let rc = unsafe { czmq_sys::zsock_send(self.zsock as *mut c_void, "s\0".as_ptr() as *const i8, data_c.as_ptr()) };
-        if rc == -1i32 { Err(()) } else { Ok(()) }
+        if rc == -1 { Err(()) } else { Ok(()) }
     }
 
-    // pub fn zsock_recv(_self: *mut ::std::os::raw::c_void,
-    //                   picture: *const ::std::os::raw::c_char, ...)
-    //  -> ::std::os::raw::c_int;
-    // pub fn recv(&self, picture: &str, d)
+    pub fn recv_str(&self) -> Result<result::Result<String, Vec<u8>>> {
+        let mut data = ptr::null();
+
+        let rc = unsafe { czmq_sys::zsock_recv(self.zsock as *mut c_void, "s\0".as_ptr() as *const i8, &mut data) };
+
+        if rc == -1 {
+            Err(())
+        } else {
+            let c_str = unsafe { CStr::from_ptr(data) };
+            let bytes = c_str.to_bytes();
+
+            match String::from_utf8(bytes.to_vec()) {
+                Ok(s) => Ok(Ok(s)),
+                Err(_) => Ok(Err(bytes.to_vec())),
+            }
+        }
+    }
 
     // pub fn zsock_bsend(_self: *mut ::std::os::raw::c_void,
     //                    picture: *const ::std::os::raw::c_char, ...)
@@ -369,51 +330,148 @@ impl ZSock {
         }
     }
 
-    // pub fn zsock_mechanism(_self: *mut ::std::os::raw::c_void)
-    //  -> ::std::os::raw::c_int;
-    // pub fn zsock_plain_server(_self: *mut ::std::os::raw::c_void)
-    //  -> ::std::os::raw::c_int;
-    // pub fn zsock_set_plain_server(_self: *mut ::std::os::raw::c_void,
-    //                               plain_server: ::std::os::raw::c_int);
-    // pub fn zsock_plain_username(_self: *mut ::std::os::raw::c_void)
-    //  -> *mut ::std::os::raw::c_char;
-    // pub fn zsock_set_plain_username(_self: *mut ::std::os::raw::c_void,
-    //                                 plain_username:
-    //                                     *const ::std::os::raw::c_char);
-    // pub fn zsock_plain_password(_self: *mut ::std::os::raw::c_void)
-    //  -> *mut ::std::os::raw::c_char;
-    // pub fn zsock_set_plain_password(_self: *mut ::std::os::raw::c_void,
-    //                                 plain_password:
-    //                                     *const ::std::os::raw::c_char);
-    // pub fn zsock_curve_server(_self: *mut ::std::os::raw::c_void)
-    //  -> ::std::os::raw::c_int;
-    // pub fn zsock_set_curve_server(_self: *mut ::std::os::raw::c_void,
-    //                               curve_server: ::std::os::raw::c_int);
-    // pub fn zsock_curve_publickey(_self: *mut ::std::os::raw::c_void)
-    //  -> *mut ::std::os::raw::c_char;
-    // pub fn zsock_set_curve_publickey(_self: *mut ::std::os::raw::c_void,
-    //                                  curve_publickey:
-    //                                      *const ::std::os::raw::c_char);
-    // pub fn zsock_set_curve_publickey_bin(_self: *mut ::std::os::raw::c_void,
-    //                                      curve_publickey: *const byte);
-    // pub fn zsock_curve_secretkey(_self: *mut ::std::os::raw::c_void)
-    //  -> *mut ::std::os::raw::c_char;
-    // pub fn zsock_set_curve_secretkey(_self: *mut ::std::os::raw::c_void,
-    //                                  curve_secretkey:
-    //                                      *const ::std::os::raw::c_char);
-    // pub fn zsock_set_curve_secretkey_bin(_self: *mut ::std::os::raw::c_void,
-    //                                      curve_secretkey: *const byte);
-    // pub fn zsock_curve_serverkey(_self: *mut ::std::os::raw::c_void)
-    //  -> *mut ::std::os::raw::c_char;
-    // pub fn zsock_set_curve_serverkey(_self: *mut ::std::os::raw::c_void,
-    //                                  curve_serverkey:
-    //                                      *const ::std::os::raw::c_char);
-    // pub fn zsock_set_curve_serverkey_bin(_self: *mut ::std::os::raw::c_void,
-    //                                      curve_serverkey: *const byte);
-    // pub fn zsock_gssapi_server(_self: *mut ::std::os::raw::c_void)
-    //  -> ::std::os::raw::c_int;
-    // pub fn zsock_set_gssapi_server(_self: *mut ::std::os::raw::c_void,
-    //                                gssapi_server: ::std::os::raw::c_int);
+    pub fn mechanism(&self) -> Result<zmq::Mechanism> {
+        let mechanism = unsafe { czmq_sys::zsock_mechanism(self.zsock as *mut c_void) };
+
+        if mechanism == -1 {
+            Err(())
+        } else {
+            match mechanism {
+                0 => Ok(zmq::Mechanism::ZMQ_NULL),
+                1 => Ok(zmq::Mechanism::ZMQ_PLAIN),
+                2 => Ok(zmq::Mechanism::ZMQ_CURVE),
+                3 => Ok(zmq::Mechanism::ZMQ_GSSAPI),
+                _ => unimplemented!(),
+            }
+        }
+    }
+
+    pub fn plain_server(&self) -> bool {
+        unsafe { czmq_sys::zsock_plain_server(self.zsock as *mut c_void) == 1 }
+    }
+
+    pub fn set_plain_server(&self, plain: bool) {
+        unsafe { czmq_sys::zsock_set_plain_server(self.zsock as *mut c_void, if plain { 1 } else { 0 }) };
+    }
+
+    pub fn plain_username<'a>(&'a self) -> Result<result::Result<&'a str, Utf8Error>> {
+        let username = unsafe { czmq_sys::zsock_plain_username(self.zsock as *mut c_void) };
+
+        if username == ptr::null_mut() {
+            Err(())
+        } else {
+            Ok(unsafe { CStr::from_ptr(username) }.to_str())
+        }
+    }
+
+    pub fn set_plain_username(&self, username: &str) {
+        let username_c = CString::new(username).unwrap_or(CString::new("").unwrap()).into_raw();
+        unsafe {
+            czmq_sys::zsock_set_plain_username(self.zsock as *mut c_void, username_c);
+            CString::from_raw(username_c);
+        }
+    }
+
+    pub fn plain_password<'a>(&'a self) -> Result<result::Result<&'a str, Utf8Error>> {
+        let password = unsafe { czmq_sys::zsock_plain_password(self.zsock as *mut c_void) };
+
+        if password == ptr::null_mut() {
+            Err(())
+        } else {
+            Ok(unsafe { CStr::from_ptr(password) }.to_str())
+        }
+    }
+
+    pub fn set_plain_password(&self, password: &str) {
+        let password_c = CString::new(password).unwrap_or(CString::new("").unwrap()).into_raw();
+        unsafe {
+            czmq_sys::zsock_set_plain_password(self.zsock as *mut c_void, password_c);
+            CString::from_raw(password_c);
+        }
+    }
+
+    pub fn curve_server(&self) -> bool {
+        unsafe { czmq_sys::zsock_curve_server(self.zsock as *mut c_void) == 1 }
+    }
+
+    pub fn set_curve_server(&self, curve: bool) {
+        unsafe { czmq_sys::zsock_set_curve_server(self.zsock as *mut c_void, if curve { 1 } else { 0 }) };
+    }
+
+    pub fn curve_publickey<'a>(&'a self) -> Result<result::Result<&'a str, Utf8Error>> {
+        let key = unsafe { czmq_sys::zsock_curve_publickey(self.zsock as *mut c_void) };
+
+        if key == ptr::null_mut() {
+            Err(())
+        } else {
+            Ok(unsafe { CStr::from_ptr(key) }.to_str())
+        }
+    }
+
+    pub fn set_curve_publickey(&self, key: &str) {
+        let key_c = CString::new(key).unwrap_or(CString::new("").unwrap()).into_raw();
+        unsafe {
+            czmq_sys::zsock_set_curve_publickey(self.zsock as *mut c_void, key_c);
+            CString::from_raw(key_c);
+        }
+    }
+
+    pub fn set_curve_publickey_bin(&self, key: &[u8]) {
+        unsafe { czmq_sys::zsock_set_curve_publickey_bin(self.zsock as *mut c_void, key.as_ptr()) };
+    }
+
+    pub fn curve_secretkey<'a>(&'a self) -> Result<result::Result<&'a str, Utf8Error>> {
+        let key = unsafe { czmq_sys::zsock_curve_secretkey(self.zsock as *mut c_void) };
+
+        if key == ptr::null_mut() {
+            Err(())
+        } else {
+            Ok(unsafe { CStr::from_ptr(key) }.to_str())
+        }
+    }
+
+    pub fn set_curve_secretkey(&self, key: &str) {
+        let key_c = CString::new(key).unwrap_or(CString::new("").unwrap()).into_raw();
+        unsafe {
+            czmq_sys::zsock_set_curve_secretkey(self.zsock as *mut c_void, key_c);
+            CString::from_raw(key_c);
+        }
+    }
+
+    pub fn set_curve_secretkey_bin(&self, key: &[u8]) {
+        unsafe { czmq_sys::zsock_set_curve_secretkey_bin(self.zsock as *mut c_void, key.as_ptr()) };
+    }
+
+    pub fn curve_serverkey<'a>(&'a self) -> Result<result::Result<&'a str, Utf8Error>> {
+        let key = unsafe { czmq_sys::zsock_curve_serverkey(self.zsock as *mut c_void) };
+
+        if key == ptr::null_mut() {
+            Err(())
+        } else {
+            Ok(unsafe { CStr::from_ptr(key) }.to_str())
+        }
+    }
+
+    pub fn set_curve_serverkey(&self, key: &str) {
+        let key_c = CString::new(key).unwrap_or(CString::new("").unwrap()).into_raw();
+        unsafe {
+            czmq_sys::zsock_set_curve_serverkey(self.zsock as *mut c_void, key_c);
+            CString::from_raw(key_c);
+        }
+    }
+
+    pub fn set_curve_serverkey_bin(&self, key: &[u8]) {
+        unsafe { czmq_sys::zsock_set_curve_serverkey_bin(self.zsock as *mut c_void, key.as_ptr()) };
+    }
+
+    // pub fn gssapi_server(&self) -> bool {
+    //     unsafe { czmq_sys::zsock_gssapi_server(self.zsock as *mut c_void) == 1 }
+    // }
+    //
+    // pub fn set_gssapi_server(&self, gssapi: bool) {
+    //     unsafe { czmq_sys::zsock_set_gssapi_server(self.zsock as *mut c_void, if gssapi { 1 } else { 0 }) };
+    // }
+
     // pub fn zsock_gssapi_plaintext(_self: *mut ::std::os::raw::c_void)
     //  -> ::std::os::raw::c_int;
     // pub fn zsock_set_gssapi_plaintext(_self: *mut ::std::os::raw::c_void,
@@ -486,10 +544,16 @@ impl ZSock {
     //  -> ::std::os::raw::c_int;
     // pub fn zsock_set_rcvbuf(_self: *mut ::std::os::raw::c_void,
     //                         rcvbuf: ::std::os::raw::c_int);
-    // pub fn zsock_linger(_self: *mut ::std::os::raw::c_void)
-    //  -> ::std::os::raw::c_int;
-    // pub fn zsock_set_linger(_self: *mut ::std::os::raw::c_void,
-    //                         linger: ::std::os::raw::c_int);
+
+    pub fn linger(&self) -> Result<i32> {
+        let linger = unsafe { czmq_sys::zsock_linger(self.zsock as *mut c_void) };
+        if linger == -1 { Err(()) } else { Ok(linger) }
+    }
+
+    pub fn set_linger(&self, linger: i32) {
+        unsafe { czmq_sys::zsock_set_linger(self.zsock as *mut c_void, linger) };
+    }
+
     // pub fn zsock_reconnect_ivl(_self: *mut ::std::os::raw::c_void)
     //  -> ::std::os::raw::c_int;
     // pub fn zsock_set_reconnect_ivl(_self: *mut ::std::os::raw::c_void,
@@ -511,14 +575,25 @@ impl ZSock {
     //  -> ::std::os::raw::c_int;
     // pub fn zsock_set_multicast_hops(_self: *mut ::std::os::raw::c_void,
     //                                 multicast_hops: ::std::os::raw::c_int);
-    // pub fn zsock_rcvtimeo(_self: *mut ::std::os::raw::c_void)
-    //  -> ::std::os::raw::c_int;
-    // pub fn zsock_set_rcvtimeo(_self: *mut ::std::os::raw::c_void,
-    //                           rcvtimeo: ::std::os::raw::c_int);
-    // pub fn zsock_sndtimeo(_self: *mut ::std::os::raw::c_void)
-    //  -> ::std::os::raw::c_int;
-    // pub fn zsock_set_sndtimeo(_self: *mut ::std::os::raw::c_void,
-    //                           sndtimeo: ::std::os::raw::c_int);
+
+    pub fn rcvtimeo(&self) -> Result<i32> {
+        let timeout = unsafe { czmq_sys::zsock_rcvtimeo(self.zsock as *mut c_void) };
+        if timeout == -1 { Err(()) } else { Ok(timeout) }
+    }
+
+    pub fn set_rcvtimeo(&self, timeout: i32) {
+        unsafe { czmq_sys::zsock_set_rcvtimeo(self.zsock as *mut c_void, timeout) };
+    }
+
+    pub fn sndtimeo(&self) -> Result<i32> {
+        let timeout = unsafe { czmq_sys::zsock_sndtimeo(self.zsock as *mut c_void) };
+        if timeout == -1 { Err(()) } else { Ok(timeout) }
+    }
+
+    pub fn set_sndtimeo(&self, timeout: i32) {
+        unsafe { czmq_sys::zsock_set_sndtimeo(self.zsock as *mut c_void, timeout) };
+    }
+
     // pub fn zsock_set_xpub_verbose(_self: *mut ::std::os::raw::c_void,
     //                               xpub_verbose: ::std::os::raw::c_int);
     // pub fn zsock_tcp_keepalive(_self: *mut ::std::os::raw::c_void)
@@ -553,10 +628,6 @@ impl ZSock {
     // pub fn zsock_last_endpoint(_self: *mut ::std::os::raw::c_void)
     //  -> *mut ::std::os::raw::c_char;
 
-    pub fn borrow_raw(&self) -> *mut czmq_sys::zsock_t {
-        self.zsock
-    }
-
     fn concat_endpoints(endpoints: &[&str]) -> String {
         let mut endpoint_str = String::new();
         let mut iter = 0;
@@ -571,6 +642,12 @@ impl ZSock {
         }
 
         endpoint_str
+    }
+}
+
+impl ZMsgable for ZSock {
+    fn borrow_raw(&self) -> *mut c_void {
+        self.zsock as *mut c_void
     }
 }
 
@@ -739,11 +816,11 @@ mod tests {
     fn test_sendrecv() {
         zsys_init();
 
-        // let server = ZSock::new_rep("inproc://test_send").unwrap();
+        let server = ZSock::new_rep("inproc://test_send").unwrap();
         let client = ZSock::new_req("inproc://test_send").unwrap();
 
         assert!(client.send_str("This is a test string.").is_ok());
-        // assert_eq!(server.recv("s"));
+        assert_eq!(server.recv_str().unwrap().unwrap(), "This is a test string.");
     }
 
     #[test]
@@ -765,5 +842,110 @@ mod tests {
         let msg = ZMsg::new_signal(1).unwrap();
         msg.zsend(&mut client).unwrap();
         assert!(server.wait().is_ok());
+    }
+
+    #[test]
+    fn test_rcvtimeo() {
+        zsys_init();
+
+        let zsock = ZSock::new(zmq::REP);
+        zsock.set_rcvtimeo(2000);
+        assert_eq!(zsock.rcvtimeo().unwrap(), 2000);
+    }
+
+    #[test]
+    fn test_sndtimeo() {
+        zsys_init();
+
+        let zsock = ZSock::new(zmq::REP);
+        zsock.set_sndtimeo(2000);
+        assert_eq!(zsock.sndtimeo().unwrap(), 2000);
+    }
+
+    #[test]
+    fn test_linger() {
+        zsys_init();
+
+        let zsock = ZSock::new(zmq::REP);
+        zsock.set_linger(2000);
+        assert_eq!(zsock.linger().unwrap(), 2000);
+    }
+
+    #[test]
+    fn test_mechanism() {
+        zsys_init();
+
+        let zsock = ZSock::new(zmq::REP);
+        assert_eq!(zsock.mechanism().unwrap(), zmq::Mechanism::ZMQ_NULL);
+
+        zsock.set_plain_server(true);
+        assert_eq!(zsock.mechanism().unwrap(), zmq::Mechanism::ZMQ_PLAIN);
+
+        zsock.set_curve_server(true);
+        assert_eq!(zsock.mechanism().unwrap(), zmq::Mechanism::ZMQ_CURVE);
+
+        // zsock.set_gssapi_server(true);
+        // assert_eq!(zsock.mechanism().unwrap(), zmq::Mechanism::ZMQ_GSSAPI);
+    }
+
+    #[test]
+    fn test_plain_server() {
+        zsys_init();
+
+        let zsock = ZSock::new(zmq::REP);
+        assert!(!zsock.plain_server());
+        zsock.set_plain_server(true);
+        assert!(zsock.plain_server());
+    }
+
+    #[test]
+    fn test_plain_username() {
+        zsys_init();
+
+        let zsock = ZSock::new(zmq::REP);
+        zsock.set_plain_username("jnrvicepresident");
+        assert_eq!(zsock.plain_username().unwrap().unwrap(), "jnrvicepresident");
+    }
+
+    #[test]
+    fn test_plain_password() {
+        zsys_init();
+
+        let zsock = ZSock::new(zmq::REP);
+        zsock.set_plain_password("ohtheinternet'soncomputersnow");
+        assert_eq!(zsock.plain_password().unwrap().unwrap(), "ohtheinternet'soncomputersnow");
+    }
+
+    #[test]
+    fn test_curve_server() {
+        zsys_init();
+
+        let zsock = ZSock::new(zmq::REP);
+        assert!(!zsock.curve_server());
+        zsock.set_curve_server(true);
+        assert!(zsock.curve_server());
+    }
+
+    #[test]
+    fn test_curve_keys() {
+        zsys_init();
+
+        let zsock = ZSock::new(zmq::REP);
+        let keypair = zmq::CurveKeypair::new().unwrap();
+
+        zsock.set_curve_publickey(&keypair.public_key);
+        assert_eq!(zsock.curve_publickey().unwrap().unwrap(), &keypair.public_key);
+        zsock.set_curve_publickey_bin(&zmq::z85_decode(&keypair.public_key));
+        assert_eq!(zsock.curve_publickey().unwrap().unwrap(), &keypair.public_key);
+
+        zsock.set_curve_secretkey(&keypair.secret_key);
+        assert_eq!(zsock.curve_secretkey().unwrap().unwrap(), &keypair.secret_key);
+        zsock.set_curve_secretkey_bin(&zmq::z85_decode(&keypair.secret_key));
+        assert_eq!(zsock.curve_secretkey().unwrap().unwrap(), &keypair.secret_key);
+
+        zsock.set_curve_serverkey(&keypair.secret_key);
+        assert_eq!(zsock.curve_serverkey().unwrap().unwrap(), &keypair.secret_key);
+        zsock.set_curve_serverkey_bin(&zmq::z85_decode(&keypair.secret_key));
+        assert_eq!(zsock.curve_serverkey().unwrap().unwrap(), &keypair.secret_key);
     }
 }

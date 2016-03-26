@@ -2,6 +2,8 @@
 
 use {czmq_sys, ZMsg, ZSock};
 use std::{ptr, result};
+use std::os::raw::c_void;
+use zmsg::ZMsgable;
 
 // Generic error code "-1" doesn't map to an error message, so just
 // return an empty tuple.
@@ -11,6 +13,8 @@ pub struct ZActor {
     zactor: *mut czmq_sys::zactor_t,
 }
 
+unsafe impl Send for ZActor {}
+
 impl Drop for ZActor {
     fn drop(&mut self) {
         unsafe { czmq_sys::zactor_destroy(&mut self.zactor) };
@@ -18,7 +22,6 @@ impl Drop for ZActor {
 }
 
 impl ZActor {
-    // @todo Missing `args` argument
     pub fn new(task: czmq_sys::zactor_fn) -> Result<ZActor> {
         let zactor = unsafe { czmq_sys::zactor_new(task, ptr::null_mut()) };
 
@@ -31,13 +34,21 @@ impl ZActor {
         }
     }
 
-    pub fn send(&self, msg: &mut ZMsg) -> Result<()> {
-        let rc = unsafe { czmq_sys::zactor_send(self.zactor, &mut msg.borrow_raw()) };
+    pub fn from_raw(zactor: *mut czmq_sys::zactor_t) -> ZActor {
+        ZActor {
+            zactor: zactor
+        }
+    }
+
+    pub fn send(&self, msg: ZMsg) -> Result<()> {
+        let rc = unsafe { czmq_sys::zactor_send(self.zactor, &mut msg.into_raw()) };
         if rc == -1 { Err(()) } else { Ok(()) }
     }
 
     pub fn send_str(&self, string: &str) -> Result<()> {
-        unimplemented!();
+        let msg = ZMsg::new();
+        try!(msg.addstr(string));
+        self.send(msg)
     }
 
     pub fn recv(&self) -> Result<ZMsg> {
@@ -51,6 +62,12 @@ impl ZActor {
     }
 
     pub fn sock(&self) -> ZSock {
-        ZSock::from_raw(unsafe { czmq_sys::zactor_sock(self.zactor) })
+        ZSock::from_raw(unsafe { czmq_sys::zactor_sock(self.zactor) }, true)
+    }
+}
+
+impl ZMsgable for ZActor {
+    fn borrow_raw(&self) -> *mut c_void {
+        self.zactor as *mut c_void
     }
 }

@@ -5,6 +5,7 @@ use std::{ptr, result, slice};
 use std::ffi::{CStr, CString};
 use std::str::{self, Utf8Error};
 use std::os::raw::c_void;
+use zmsg::ZMsgable;
 use zmq;
 
 // Generic error code "-1" doesn't map to an error message, so just

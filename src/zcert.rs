@@ -1,10 +1,11 @@
 //! Module: czmq-zcert
 
-use {czmq_sys, ZList};
+use {czmq_sys, ZList, ZSock};
 use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
+use std::os::raw::{c_char, c_void};
 use std::{ptr, result, slice};
 use zmq::Socket;
+use zmsg::ZMsgable;
 
 const KEY_SIZE: usize = 32;
 
@@ -127,6 +128,10 @@ impl ZCert {
 
     pub fn apply(&self, sock: &mut Socket) {
         unsafe { czmq_sys::zcert_apply(self.zcert, sock.borrow_raw()) };
+    }
+
+    pub fn zapply(&self, sock: &ZSock) {
+        unsafe { czmq_sys::zcert_apply(self.zcert, sock.borrow_raw() as *mut c_void) };
     }
 
     pub fn dup(&self) -> ZCert {

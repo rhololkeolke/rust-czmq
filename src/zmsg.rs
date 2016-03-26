@@ -1,10 +1,9 @@
 //! Module: czmq-zmsg
 
-use {czmq_sys, ZFrame, ZSock};
-use std::{ptr, result};
+use {czmq_sys, ZFrame};
+use std::{mem, ptr, result};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
-use std::str::Utf8Error;
 use zmq;
 
 // Generic error code "-1" doesn't map to an error message, so just
@@ -13,11 +12,14 @@ pub type Result<T> = result::Result<T, ()>;
 
 pub struct ZMsg {
     zmsg: *mut czmq_sys::zmsg_t,
+    destroyed: bool,
 }
 
 impl Drop for ZMsg {
     fn drop(&mut self) {
-        unsafe { czmq_sys::zmsg_destroy(&mut self.zmsg) };
+        if !self.destroyed {
+            unsafe { czmq_sys::zmsg_destroy(&mut self.zmsg) };
+        }
     }
 }
 
@@ -25,21 +27,29 @@ impl ZMsg {
     pub fn new() -> ZMsg {
         ZMsg {
             zmsg: unsafe { czmq_sys::zmsg_new() },
+            destroyed: false,
         }
     }
 
     pub fn from_raw(zmsg: *mut czmq_sys::zmsg_t) -> ZMsg {
         ZMsg {
             zmsg: zmsg,
+            destroyed: false,
         }
+    }
+
+    pub fn into_raw(self) -> *mut czmq_sys::zmsg_t {
+        let mut msg = self;
+        msg.destroyed = true;
+        msg.zmsg
     }
 
     pub fn recv(source: &mut zmq::Socket) -> Result<ZMsg> {
         Self::do_recv(source.borrow_raw())
     }
 
-    pub fn zrecv(source: &mut ZSock) -> Result<ZMsg> {
-        Self::do_recv(source.borrow_raw() as *mut c_void)
+    pub fn zrecv(source: &ZMsgable) -> Result<ZMsg> {
+        Self::do_recv(source.borrow_raw())
     }
 
     fn do_recv(source: *mut c_void) -> Result<ZMsg> {
@@ -50,6 +60,7 @@ impl ZMsg {
         } else {
             Ok(ZMsg {
                 zmsg: zmsg,
+                destroyed: false,
             })
         }
     }
@@ -76,6 +87,7 @@ impl ZMsg {
         } else {
             Ok(ZMsg {
                 zmsg: zmsg,
+                destroyed: false,
             })
         }
     }
@@ -88,6 +100,7 @@ impl ZMsg {
         } else {
             Ok(ZMsg {
                 zmsg: zmsg,
+                destroyed: false,
             })
         }
     }
@@ -97,7 +110,7 @@ impl ZMsg {
         zmsg.do_send(dest.borrow_raw())
     }
 
-    pub fn zsend(self, dest: &mut ZSock) -> Result<()> {
+    pub fn zsend(self, dest: &mut ZMsgable) -> Result<()> {
         let mut zmsg = self;
         zmsg.do_send(dest.borrow_raw() as *mut c_void)
     }
@@ -129,6 +142,10 @@ impl ZMsg {
     pub fn addstr(&self, string: &str) -> Result<()> {
         let string_c = CString::new(string).unwrap_or(CString::new("").unwrap());
         let rc = unsafe { czmq_sys::zmsg_addstr(self.zmsg, string_c.as_ptr()) };
+
+        // Deliberately leak this memory, which will be managed by C
+        mem::forget(string_c);
+
         if rc == -1 { Err(()) } else { Ok(()) }
     }
 
@@ -139,14 +156,18 @@ impl ZMsg {
     //                     format: *const ::std::os::raw::c_char, ...)
     //  -> ::std::os::raw::c_int;
 
-    pub fn popstr<'a>(&'a self) -> Result<result::Result<&'a str, Utf8Error>> {
+    pub fn popstr(&self) -> Result<result::Result<String, Vec<u8>>> {
         let ptr = unsafe { czmq_sys::zmsg_popstr(self.zmsg) };
 
         if ptr == ptr::null_mut() {
             Err(())
         } else {
-            let c_str = unsafe { CStr::from_ptr(ptr) };
-            Ok(c_str.to_str())
+            let c_string = unsafe { CStr::from_ptr(ptr).to_owned() };
+            let bytes = c_string.as_bytes().to_vec();
+            match c_string.into_string() {
+                Ok(s) => Ok(Ok(s)),
+                Err(_) => Ok(Err(bytes))
+            }
         }
     }
 
@@ -183,6 +204,10 @@ impl ZMsg {
     pub fn borrow_raw(&self) -> *mut czmq_sys::zmsg_t {
         self.zmsg
     }
+}
+
+pub trait ZMsgable {
+    fn borrow_raw(&self) -> *mut c_void;
 }
 
 #[cfg(test)]
