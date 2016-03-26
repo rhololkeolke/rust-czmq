@@ -22,7 +22,6 @@ addons:
     - pkg-config
     - libtool
     - git
-    - ca-certificates
 before_script:
 - |
   pip install 'travis-cargo<0.2' --user &&
@@ -30,21 +29,21 @@ before_script:
   export LIBRARY_PATH=$HOME/lib &&
   export LD_LIBRARY_PATH=$HOME/lib &&
   export PKG_CONFIG_PATH=$HOME/lib/pkgconfig &&
-  wget https://download.libsodium.org/libsodium/releases/libsodium-1.0.8.tar.gz &&
-  wget https://download.libsodium.org/libsodium/releases/libsodium-1.0.8.tar.gz.sig &&
-  wget https://download.libsodium.org/jedi.gpg.asc &&
+  curl -O https://download.libsodium.org/libsodium/releases/libsodium-1.0.8.tar.gz &&
+  curl -O https://download.libsodium.org/libsodium/releases/libsodium-1.0.8.tar.gz.sig &&
+  curl -O https://download.libsodium.org/jedi.gpg.asc &&
   gpg --import jedi.gpg.asc &&
   gpg --verify libsodium-1.0.8.tar.gz.sig libsodium-1.0.8.tar.gz &&
   tar zxf libsodium-1.0.8.tar.gz &&
   cd libsodium-1.0.8 &&
   ./configure --prefix=$HOME && make && make install &&
   cd .. &&
-  wget https://github.com/zeromq/zeromq4-1/archive/v4.1.4.tar.gz &&
+  curl -O https://github.com/zeromq/zeromq4-1/archive/v4.1.4.tar.gz &&
   tar zxf v4.1.4.tar.gz &&
   cd zeromq4-1-4.1.4 &&
   ./autogen.sh && ./configure --prefix=$HOME --with-libsodium && make && make install &&
   cd .. &&
-  wget https://github.com/zeromq/czmq/archive/v3.0.2.tar.gz &&
+  curl -O https://github.com/zeromq/czmq/archive/v3.0.2.tar.gz &&
   tar zxf v3.0.2.tar.gz &&
   cd czmq-3.0.2 &&
   ./autogen.sh && ./configure --prefix=$HOME && make && make install &&
