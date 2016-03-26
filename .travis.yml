@@ -22,6 +22,7 @@ addons:
     - pkg-config
     - libtool
     - git
+    - ca-certificates
 before_script:
 - |
   pip install 'travis-cargo<0.2' --user &&
