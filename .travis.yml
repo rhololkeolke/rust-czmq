@@ -44,9 +44,8 @@ before_script:
   cd zeromq4-1-4.1.4 &&
   ./autogen.sh && ./configure --prefix=$HOME --with-libsodium && make && make install &&
   cd .. &&
-  curl -sSOL https://github.com/zeromq/czmq/archive/v3.0.2.tar.gz &&
-  tar zxf v3.0.2.tar.gz &&
-  cd czmq-3.0.2 &&
+  git clone https://github.com/zeromq/czmq &&
+  cd czmq &&
   ./autogen.sh && ./configure --prefix=$HOME && make && make install &&
   cd ..
 script:
