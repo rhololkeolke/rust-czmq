@@ -9,6 +9,7 @@ extern crate tempdir;
 extern crate tempfile;
 extern crate zmq;
 
+mod error;
 mod zactor;
 mod zauth;
 mod zcert;
@@ -18,6 +19,7 @@ mod zmonitor;
 mod zmsg;
 mod zsock;
 
+pub use error::{Error, ErrorKind};
 pub use zactor::ZActor;
 pub use zauth::ZAuth;
 pub use zcert::ZCert;
@@ -26,6 +28,9 @@ pub use zlist::ZList;
 pub use zmonitor::{ZMonitor, ZMonitorEvents};
 pub use zmsg::ZMsg;
 pub use zsock::ZSock;
+
+use std::result;
+pub type Result<T> = result::Result<T, Error>;
 
 // Each new ZSock calls zsys_init(), which is a non-threadsafe
 // fn. To mitigate the race condition, wrap it in a Once struct.

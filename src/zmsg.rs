@@ -1,19 +1,18 @@
 //! Module: czmq-zmsg
 
-use {czmq_sys, ZFrame};
-use std::{mem, ptr, result};
+use {czmq_sys, Error, ErrorKind, Result, ZFrame};
+use std::{error, fmt, mem, ptr, result};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 use zmq;
-
-// Generic error code "-1" doesn't map to an error message, so just
-// return an empty tuple.
-pub type Result<T> = result::Result<T, ()>;
 
 pub struct ZMsg {
     zmsg: *mut czmq_sys::zmsg_t,
     destroyed: bool,
 }
+
+unsafe impl Send for ZMsg {}
+unsafe impl Sync for ZMsg {}
 
 impl Drop for ZMsg {
     fn drop(&mut self) {
@@ -56,7 +55,7 @@ impl ZMsg {
         let zmsg = unsafe { czmq_sys::zmsg_recv(source) };
 
         if zmsg == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZMsgError::CmdFailed))
         } else {
             Ok(ZMsg {
                 zmsg: zmsg,
@@ -73,7 +72,7 @@ impl ZMsg {
         let zframe = unsafe { czmq_sys::zmsg_encode(self.zmsg) };
 
         if zframe == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZMsgError::CmdFailed))
         } else {
             Ok(ZFrame::from_raw(zframe))
         }
@@ -83,7 +82,7 @@ impl ZMsg {
         let zmsg = unsafe { czmq_sys::zmsg_decode(frame.borrow_raw()) };
 
         if zmsg == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZMsgError::CmdFailed))
         } else {
             Ok(ZMsg {
                 zmsg: zmsg,
@@ -96,7 +95,7 @@ impl ZMsg {
         let zmsg = unsafe { czmq_sys::zmsg_new_signal(status) };
 
         if zmsg == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZMsgError::CmdFailed))
         } else {
             Ok(ZMsg {
                 zmsg: zmsg,
@@ -117,7 +116,11 @@ impl ZMsg {
 
     fn do_send(&mut self, dest: *mut c_void) -> Result<()> {
         let rc = unsafe { czmq_sys::zmsg_send(&mut self.zmsg, dest) };
-        if rc == -1 { Err(()) } else { Ok(()) }
+        if rc == -1 {
+            Err(Error::new(ErrorKind::NonZero, ZMsgError::CmdFailed))
+        } else {
+            Ok(())
+        }
     }
 
     // pub fn zmsg_sendm(self_p: *mut *mut zmsg_t,
@@ -146,7 +149,11 @@ impl ZMsg {
         // Deliberately leak this memory, which will be managed by C
         mem::forget(string_c);
 
-        if rc == -1 { Err(()) } else { Ok(()) }
+        if rc == -1 {
+            Err(Error::new(ErrorKind::NonZero, ZMsgError::CmdFailed))
+        } else {
+            Ok(())
+        }
     }
 
     // pub fn zmsg_pushstrf(_self: *mut zmsg_t,
@@ -160,7 +167,7 @@ impl ZMsg {
         let ptr = unsafe { czmq_sys::zmsg_popstr(self.zmsg) };
 
         if ptr == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZMsgError::CmdFailed))
         } else {
             let c_string = unsafe { CStr::from_ptr(ptr).to_owned() };
             let bytes = c_string.as_bytes().to_vec();
@@ -186,7 +193,11 @@ impl ZMsg {
 
     pub fn signal(&self) -> Result<u8> {
         let signal = unsafe { czmq_sys::zmsg_signal(self.zmsg) };
-        if signal == -1 { Err(()) } else { Ok(signal as u8) }
+        if signal == -1 {
+            Err(Error::new(ErrorKind::NonZero, ZMsgError::CmdFailed))
+        } else {
+            Ok(signal as u8)
+        }
     }
 
     // pub fn zmsg_is(_self: *mut ::std::os::raw::c_void) -> u8;
@@ -208,6 +219,27 @@ impl ZMsg {
 
 pub trait ZMsgable {
     fn borrow_raw(&self) -> *mut c_void;
+}
+
+#[derive(Debug)]
+pub enum ZMsgError {
+    CmdFailed,
+}
+
+impl fmt::Display for ZMsgError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            ZMsgError::CmdFailed => write!(f, "ZMsg command failed"),
+        }
+    }
+}
+
+impl error::Error for ZMsgError {
+    fn description(&self) -> &str {
+        match *self {
+            ZMsgError::CmdFailed => "ZMsg command failed",
+        }
+    }
 }
 
 #[cfg(test)]

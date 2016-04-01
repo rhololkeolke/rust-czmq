@@ -1,16 +1,12 @@
 //! Module: czmq-zframe
 
-use {czmq_sys, ZSock};
-use std::{ptr, result, slice};
+use {czmq_sys, Error, ErrorKind, Result, ZSock};
+use std::{error, fmt, ptr, result, slice};
 use std::ffi::{CStr, CString};
 use std::str::{self, Utf8Error};
 use std::os::raw::c_void;
 use zmsg::ZMsgable;
 use zmq;
-
-// Generic error code "-1" doesn't map to an error message, so just
-// return an empty tuple.
-pub type Result<T> = result::Result<T, ()>;
 
 bitflags! {
     pub flags Flags: i32 {
@@ -23,6 +19,9 @@ bitflags! {
 pub struct ZFrame {
     zframe: *mut czmq_sys::zframe_t,
 }
+
+unsafe impl Send for ZFrame {}
+unsafe impl Sync for ZFrame {}
 
 impl Drop for ZFrame {
     fn drop(&mut self) {
@@ -37,7 +36,7 @@ impl ZFrame {
         unsafe { CString::from_raw(data_c) };
 
         if zframe == ptr::null_mut() {
-            return Err(());
+            return Err(Error::new(ErrorKind::NullPtr, ZFrameError::Instantiate));
         }
 
         Ok(ZFrame {
@@ -49,7 +48,7 @@ impl ZFrame {
         let zframe = unsafe { czmq_sys::zframe_new_empty() };
 
         if zframe == ptr::null_mut() {
-            return Err(());
+            return Err(Error::new(ErrorKind::NullPtr, ZFrameError::Instantiate));
         }
 
         Ok(ZFrame {
@@ -82,7 +81,7 @@ impl ZFrame {
         let zframe = unsafe { czmq_sys::zframe_recv(source) };
 
         if zframe == ptr::null_mut() {
-            return Err(());
+            return Err(Error::new(ErrorKind::NullPtr, ZFrameError::CmdFailed));
         }
 
         Ok(ZFrame {
@@ -123,7 +122,11 @@ impl ZFrame {
     fn do_send(&mut self, dest: *mut c_void, flags: Option<Flags>) -> Result<i32> {
         let flags_c = if let Some(f) = flags { f.bits() } else { 0 };
         let size = unsafe { czmq_sys::zframe_send(&mut self.zframe as *mut *mut czmq_sys::zframe_t, dest, flags_c) };
-        if size == -1i32 { Err(()) } else { Ok(size) }
+        if size == -1 {
+            Err(Error::new(ErrorKind::NonZero, ZFrameError::CmdFailed))
+        } else {
+            Ok(size)
+        }
     }
 
     pub fn size(&self) -> usize {
@@ -134,7 +137,7 @@ impl ZFrame {
         let data = unsafe { czmq_sys::zframe_data(self.zframe) };
 
         if data == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZFrameError::CmdFailed))
         } else {
             let s = unsafe { slice::from_raw_parts(data, self.size()) };
             Ok(str::from_utf8(s))
@@ -145,7 +148,7 @@ impl ZFrame {
         let zframe = unsafe { czmq_sys::zframe_dup(self.zframe) };
 
         if zframe == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZFrameError::CmdFailed))
         } else {
             Ok(ZFrame {
                 zframe: zframe,
@@ -157,7 +160,7 @@ impl ZFrame {
         let hex = unsafe { czmq_sys::zframe_strhex(self.zframe) };
 
         if hex == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZFrameError::CmdFailed))
         } else {
             Ok(unsafe { CStr::from_ptr(hex) }.to_str())
         }
@@ -167,7 +170,7 @@ impl ZFrame {
         let string = unsafe { czmq_sys::zframe_strdup(self.zframe) };
 
         if string == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZFrameError::CmdFailed))
         } else {
             let cstr = unsafe { CStr::from_ptr(string) }.to_str();
             match cstr {
@@ -207,6 +210,30 @@ impl ZFrame {
 
     pub fn borrow_raw(&self) -> *mut czmq_sys::zframe_t {
         self.zframe
+    }
+}
+
+#[derive(Debug)]
+pub enum ZFrameError {
+    Instantiate,
+    CmdFailed,
+}
+
+impl fmt::Display for ZFrameError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            ZFrameError::Instantiate => write!(f, "Could not instantiate new ZFrame struct"),
+            ZFrameError::CmdFailed => write!(f, "ZFrame command failed"),
+        }
+    }
+}
+
+impl error::Error for ZFrameError {
+    fn description(&self) -> &str {
+        match *self {
+            ZFrameError::Instantiate => "Could not instantiate new ZFrame struct",
+            ZFrameError::CmdFailed => "ZFrame command failed",
+        }
     }
 }
 

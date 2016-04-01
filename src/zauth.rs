@@ -1,15 +1,12 @@
 //! Module: czmq-zauth
 
-use {czmq_sys, ZActor, ZMsg};
-use std::result;
-
-// Generic error code "-1" doesn't map to an error message, so just
-// return an empty tuple.
-pub type Result<T> = result::Result<T, ()>;
+use {czmq_sys, Result, ZActor, ZMsg};
 
 pub struct ZAuth {
     zactor: ZActor,
 }
+
+unsafe impl Send for ZAuth {}
 
 impl ZAuth {
     pub fn new() -> Result<ZAuth> {

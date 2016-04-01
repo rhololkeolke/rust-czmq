@@ -1,13 +1,9 @@
 //! Module: czmq-zactor
 
-use {czmq_sys, ZMsg, ZSock};
-use std::{ptr, result};
+use {czmq_sys, Error, ErrorKind, Result, ZMsg, ZSock};
+use std::{error, fmt, ptr};
 use std::os::raw::c_void;
 use zmsg::ZMsgable;
-
-// Generic error code "-1" doesn't map to an error message, so just
-// return an empty tuple.
-pub type Result<T> = result::Result<T, ()>;
 
 pub struct ZActor {
     zactor: *mut czmq_sys::zactor_t,
@@ -26,7 +22,7 @@ impl ZActor {
         let zactor = unsafe { czmq_sys::zactor_new(task, ptr::null_mut()) };
 
         if zactor == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZActorError::Instantiate))
         } else {
             Ok(ZActor {
                 zactor: zactor,
@@ -42,7 +38,11 @@ impl ZActor {
 
     pub fn send(&self, msg: ZMsg) -> Result<()> {
         let rc = unsafe { czmq_sys::zactor_send(self.zactor, &mut msg.into_raw()) };
-        if rc == -1 { Err(()) } else { Ok(()) }
+        if rc == -1 {
+            Err(Error::new(ErrorKind::NonZero, ZActorError::CmdFailed))
+        } else {
+            Ok(())
+        }
     }
 
     pub fn send_str(&self, string: &str) -> Result<()> {
@@ -55,7 +55,7 @@ impl ZActor {
         let zmsg_ptr = unsafe { czmq_sys::zactor_recv(self.zactor) };
 
         if zmsg_ptr == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZActorError::CmdFailed))
         } else {
             Ok(ZMsg::from_raw(zmsg_ptr))
         }
@@ -69,5 +69,29 @@ impl ZActor {
 impl ZMsgable for ZActor {
     fn borrow_raw(&self) -> *mut c_void {
         self.zactor as *mut c_void
+    }
+}
+
+#[derive(Debug)]
+pub enum ZActorError {
+    Instantiate,
+    CmdFailed,
+}
+
+impl fmt::Display for ZActorError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            ZActorError::Instantiate => write!(f, "Could not instantiate new ZActor struct"),
+            ZActorError::CmdFailed => write!(f, "ZActor command failed"),
+        }
+    }
+}
+
+impl error::Error for ZActorError {
+    fn description(&self) -> &str {
+        match *self {
+            ZActorError::Instantiate => "Could not instantiate new ZActor struct",
+            ZActorError::CmdFailed => "ZActor command failed",
+        }
     }
 }

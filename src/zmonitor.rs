@@ -1,13 +1,9 @@
 //! Module: czmq-zmonitor
 
-use {czmq_sys, ZActor, ZMsg, ZSock};
+use {czmq_sys, Error, ErrorKind, Result, ZActor, ZMsg, ZSock};
+use std::{error, fmt, ptr, result};
 use std::os::raw::c_void;
-use std::{ptr, result};
 use zmsg::ZMsgable;
-
-// Generic error code "-1" doesn't map to an error message, so just
-// return an empty tuple.
-pub type Result<T> = result::Result<T, ()>;
 
 #[derive(Debug, PartialEq)]
 pub enum ZMonitorEvents {
@@ -66,12 +62,14 @@ pub struct ZMonitor {
     zactor: ZActor,
 }
 
+unsafe impl Send for ZMonitor {}
+
 impl ZMonitor {
     pub fn new(zsock: &ZSock) -> Result<ZMonitor> {
         let zactor = unsafe { czmq_sys::zactor_new(czmq_sys::zmonitor, zsock.borrow_raw() as *mut c_void) };
 
         if zactor == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZMonitorError::Instantiate))
         } else {
             Ok(ZMonitor {
                 zactor: ZActor::from_raw(zactor),
@@ -104,6 +102,27 @@ impl ZMonitor {
 
     pub fn verbose(&self) -> Result<()> {
         self.zactor.send_str("VERBOSE")
+    }
+}
+
+#[derive(Debug)]
+pub enum ZMonitorError {
+    Instantiate,
+}
+
+impl fmt::Display for ZMonitorError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            ZMonitorError::Instantiate => write!(f, "Could not instantiate new ZMonitor struct"),
+        }
+    }
+}
+
+impl error::Error for ZMonitorError {
+    fn description(&self) -> &str {
+        match *self {
+            ZMonitorError::Instantiate => "Could not instantiate new ZMonitor struct",
+        }
     }
 }
 

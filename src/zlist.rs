@@ -13,6 +13,9 @@ pub struct ZList {
     zlist: *mut czmq_sys::zlist_t,
 }
 
+unsafe impl Send for ZList {}
+unsafe impl Sync for ZList {}
+
 impl Drop for ZList {
     fn drop(&mut self) {
         unsafe { czmq_sys::zlist_destroy(&mut self.zlist) };
@@ -61,12 +64,8 @@ impl ZList {
     #[cfg(test)]
     fn append(&self, value: &str) -> Result<(), ()> {
         let value_c = CString::new(value).unwrap_or(CString::new("").unwrap());
-        unsafe {
-            let rc = czmq_sys::zlist_append(self.zlist, value_c.into_raw() as *mut c_void);
-            // Generic error code "-1" doesn't map to an error
-            // message, so just return an empty tuple.
-            if rc == -1i32 { Err(()) } else { Ok(()) }
-        }
+        let rc = unsafe { czmq_sys::zlist_append(self.zlist, value_c.into_raw() as *mut c_void) };
+        if rc == -1 { Err(()) } else { Ok(()) }
     }
 }
 

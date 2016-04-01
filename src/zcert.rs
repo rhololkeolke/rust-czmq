@@ -1,21 +1,20 @@
 //! Module: czmq-zcert
 
-use {czmq_sys, ZList, ZSock};
+use {czmq_sys, Error, ErrorKind, Result, ZList, ZSock};
 use std::ffi::{CStr, CString};
 use std::os::raw::{c_char, c_void};
-use std::{ptr, result, slice};
+use std::{error, fmt, ptr, slice};
 use zmq::Socket;
 use zmsg::ZMsgable;
 
 const KEY_SIZE: usize = 32;
 
-// Generic error code "-1" doesn't map to an error message, so just
-// return an empty tuple.
-pub type Result<T> = result::Result<T, ()>;
-
 pub struct ZCert {
     zcert: *mut czmq_sys::zcert_t,
 }
+
+unsafe impl Send for ZCert {}
+unsafe impl Sync for ZCert {}
 
 impl Drop for ZCert {
     fn drop(&mut self) {
@@ -28,7 +27,7 @@ impl ZCert {
         let zcert = unsafe { czmq_sys::zcert_new() };
 
         if zcert == ptr::null_mut() {
-            return Err(());
+            return Err(Error::new(ErrorKind::NullPtr, ZCertError::Instantiate));
         }
 
         Ok(ZCert {
@@ -42,12 +41,17 @@ impl ZCert {
         }
     }
 
-    pub fn load(filename: &str) -> ZCert {
-        let filename_c = CString::new(filename).unwrap_or(CString::new("").unwrap());
+    pub fn load(filename: &str) -> Result<ZCert> {
+        let filename_c = try!(CString::new(filename));
+        let zcert = unsafe { czmq_sys::zcert_load(filename_c.as_ptr()) };
 
-        ZCert {
-            zcert: unsafe { czmq_sys::zcert_load(filename_c.as_ptr()) },
+        if zcert == ptr::null_mut() {
+            return Err(Error::new(ErrorKind::NullPtr, ZCertError::InvalidCert(filename_c.into_string().unwrap())));
         }
+
+        Ok(ZCert {
+            zcert: zcert,
+        })
     }
 
     pub fn public_key<'a>(&'a self) -> &'a mut [u8] {
@@ -85,12 +89,17 @@ impl ZCert {
         unsafe { czmq_sys::zcert_set_meta(self.zcert, key_c.as_ptr(), "%s\0".as_ptr() as *const i8, value_c.as_ptr()) };
     }
 
-    pub fn meta<'a>(&'a self, key: &str) -> &'a str {
-        let key_c = CString::new(key).unwrap_or(CString::new("").unwrap());
+    pub fn meta<'a>(&'a self, key: &str) -> Result<Option<&'a str>> {
+        let key_c = try!(CString::new(key));
 
-        unsafe {
+        let value = unsafe {
             let ptr = czmq_sys::zcert_meta(self.zcert, key_c.as_ptr());
-            CStr::from_ptr(ptr as *const c_char).to_str().unwrap_or("")
+            CStr::from_ptr(ptr as *const c_char)
+        };
+
+        match value.to_str() {
+            Ok(s) => Ok(Some(s)),
+            Err(_) => Ok(None),
         }
     }
 
@@ -100,29 +109,41 @@ impl ZCert {
     }
 
     pub fn save(&self, filename: &str) -> Result<()> {
-        let filename_c = CString::new(filename).unwrap_or(CString::new("").unwrap());
+        let filename_c = try!(CString::new(filename));
 
         unsafe {
             let rc = czmq_sys::zcert_save(self.zcert, filename_c.as_ptr());
-            if rc == -1i32 { Err(()) } else { Ok(()) }
+            if rc == -1 {
+                Err(Error::new(ErrorKind::NonZero, ZCertError::SavePath(filename_c.into_string().unwrap())))
+            } else {
+                Ok(())
+            }
         }
     }
 
     pub fn save_public(&self, filename: &str) -> Result<()> {
-        let filename_c = CString::new(filename).unwrap_or(CString::new("").unwrap());
+        let filename_c = try!(CString::new(filename));
 
         unsafe {
             let rc = czmq_sys::zcert_save_public(self.zcert, filename_c.as_ptr());
-            if rc == -1i32 { Err(()) } else { Ok(()) }
+            if rc == -1 {
+                Err(Error::new(ErrorKind::NonZero, ZCertError::SavePath(filename_c.into_string().unwrap())))
+            } else {
+                Ok(())
+            }
         }
     }
 
     pub fn save_secret(&self, filename: &str) -> Result<()> {
-        let filename_c = CString::new(filename).unwrap_or(CString::new("").unwrap());
+        let filename_c = try!(CString::new(filename));
 
         unsafe {
             let rc = czmq_sys::zcert_save_secret(self.zcert, filename_c.as_ptr());
-            if rc == -1i32 { Err(()) } else { Ok(()) }
+            if rc == -1 {
+                Err(Error::new(ErrorKind::NonZero, ZCertError::SavePath(filename_c.into_string().unwrap())))
+            } else {
+                Ok(())
+            }
         }
     }
 
@@ -149,6 +170,33 @@ impl ZCert {
 
     pub fn print(&self) {
         unsafe { czmq_sys::zcert_print(self.zcert) };
+    }
+}
+
+#[derive(Debug)]
+pub enum ZCertError {
+    Instantiate,
+    InvalidCert(String),
+    SavePath(String),
+}
+
+impl fmt::Display for ZCertError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            ZCertError::Instantiate => write!(f, "Could not instantiate new ZCert struct"),
+            ZCertError::InvalidCert(ref e) => write!(f, "Could not open certificate at path: {}", e),
+            ZCertError::SavePath(ref e) => write!(f, "Could not save certificate file to path: {}", e),
+        }
+    }
+}
+
+impl error::Error for ZCertError {
+    fn description(&self) -> &str {
+        match *self {
+            ZCertError::Instantiate => "Could not instantiate new ZCert struct",
+            ZCertError::InvalidCert(_) => "Certificate was invalid or non-existent",
+            ZCertError::SavePath(_) => "Could not save certificate file to given path",
+        }
     }
 }
 
@@ -202,7 +250,7 @@ mod tests {
     fn test_getset_meta() {
         let cert = create_cert();
         cert.set_meta("moo", "cow");
-        assert_eq!(cert.meta("moo"), "cow");
+        assert_eq!(cert.meta("moo").unwrap().unwrap(), "cow");
     }
 
     #[test]

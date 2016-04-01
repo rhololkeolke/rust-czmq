@@ -1,16 +1,12 @@
 //! Module: czmq-zsock
 
-use czmq_sys;
-use std::{ptr, result};
+use {czmq_sys, Error, ErrorKind, Result};
+use std::{error, fmt, ptr, result};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 use std::str::{Utf8Error};
 use zmsg::ZMsgable;
 use zmq;
-
-// Generic error code "-1" doesn't map to an error message, so just
-// return an empty tuple.
-pub type Result<T> = result::Result<T, ()>;
 
 pub struct ZSock {
     zsock: *mut czmq_sys::zsock_t,
@@ -39,7 +35,7 @@ impl ZSock {
         let zsock = unsafe { czmq_sys::zsock_new_pub(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZSockError::CreateSock))
         } else {
             Ok(ZSock {
                 zsock: zsock,
@@ -57,7 +53,7 @@ impl ZSock {
         let zsock = unsafe { czmq_sys::zsock_new_sub(CString::new(endpoint).unwrap().as_ptr(), subscribe_ptr) };
 
         if zsock == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZSockError::CreateSock))
         } else {
             Ok(ZSock {
                 zsock: zsock,
@@ -70,7 +66,7 @@ impl ZSock {
         let zsock = unsafe { czmq_sys::zsock_new_req(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZSockError::CreateSock))
         } else {
             Ok(ZSock {
                 zsock: zsock,
@@ -83,7 +79,7 @@ impl ZSock {
         let zsock = unsafe { czmq_sys::zsock_new_rep(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZSockError::CreateSock))
         } else {
             Ok(ZSock {
                 zsock: zsock,
@@ -96,7 +92,7 @@ impl ZSock {
         let zsock = unsafe { czmq_sys::zsock_new_dealer(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZSockError::CreateSock))
         } else {
             Ok(ZSock {
                 zsock: zsock,
@@ -109,7 +105,7 @@ impl ZSock {
         let zsock = unsafe { czmq_sys::zsock_new_router(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZSockError::CreateSock))
         } else {
             Ok(ZSock {
                 zsock: zsock,
@@ -122,7 +118,7 @@ impl ZSock {
         let zsock = unsafe { czmq_sys::zsock_new_push(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZSockError::CreateSock))
         } else {
             Ok(ZSock {
                 zsock: zsock,
@@ -135,7 +131,7 @@ impl ZSock {
         let zsock = unsafe { czmq_sys::zsock_new_pull(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZSockError::CreateSock))
         } else {
             Ok(ZSock {
                 zsock: zsock,
@@ -148,7 +144,7 @@ impl ZSock {
         let zsock = unsafe { czmq_sys::zsock_new_xpub(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZSockError::CreateSock))
         } else {
             Ok(ZSock {
                 zsock: zsock,
@@ -161,7 +157,7 @@ impl ZSock {
         let zsock = unsafe { czmq_sys::zsock_new_xsub(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZSockError::CreateSock))
         } else {
             Ok(ZSock {
                 zsock: zsock,
@@ -174,7 +170,7 @@ impl ZSock {
         let zsock = unsafe { czmq_sys::zsock_new_pair(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZSockError::CreateSock))
         } else {
             Ok(ZSock {
                 zsock: zsock,
@@ -187,7 +183,7 @@ impl ZSock {
         let zsock = unsafe { czmq_sys::zsock_new_stream(CString::new(endpoint).unwrap().as_ptr()) };
 
         if zsock == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZSockError::CreateSock))
         } else {
             Ok(ZSock {
                 zsock: zsock,
@@ -204,47 +200,68 @@ impl ZSock {
     }
 
     pub fn bind(&self, endpoint: &str) -> Result<i32> {
-        let rc = unsafe { czmq_sys::zsock_bind(self.zsock, "%s\0".as_ptr() as *const i8, endpoint.as_ptr() as *const i8) };
-        if rc == -1i32 { Err(()) } else { Ok(rc) }
+        let rc = unsafe { czmq_sys::zsock_bind(self.zsock, "%s\0".as_ptr() as *const i8, try!(CString::new(endpoint)).as_ptr() as *const i8) };
+        if rc == -1 {
+            Err(Error::new(ErrorKind::NonZero, ZSockError::CmdFailed))
+        } else {
+            Ok(rc)
+        }
     }
 
-    pub fn endpoint<'a>(&'a self) -> result::Result<&'a str, Utf8Error> {
+    pub fn endpoint<'a>(&'a self) -> Result<&'a str> {
         let endpoint_c = unsafe { czmq_sys::zsock_endpoint(self.zsock) };
 
         if endpoint_c == ptr::null() {
-            Ok("")
+            Err(Error::new(ErrorKind::NonZero, ZSockError::CmdFailed))
         } else {
-            unsafe { CStr::from_ptr(endpoint_c) }.to_str()
+            let s = try!(unsafe { CStr::from_ptr(endpoint_c) }.to_str());
+            Ok(s)
         }
     }
 
     pub fn unbind(&self, endpoint: &str) -> Result<()> {
         let rc = unsafe { czmq_sys::zsock_unbind(self.zsock, "%s\0".as_ptr() as *const i8, endpoint.as_ptr() as *const i8) };
-        if rc == -1i32 { Err(()) } else { Ok(()) }
+        if rc == -1 {
+            Err(Error::new(ErrorKind::NonZero, ZSockError::CmdFailed))
+        } else {
+            Ok(())
+        }
     }
 
     pub fn connect(&self, endpoint: &str) -> Result<()> {
-        let rc = unsafe { czmq_sys::zsock_connect(self.zsock, "%s\0".as_ptr() as *const i8, endpoint.as_ptr() as *const i8) };
-        if rc == -1i32 { Err(()) } else { Ok(()) }
+        let rc = unsafe { czmq_sys::zsock_connect(self.zsock, "%s\0".as_ptr() as *const i8, try!(CString::new(endpoint)).as_ptr() as *const i8) };
+        if rc == -1 {
+            Err(Error::new(ErrorKind::NonZero, ZSockError::CmdFailed))
+        } else {
+            Ok(())
+        }
     }
 
     pub fn disconnect(&self, endpoint: &str) -> Result<()> {
         let rc = unsafe { czmq_sys::zsock_disconnect(self.zsock, "%s\0".as_ptr() as *const i8, endpoint.as_ptr() as *const i8) };
-        if rc == -1i32 { Err(()) } else { Ok(()) }
+        if rc == -1 {
+            Err(Error::new(ErrorKind::NonZero, ZSockError::CmdFailed))
+        } else {
+            Ok(())
+        }
     }
 
     pub fn attach(&self, endpoints: &[&str], serverish: bool) -> Result<()> {
         let endpoints_c = CString::new(Self::concat_endpoints(endpoints)).unwrap_or(CString::new("").unwrap());
 
         let rc = unsafe { czmq_sys::zsock_attach(self.zsock, endpoints_c.as_ptr(), if serverish { 1 } else { 0 }) };
-        if rc == -1 { Err(()) } else { Ok(()) }
+        if rc == -1 {
+            Err(Error::new(ErrorKind::NonZero, ZSockError::CmdFailed))
+        } else {
+            Ok(())
+        }
     }
 
     pub fn type_str<'a>(&'a self) -> Result<result::Result<&'a str, Utf8Error>> {
         let ptr = unsafe { czmq_sys::zsock_type_str(self.zsock) };
 
         if ptr == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZSockError::CmdFailed))
         } else {
             let type_str = unsafe { CStr::from_ptr(ptr) };
             Ok(type_str.to_str())
@@ -253,17 +270,21 @@ impl ZSock {
 
     pub fn send_str(&self, data: &str) -> Result<()> {
         let data_c = CString::new(data).unwrap_or(CString::new("").unwrap());
+
         let rc = unsafe { czmq_sys::zsock_send(self.zsock as *mut c_void, "s\0".as_ptr() as *const i8, data_c.as_ptr()) };
-        if rc == -1 { Err(()) } else { Ok(()) }
+        if rc == -1 {
+            Err(Error::new(ErrorKind::NonZero, ZSockError::CmdFailed))
+        } else {
+            Ok(())
+        }
     }
 
     pub fn recv_str(&self) -> Result<result::Result<String, Vec<u8>>> {
         let mut data = ptr::null();
 
         let rc = unsafe { czmq_sys::zsock_recv(self.zsock as *mut c_void, "s\0".as_ptr() as *const i8, &mut data) };
-
         if rc == -1 {
-            Err(())
+            Err(Error::new(ErrorKind::NonZero, ZSockError::CmdFailed))
         } else {
             let c_str = unsafe { CStr::from_ptr(data) };
             let bytes = c_str.to_bytes();
@@ -287,7 +308,11 @@ impl ZSock {
 
     pub fn wait(&self) -> Result<()> {
         let rc = unsafe { czmq_sys::zsock_wait(self.zsock as *mut c_void) };
-        if rc == -1 { Err(()) } else { Ok(()) }
+        if rc == -1 {
+            Err(Error::new(ErrorKind::NonZero, ZSockError::CmdFailed))
+        } else {
+            Ok(())
+        }
     }
 
     // pub fn zsock_flush(_self: *mut ::std::os::raw::c_void);
@@ -316,7 +341,7 @@ impl ZSock {
         let domain = unsafe { czmq_sys::zsock_zap_domain(self.zsock as *mut c_void) };
 
         if domain == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZSockError::CmdFailed))
         } else {
             Ok(unsafe { CStr::from_ptr(domain) }.to_str())
         }
@@ -334,7 +359,7 @@ impl ZSock {
         let mechanism = unsafe { czmq_sys::zsock_mechanism(self.zsock as *mut c_void) };
 
         if mechanism == -1 {
-            Err(())
+            Err(Error::new(ErrorKind::NonZero, ZSockError::CmdFailed))
         } else {
             match mechanism {
                 0 => Ok(zmq::Mechanism::ZMQ_NULL),
@@ -358,7 +383,7 @@ impl ZSock {
         let username = unsafe { czmq_sys::zsock_plain_username(self.zsock as *mut c_void) };
 
         if username == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZSockError::CmdFailed))
         } else {
             Ok(unsafe { CStr::from_ptr(username) }.to_str())
         }
@@ -376,7 +401,7 @@ impl ZSock {
         let password = unsafe { czmq_sys::zsock_plain_password(self.zsock as *mut c_void) };
 
         if password == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZSockError::CmdFailed))
         } else {
             Ok(unsafe { CStr::from_ptr(password) }.to_str())
         }
@@ -402,7 +427,7 @@ impl ZSock {
         let key = unsafe { czmq_sys::zsock_curve_publickey(self.zsock as *mut c_void) };
 
         if key == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZSockError::CmdFailed))
         } else {
             Ok(unsafe { CStr::from_ptr(key) }.to_str())
         }
@@ -424,7 +449,7 @@ impl ZSock {
         let key = unsafe { czmq_sys::zsock_curve_secretkey(self.zsock as *mut c_void) };
 
         if key == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZSockError::CmdFailed))
         } else {
             Ok(unsafe { CStr::from_ptr(key) }.to_str())
         }
@@ -446,7 +471,7 @@ impl ZSock {
         let key = unsafe { czmq_sys::zsock_curve_serverkey(self.zsock as *mut c_void) };
 
         if key == ptr::null_mut() {
-            Err(())
+            Err(Error::new(ErrorKind::NullPtr, ZSockError::CmdFailed))
         } else {
             Ok(unsafe { CStr::from_ptr(key) }.to_str())
         }
@@ -547,7 +572,12 @@ impl ZSock {
 
     pub fn linger(&self) -> Result<i32> {
         let linger = unsafe { czmq_sys::zsock_linger(self.zsock as *mut c_void) };
-        if linger == -1 { Err(()) } else { Ok(linger) }
+
+        if linger == -1 {
+            Err(Error::new(ErrorKind::NonZero, ZSockError::CmdFailed))
+        } else {
+            Ok(linger)
+        }
     }
 
     pub fn set_linger(&self, linger: i32) {
@@ -578,7 +608,12 @@ impl ZSock {
 
     pub fn rcvtimeo(&self) -> Result<i32> {
         let timeout = unsafe { czmq_sys::zsock_rcvtimeo(self.zsock as *mut c_void) };
-        if timeout == -1 { Err(()) } else { Ok(timeout) }
+
+        if timeout == -1 {
+            Err(Error::new(ErrorKind::NonZero, ZSockError::CmdFailed))
+        } else {
+            Ok(timeout)
+        }
     }
 
     pub fn set_rcvtimeo(&self, timeout: i32) {
@@ -587,7 +622,12 @@ impl ZSock {
 
     pub fn sndtimeo(&self) -> Result<i32> {
         let timeout = unsafe { czmq_sys::zsock_sndtimeo(self.zsock as *mut c_void) };
-        if timeout == -1 { Err(()) } else { Ok(timeout) }
+
+        if timeout == -1 {
+            Err(Error::new(ErrorKind::NonZero, ZSockError::CmdFailed))
+        } else {
+            Ok(timeout)
+        }
     }
 
     pub fn set_sndtimeo(&self, timeout: i32) {
@@ -648,6 +688,30 @@ impl ZSock {
 impl ZMsgable for ZSock {
     fn borrow_raw(&self) -> *mut c_void {
         self.zsock as *mut c_void
+    }
+}
+
+#[derive(Debug)]
+pub enum ZSockError {
+    CreateSock,
+    CmdFailed,
+}
+
+impl fmt::Display for ZSockError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            ZSockError::CreateSock => write!(f, "Could not create socket"),
+            ZSockError::CmdFailed => write!(f, "Socket command failed"),
+        }
+    }
+}
+
+impl error::Error for ZSockError {
+    fn description(&self) -> &str {
+        match *self {
+            ZSockError::CreateSock => "Could not create socket",
+            ZSockError::CmdFailed => "Socket command failed",
+        }
     }
 }
 
