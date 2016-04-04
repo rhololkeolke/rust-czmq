@@ -660,8 +660,11 @@ impl ZSock {
     // pub fn zsock_set_tcp_accept_filter(_self: *mut ::std::os::raw::c_void,
     //                                    tcp_accept_filter:
     //                                        *const ::std::os::raw::c_char);
-    // pub fn zsock_rcvmore(_self: *mut ::std::os::raw::c_void)
-    //  -> ::std::os::raw::c_int;
+
+    pub fn rcvmore(&self) -> bool {
+        unsafe { czmq_sys::zsock_rcvmore(self.zsock as *mut c_void) == 1 }
+    }
+
     // pub fn zsock_fd(_self: *mut ::std::os::raw::c_void) -> SOCKET;
     // pub fn zsock_events(_self: *mut ::std::os::raw::c_void)
     //  -> ::std::os::raw::c_int;
