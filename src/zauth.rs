@@ -166,7 +166,7 @@ mod tests {
 
         let server = ZSock::new(zmq::PULL);
         let server_cert = ZCert::new().unwrap();
-        server_cert.zapply(&server);
+        server_cert.apply(&server);
         server.set_zap_domain("sky.net");
         server.set_curve_server(true);
         server.set_rcvtimeo(100);
@@ -174,7 +174,7 @@ mod tests {
 
         let client = ZSock::new(zmq::PUSH);
         let client_cert = ZCert::new().unwrap();
-        client_cert.zapply(&client);
+        client_cert.apply(&client);
         client.set_curve_serverkey(server_cert.public_txt());
         client.set_linger(100);
         client.set_sndtimeo(100);

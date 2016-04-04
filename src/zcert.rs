@@ -1,10 +1,9 @@
 //! Module: czmq-zcert
 
-use {czmq_sys, Error, ErrorKind, Result, ZList, ZSock};
+use {czmq_sys, Error, ErrorKind, Result, ZList};
 use std::ffi::{CStr, CString};
-use std::os::raw::{c_char, c_void};
+use std::os::raw::c_char;
 use std::{error, fmt, ptr, slice};
-use zmq::Socket;
 use zmsg::ZMsgable;
 
 const KEY_SIZE: usize = 32;
@@ -147,12 +146,8 @@ impl ZCert {
         }
     }
 
-    pub fn apply(&self, sock: &mut Socket) {
+    pub fn apply(&self, sock: &ZMsgable) {
         unsafe { czmq_sys::zcert_apply(self.zcert, sock.borrow_raw()) };
-    }
-
-    pub fn zapply(&self, sock: &ZSock) {
-        unsafe { czmq_sys::zcert_apply(self.zcert, sock.borrow_raw() as *mut c_void) };
     }
 
     pub fn dup(&self) -> ZCert {
@@ -202,6 +197,7 @@ impl error::Error for ZCertError {
 
 #[cfg(test)]
 mod tests {
+    use {ZSock, zsys_init};
     use super::*;
     use zmq;
 
@@ -263,13 +259,24 @@ mod tests {
     }
 
     #[test]
-    fn test_apply() {
+    fn test_apply_zmq() {
         let cert = create_cert();
         let mut ctx = zmq::Context::new();
-        let mut sock = ctx.socket(zmq::REQ).unwrap();
-        cert.apply(&mut sock);
+        let sock = ctx.socket(zmq::REQ).unwrap();
+        cert.apply(&sock);
         assert_eq!(sock.get_curve_publickey().unwrap().unwrap(), PUBLIC_TXT);
         assert_eq!(sock.get_curve_secretkey().unwrap().unwrap(), SECRET_TXT);
+    }
+
+    #[test]
+    fn test_apply_zsock() {
+        zsys_init();
+
+        let cert = create_cert();
+        let sock = ZSock::new_rep("inproc://zcert_test_apply_zsock").unwrap();
+        cert.apply(&sock);
+        assert_eq!(sock.curve_publickey().unwrap().unwrap(), PUBLIC_TXT);
+        assert_eq!(sock.curve_secretkey().unwrap().unwrap(), SECRET_TXT);
     }
 
     #[test]
