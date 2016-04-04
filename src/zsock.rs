@@ -904,10 +904,10 @@ mod tests {
         zsys_init();
 
         let server = ZSock::new_rep("inproc://zsock_wait").unwrap();
-        let mut client = ZSock::new_req("inproc://zsock_wait").unwrap();
+        let client = ZSock::new_req("inproc://zsock_wait").unwrap();
 
         let msg = ZMsg::new_signal(1).unwrap();
-        msg.zsend(&mut client).unwrap();
+        msg.send(&client).unwrap();
         assert!(server.wait().is_ok());
     }
 

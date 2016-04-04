@@ -10,6 +10,7 @@ extern crate tempfile;
 extern crate zmq;
 
 mod error;
+mod socket;
 mod zactor;
 mod zauth;
 mod zcert;

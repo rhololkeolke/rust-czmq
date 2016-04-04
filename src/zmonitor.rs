@@ -88,7 +88,7 @@ impl ZMonitor {
     }
 
     pub fn get_attr(&self) -> Result<result::Result<ZMonitorEvents, Vec<u8>>> {
-        let msg = try!(ZMsg::zrecv(&self.zactor));
+        let msg = try!(ZMsg::recv(&self.zactor));
         match try!(msg.popstr()) {
             Ok(s) => Ok(Ok(ZMonitorEvents::from_str(&s))),
             Err(v) => Ok(Err(v))

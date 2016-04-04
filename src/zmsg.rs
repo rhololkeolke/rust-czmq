@@ -4,7 +4,6 @@ use {czmq_sys, Error, ErrorKind, Result, ZFrame};
 use std::{error, fmt, mem, ptr, result};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
-use zmq;
 
 pub struct ZMsg {
     zmsg: *mut czmq_sys::zmsg_t,
@@ -43,16 +42,8 @@ impl ZMsg {
         msg.zmsg
     }
 
-    pub fn recv(source: &mut zmq::Socket) -> Result<ZMsg> {
-        Self::do_recv(source.borrow_raw())
-    }
-
-    pub fn zrecv(source: &ZMsgable) -> Result<ZMsg> {
-        Self::do_recv(source.borrow_raw())
-    }
-
-    fn do_recv(source: *mut c_void) -> Result<ZMsg> {
-        let zmsg = unsafe { czmq_sys::zmsg_recv(source) };
+    pub fn recv(source: &ZMsgable) -> Result<ZMsg> {
+        let zmsg = unsafe { czmq_sys::zmsg_recv(source.borrow_raw()) };
 
         if zmsg == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZMsgError::CmdFailed))
@@ -104,18 +95,10 @@ impl ZMsg {
         }
     }
 
-    pub fn send(self, dest: &mut zmq::Socket) -> Result<()> {
+    pub fn send(self, dest: &ZMsgable) -> Result<()> {
         let mut zmsg = self;
-        zmsg.do_send(dest.borrow_raw())
-    }
 
-    pub fn zsend(self, dest: &mut ZMsgable) -> Result<()> {
-        let mut zmsg = self;
-        zmsg.do_send(dest.borrow_raw() as *mut c_void)
-    }
-
-    fn do_send(&mut self, dest: *mut c_void) -> Result<()> {
-        let rc = unsafe { czmq_sys::zmsg_send(&mut self.zmsg, dest) };
+        let rc = unsafe { czmq_sys::zmsg_send(&mut zmsg.zmsg, dest.borrow_raw()) };
         if rc == -1 {
             Err(Error::new(ErrorKind::NonZero, ZMsgError::CmdFailed))
         } else {
@@ -126,7 +109,11 @@ impl ZMsg {
     // pub fn zmsg_sendm(self_p: *mut *mut zmsg_t,
     //                   dest: *mut ::std::os::raw::c_void)
     //  -> ::std::os::raw::c_int;
-    // pub fn zmsg_size(_self: *mut zmsg_t) -> size_t;
+
+    pub fn size(&self) -> usize {
+        unsafe { czmq_sys::zmsg_size(self.zmsg) as usize }
+    }
+
     // pub fn zmsg_content_size(_self: *mut zmsg_t) -> size_t;
     // pub fn zmsg_prepend(_self: *mut zmsg_t, frame_p: *mut *mut zframe_t)
     //  -> ::std::os::raw::c_int;
@@ -248,33 +235,33 @@ mod tests {
     use {zmq, ZSock, zsys_init};
 
     #[test]
-    fn test_sendrecv() {
+    fn test_sendrecv_zmq() {
         let mut ctx = zmq::Context::new();
 
         let mut server = ctx.socket(zmq::REP).unwrap();
-        server.bind("inproc://test").unwrap();
+        server.bind("inproc://zmsg_sendrecv_zmq").unwrap();
 
         let mut client = ctx.socket(zmq::REQ).unwrap();
-        client.connect("inproc://test").unwrap();
+        client.connect("inproc://zmsg_sendrecv_zmq").unwrap();
 
         let zmsg = ZMsg::new();
         zmsg.addstr("Hello world!").unwrap();
         zmsg.send(&mut client).unwrap();
 
-        let zmsg_recv = ZMsg::recv(&mut server).unwrap();
+        let zmsg_recv = ZMsg::recv(&server).unwrap();
         assert_eq!(zmsg_recv.popstr().unwrap().unwrap(), "Hello world!");
     }
 
     #[test]
-    fn test_zsendrecv() {
+    fn test_sendrecv_zsock() {
         zsys_init();
 
-        let mut server = ZSock::new_rep("inproc://zmsg_zsendrecv").unwrap();
-        let client = ZSock::new_req("inproc://zmsg_zsendrecv").unwrap();
+        let server = ZSock::new_rep("inproc://zmsg_sendrecv_zsock").unwrap();
+        let client = ZSock::new_req("inproc://zmsg_sendrecv_zsock").unwrap();
 
         client.send_str("Hello world!").unwrap();
 
-        let msg = ZMsg::zrecv(&mut server).unwrap();
+        let msg = ZMsg::recv(&server).unwrap();
         assert_eq!(msg.popstr().unwrap().unwrap(), "Hello world!");
     }
 

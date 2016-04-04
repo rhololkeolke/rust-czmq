@@ -1,12 +1,11 @@
 //! Module: czmq-zframe
 
-use {czmq_sys, Error, ErrorKind, Result, ZSock};
+use {czmq_sys, Error, ErrorKind, Result};
 use std::{error, fmt, ptr, result, slice};
 use std::ffi::{CStr, CString};
 use std::str::{self, Utf8Error};
 use std::os::raw::c_void;
 use zmsg::ZMsgable;
-use zmq;
 
 bitflags! {
     pub flags Flags: i32 {
@@ -69,16 +68,8 @@ impl ZFrame {
         }
     }
 
-    pub fn recv(source: &mut zmq::Socket) -> Result<ZFrame> {
-        Self::do_recv(source.borrow_raw())
-    }
-
-    pub fn zrecv(source: &mut ZSock) -> Result<ZFrame> {
-        Self::do_recv(source.borrow_raw() as *mut c_void)
-    }
-
-    fn do_recv(source: *mut c_void) -> Result<ZFrame> {
-        let zframe = unsafe { czmq_sys::zframe_recv(source) };
+    pub fn recv(source: &ZMsgable) -> Result<ZFrame> {
+        let zframe = unsafe { czmq_sys::zframe_recv(source.borrow_raw()) };
 
         if zframe == ptr::null_mut() {
             return Err(Error::new(ErrorKind::NullPtr, ZFrameError::CmdFailed));
@@ -90,33 +81,19 @@ impl ZFrame {
     }
 
     // This fn consumes the ZFrame, implying no REUSE flag
-    pub fn send(self, dest: &mut zmq::Socket, flags: Option<Flags>) -> Result<i32> {
+    pub fn send(self, dest: &ZMsgable, flags: Option<Flags>) -> Result<i32> {
         let mut zframe = self;
         zframe.do_send(dest.borrow_raw(), flags)
     }
 
-    pub fn zsend(self, dest: &mut ZSock, flags: Option<Flags>) -> Result<i32> {
-        let mut zframe = self;
-        zframe.do_send(dest.borrow_raw() as *mut c_void, flags)
-    }
-
     // This fn doesn't consume the ZFrame, which implies REUSE flag
-    pub fn send_reuse(&mut self, dest: &mut zmq::Socket, flags: Option<Flags>) -> Result<i32> {
+    pub fn send_reuse(&mut self, dest: &ZMsgable, flags: Option<Flags>) -> Result<i32> {
         let flags = if let Some(f) = flags {
             f | ZFRAME_REUSE
         } else {
             ZFRAME_REUSE
         };
         self.do_send(dest.borrow_raw(), Some(flags))
-    }
-
-    pub fn zsend_reuse(&mut self, dest: &mut ZSock, flags: Option<Flags>) -> Result<i32> {
-        let flags = if let Some(f) = flags {
-            f | ZFRAME_REUSE
-        } else {
-            ZFRAME_REUSE
-        };
-        self.do_send(dest.borrow_raw() as *mut c_void, Some(flags))
     }
 
     fn do_send(&mut self, dest: *mut c_void, flags: Option<Flags>) -> Result<i32> {
@@ -243,38 +220,38 @@ mod tests {
     use {zmq, ZSock, zsys_init};
 
     #[test]
-    fn test_sendrecv() {
+    fn test_sendrecv_zmq() {
         let mut ctx = zmq::Context::new();
 
         let mut server = ctx.socket(zmq::REP).unwrap();
-        server.bind("inproc://test").unwrap();
+        server.bind("inproc://zframe_sendrecv_zmq").unwrap();
 
         let mut client = ctx.socket(zmq::REQ).unwrap();
-        client.connect("inproc://test").unwrap();
+        client.connect("inproc://zframe_sendrecv_zmq").unwrap();
 
         let mut zframe1 = ZFrame::from("Hello world!").unwrap();
-        zframe1.send_reuse(&mut client, Some(ZFRAME_MORE)).unwrap();
-        zframe1.send(&mut client, None).unwrap();
+        zframe1.send_reuse(&client, Some(ZFRAME_MORE)).unwrap();
+        zframe1.send(&client, None).unwrap();
 
         for _ in 1..2 {
-            let zframe = ZFrame::recv(&mut server).unwrap();
+            let zframe = ZFrame::recv(&server).unwrap();
             assert_eq!(zframe.data().unwrap().unwrap(), "Hello world!");
         }
     }
 
     #[test]
-    fn test_zsendrecv() {
+    fn test_sendrecv_zsock() {
         zsys_init();
 
-        let mut server = ZSock::new_rep("inproc://zframe_zsendrecv").unwrap();
-        let mut client = ZSock::new_req("inproc://zframe_zsendrecv").unwrap();
+        let server = ZSock::new_rep("inproc://zframe_sendrecv_zsock").unwrap();
+        let client = ZSock::new_req("inproc://zframe_sendrecv_zsock").unwrap();
 
         let mut zframe1 = ZFrame::from("Hello world!").unwrap();
-        zframe1.zsend_reuse(&mut client, Some(ZFRAME_MORE)).unwrap();
-        zframe1.zsend(&mut client, None).unwrap();
+        zframe1.send_reuse(&client, Some(ZFRAME_MORE)).unwrap();
+        zframe1.send(&client, None).unwrap();
 
         for _ in 1..2 {
-            let zframe = ZFrame::zrecv(&mut server).unwrap();
+            let zframe = ZFrame::recv(&server).unwrap();
             assert_eq!(zframe.data().unwrap().unwrap(), "Hello world!");
         }
     }
