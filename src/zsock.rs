@@ -533,14 +533,35 @@ impl ZSock {
     //                                              ::std::os::raw::c_int);
     // pub fn zsock_type(_self: *mut ::std::os::raw::c_void)
     //  -> ::std::os::raw::c_int;
-    // pub fn zsock_sndhwm(_self: *mut ::std::os::raw::c_void)
-    //  -> ::std::os::raw::c_int;
-    // pub fn zsock_set_sndhwm(_self: *mut ::std::os::raw::c_void,
-    //                         sndhwm: ::std::os::raw::c_int);
-    // pub fn zsock_rcvhwm(_self: *mut ::std::os::raw::c_void)
-    //  -> ::std::os::raw::c_int;
-    // pub fn zsock_set_rcvhwm(_self: *mut ::std::os::raw::c_void,
-    //                         rcvhwm: ::std::os::raw::c_int);
+
+    pub fn sndhwm(&self) -> Result<i32> {
+        let sndhwm = unsafe { czmq_sys::zsock_sndhwm(self.zsock as *mut c_void) };
+
+        if sndhwm == -1 {
+            Err(Error::new(ErrorKind::NonZero, ZSockError::CmdFailed))
+        } else {
+            Ok(sndhwm)
+        }
+    }
+
+    pub fn set_sndhwm(&self, sndhwm: i32) {
+        unsafe { czmq_sys::zsock_set_sndhwm(self.zsock as *mut c_void, sndhwm) };
+    }
+
+    pub fn rcvhwm(&self) -> Result<i32> {
+        let rcvhwm = unsafe { czmq_sys::zsock_rcvhwm(self.zsock as *mut c_void) };
+
+        if rcvhwm == -1 {
+            Err(Error::new(ErrorKind::NonZero, ZSockError::CmdFailed))
+        } else {
+            Ok(rcvhwm)
+        }
+    }
+
+    pub fn set_rcvhwm(&self, rcvhwm: i32) {
+        unsafe { czmq_sys::zsock_set_rcvhwm(self.zsock as *mut c_void, rcvhwm) };
+    }
+
     // pub fn zsock_affinity(_self: *mut ::std::os::raw::c_void)
     //  -> ::std::os::raw::c_int;
     // pub fn zsock_set_affinity(_self: *mut ::std::os::raw::c_void,
@@ -927,6 +948,24 @@ mod tests {
         let zsock = ZSock::new(zmq::REP);
         zsock.set_sndtimeo(2000);
         assert_eq!(zsock.sndtimeo().unwrap(), 2000);
+    }
+
+    #[test]
+    fn test_sndhwm() {
+        zsys_init();
+
+        let zsock = ZSock::new(zmq::REP);
+        zsock.set_sndhwm(2000);
+        assert_eq!(zsock.sndhwm().unwrap(), 2000);
+    }
+
+    #[test]
+    fn test_rcvhwm() {
+        zsys_init();
+
+        let zsock = ZSock::new(zmq::REP);
+        zsock.set_rcvhwm(2000);
+        assert_eq!(zsock.rcvhwm().unwrap(), 2000);
     }
 
     #[test]
