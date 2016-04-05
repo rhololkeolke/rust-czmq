@@ -68,7 +68,7 @@ impl ZFrame {
         }
     }
 
-    pub fn recv(source: &ZMsgable) -> Result<ZFrame> {
+    pub fn recv<S: ZMsgable>(source: &S) -> Result<ZFrame> {
         let zframe = unsafe { czmq_sys::zframe_recv(source.borrow_raw()) };
 
         if zframe == ptr::null_mut() {
@@ -81,13 +81,13 @@ impl ZFrame {
     }
 
     // This fn consumes the ZFrame, implying no REUSE flag
-    pub fn send(self, dest: &ZMsgable, flags: Option<Flags>) -> Result<i32> {
+    pub fn send<D: ZMsgable>(self, dest: &D, flags: Option<Flags>) -> Result<i32> {
         let mut zframe = self;
         zframe.do_send(dest.borrow_raw(), flags)
     }
 
     // This fn doesn't consume the ZFrame, which implies REUSE flag
-    pub fn send_reuse(&mut self, dest: &ZMsgable, flags: Option<Flags>) -> Result<i32> {
+    pub fn send_reuse<D: ZMsgable>(&mut self, dest: &D, flags: Option<Flags>) -> Result<i32> {
         let flags = if let Some(f) = flags {
             f | ZFRAME_REUSE
         } else {

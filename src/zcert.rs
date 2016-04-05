@@ -146,7 +146,7 @@ impl ZCert {
         }
     }
 
-    pub fn apply(&self, sock: &ZMsgable) {
+    pub fn apply<S: ZMsgable>(&self, sock: &S) {
         unsafe { czmq_sys::zcert_apply(self.zcert, sock.borrow_raw()) };
     }
 

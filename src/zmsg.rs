@@ -42,7 +42,7 @@ impl ZMsg {
         msg.zmsg
     }
 
-    pub fn recv(source: &ZMsgable) -> Result<ZMsg> {
+    pub fn recv<S: ZMsgable>(source: &S) -> Result<ZMsg> {
         let zmsg = unsafe { czmq_sys::zmsg_recv(source.borrow_raw()) };
 
         if zmsg == ptr::null_mut() {
@@ -95,7 +95,7 @@ impl ZMsg {
         }
     }
 
-    pub fn send(self, dest: &ZMsgable) -> Result<()> {
+    pub fn send<D: ZMsgable>(self, dest: &D) -> Result<()> {
         let mut zmsg = self;
 
         let rc = unsafe { czmq_sys::zmsg_send(&mut zmsg.zmsg, dest.borrow_raw()) };
@@ -119,7 +119,17 @@ impl ZMsg {
     //  -> ::std::os::raw::c_int;
     // pub fn zmsg_append(_self: *mut zmsg_t, frame_p: *mut *mut zframe_t)
     //  -> ::std::os::raw::c_int;
-    // pub fn zmsg_pop(_self: *mut zmsg_t) -> *mut zframe_t;
+
+    pub fn pop(&self) -> Result<ZFrame> {
+        let ptr = unsafe { czmq_sys::zmsg_pop(self.zmsg) };
+
+        if ptr == ptr::null_mut() {
+            Err(Error::new(ErrorKind::NullPtr, ZMsgError::CmdFailed))
+        } else {
+            Ok(ZFrame::from_raw(ptr))
+        }
+    }
+
     // pub fn zmsg_pushmem(_self: *mut zmsg_t,
     //                     src: *const ::std::os::raw::c_void, size: size_t)
     //  -> ::std::os::raw::c_int;
@@ -162,6 +172,17 @@ impl ZMsg {
                 Ok(s) => Ok(Ok(s)),
                 Err(_) => Ok(Err(bytes))
             }
+        }
+    }
+
+    pub fn popbytes(&self) -> Result<Vec<u8>> {
+        let ptr = unsafe { czmq_sys::zmsg_popstr(self.zmsg) };
+
+        if ptr == ptr::null_mut() {
+            Err(Error::new(ErrorKind::NullPtr, ZMsgError::CmdFailed))
+        } else {
+            let c_string = unsafe { CStr::from_ptr(ptr).to_owned() };
+            Ok(c_string.to_bytes().to_vec())
         }
     }
 
@@ -246,7 +267,7 @@ mod tests {
 
         let zmsg = ZMsg::new();
         zmsg.addstr("Hello world!").unwrap();
-        zmsg.send(&mut client).unwrap();
+        zmsg.send(&client).unwrap();
 
         let zmsg_recv = ZMsg::recv(&server).unwrap();
         assert_eq!(zmsg_recv.popstr().unwrap().unwrap(), "Hello world!");
@@ -259,7 +280,9 @@ mod tests {
         let server = ZSock::new_rep("inproc://zmsg_sendrecv_zsock").unwrap();
         let client = ZSock::new_req("inproc://zmsg_sendrecv_zsock").unwrap();
 
-        client.send_str("Hello world!").unwrap();
+        let zmsg = ZMsg::new();
+        zmsg.addstr("Hello world!").unwrap();
+        zmsg.send(&client).unwrap();
 
         let msg = ZMsg::recv(&server).unwrap();
         assert_eq!(msg.popstr().unwrap().unwrap(), "Hello world!");
@@ -277,5 +300,33 @@ mod tests {
     fn test_signal() {
         let msg = ZMsg::new_signal(97).unwrap();
         assert_eq!(msg.signal().unwrap(), 97);
+    }
+
+    #[test]
+    fn test_size() {
+        let msg = ZMsg::new();
+        msg.addstr("123").unwrap();
+        assert_eq!(msg.size(), 1);
+    }
+
+    #[test]
+    fn test_pop() {
+        let msg = ZMsg::new();
+        msg.addstr("123").unwrap();
+        assert_eq!(msg.pop().unwrap().data().unwrap().unwrap(), "123");
+    }
+
+    #[test]
+    fn test_popstr() {
+        let msg = ZMsg::new();
+        msg.addstr("123").unwrap();
+        assert_eq!(msg.popstr().unwrap().unwrap(), "123");
+    }
+
+    #[test]
+    fn test_popbytes() {
+        let msg = ZMsg::new();
+        msg.addstr("123").unwrap();
+        assert_eq!(msg.popbytes().unwrap(), "123".as_bytes());
     }
 }
