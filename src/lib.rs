@@ -28,7 +28,7 @@ pub use zframe::{ZFrame, ZFRAME_MORE, ZFRAME_REUSE, ZFRAME_DONTWAIT};
 pub use zlist::ZList;
 pub use zmonitor::{ZMonitor, ZMonitorEvents};
 pub use zmsg::ZMsg;
-pub use zsock::ZSock;
+pub use zsock::{ZSock, ZSockMechanism, ZSockType};
 
 use std::result;
 pub type Result<T> = result::Result<T, Error>;
