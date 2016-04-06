@@ -1020,23 +1020,21 @@ mod tests {
         let subscriber = ZSock::new(ZSockType::SUB);
         subscriber.set_rcvtimeo(200);
         subscriber.set_subscribe("moo");
-        subscriber.bind("inproc://zsock_test_subscribe").unwrap();
+        subscriber.connect("inproc://zsock_test_subscribe").unwrap();
 
         // Wait for subscriber to connect
         sleep(Duration::from_millis(200));
 
         let msg = ZMsg::new();
         msg.addstr("moo").unwrap();
-        msg.addstr("cow").unwrap();
         msg.send(&publisher).unwrap();
 
-        assert_eq!(subscriber.recv_str().unwrap().unwrap(), "cow");
+        assert_eq!(subscriber.recv_str().unwrap().unwrap(), "moo");
 
         subscriber.set_unsubscribe("moo");
 
         let msg = ZMsg::new();
         msg.addstr("moo").unwrap();
-        msg.addstr("cow").unwrap();
         msg.send(&publisher).unwrap();
 
         assert!(subscriber.recv_str().is_err());
