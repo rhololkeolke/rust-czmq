@@ -75,7 +75,7 @@ mod tests {
     use super::*;
     use tempdir::TempDir;
     use tempfile::NamedTempFile;
-    use {zmq, ZCert, ZSock, zsys_init};
+    use {ZCert, ZSock, ZSockType, zsys_init};
 
     // There can only be one ZAuth instance per context as each ZAuth
     // instance binds to the same inproc endpoint. The simplest way
@@ -96,11 +96,11 @@ mod tests {
     }
 
     fn test_allow_deny() {
-        let server = ZSock::new(zmq::PULL);
+        let server = ZSock::new(ZSockType::PULL);
         server.set_zap_domain("compuglobalhypermega.net");
         server.set_rcvtimeo(100);
 
-        let client = ZSock::new(zmq::PUSH);
+        let client = ZSock::new(ZSockType::PUSH);
         client.set_linger(100);
         client.set_sndtimeo(100);
 
@@ -130,13 +130,13 @@ mod tests {
     fn test_plain() {
         let zauth = ZAuth::new().unwrap();
 
-        let server = ZSock::new(zmq::PULL);
+        let server = ZSock::new(ZSockType::PULL);
         server.set_zap_domain("sky.net");
         server.set_plain_server(true);
         server.set_rcvtimeo(100);
         let port = server.bind("tcp://127.0.0.1:*[60000-]").unwrap();
 
-        let client = ZSock::new(zmq::PUSH);
+        let client = ZSock::new(ZSockType::PUSH);
         client.set_plain_username("moo");
         client.set_plain_password("cow");
         client.set_linger(100);
@@ -164,7 +164,7 @@ mod tests {
     fn test_curve() {
         let zauth = ZAuth::new().unwrap();
 
-        let server = ZSock::new(zmq::PULL);
+        let server = ZSock::new(ZSockType::PULL);
         let server_cert = ZCert::new().unwrap();
         server_cert.apply(&server);
         server.set_zap_domain("sky.net");
@@ -172,7 +172,7 @@ mod tests {
         server.set_rcvtimeo(100);
         let port = server.bind("tcp://127.0.0.1:*[60000-]").unwrap();
 
-        let client = ZSock::new(zmq::PUSH);
+        let client = ZSock::new(ZSockType::PUSH);
         let client_cert = ZCert::new().unwrap();
         client_cert.apply(&client);
         client.set_curve_serverkey(server_cert.public_txt());

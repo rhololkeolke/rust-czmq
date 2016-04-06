@@ -6,7 +6,6 @@ use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 use std::str::{Utf8Error};
 use zmsg::ZMsgable;
-use zmq;
 
 // Duplicate this from rust-zmq to avoid users having to depend on
 // both libs.
@@ -1057,16 +1056,16 @@ mod tests {
         zsys_init();
 
         let zsock = ZSock::new(ZSockType::REP);
-        assert_eq!(zsock.mechanism().unwrap(), zmq::Mechanism::ZMQ_NULL);
+        assert_eq!(zsock.mechanism().unwrap(), ZSockMechanism::ZMQ_NULL);
 
         zsock.set_plain_server(true);
-        assert_eq!(zsock.mechanism().unwrap(), zmq::Mechanism::ZMQ_PLAIN);
+        assert_eq!(zsock.mechanism().unwrap(), ZSockMechanism::ZMQ_PLAIN);
 
         zsock.set_curve_server(true);
-        assert_eq!(zsock.mechanism().unwrap(), zmq::Mechanism::ZMQ_CURVE);
+        assert_eq!(zsock.mechanism().unwrap(), ZSockMechanism::ZMQ_CURVE);
 
         // zsock.set_gssapi_server(true);
-        // assert_eq!(zsock.mechanism().unwrap(), zmq::Mechanism::ZMQ_GSSAPI);
+        // assert_eq!(zsock.mechanism().unwrap(), ZSockMechanism::ZMQ_GSSAPI);
     }
 
     #[test]
