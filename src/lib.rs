@@ -37,14 +37,11 @@ pub type Result<T> = result::Result<T, Error>;
 // fn. To mitigate the race condition, wrap it in a Once struct.
 // Currently this is only necessary in tests, as they are the only
 // multithreaded component.
-#[cfg(test)]
 use std::sync::{Once, ONCE_INIT};
 
-#[cfg(test)]
 static INIT_ZSYS: Once = ONCE_INIT;
 
-#[cfg(test)]
-fn zsys_init() {
+pub fn zsys_init() {
     INIT_ZSYS.call_once(|| {
         unsafe { czmq_sys::zsys_init() };
     });
