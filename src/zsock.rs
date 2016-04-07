@@ -1019,11 +1019,13 @@ mod tests {
         let publisher = ZSock::new_pub("inproc://zsock_test_subscribe").unwrap();
         let subscriber = ZSock::new(ZSockType::SUB);
         subscriber.set_rcvtimeo(200);
-        subscriber.set_subscribe("moo");
         subscriber.connect("inproc://zsock_test_subscribe").unwrap();
 
         // Wait for subscriber to connect
         sleep(Duration::from_millis(200));
+
+        // Test subscribe prefix
+        subscriber.set_subscribe("m");
 
         let msg = ZMsg::new();
         msg.addstr("moo").unwrap();
@@ -1031,13 +1033,23 @@ mod tests {
 
         assert_eq!(subscriber.recv_str().unwrap().unwrap(), "moo");
 
-        subscriber.set_unsubscribe("moo");
+        // Test no subscription
+        subscriber.set_unsubscribe("m");
 
         let msg = ZMsg::new();
         msg.addstr("moo").unwrap();
         msg.send(&publisher).unwrap();
 
         assert!(subscriber.recv_str().is_err());
+
+        // Test blank subscription (thus subscribe to all)
+        subscriber.set_subscribe("");
+
+        let msg = ZMsg::new();
+        msg.addstr("moo").unwrap();
+        msg.send(&publisher).unwrap();
+
+        assert_eq!(subscriber.recv_str().unwrap().unwrap(), "moo");
     }
 
     #[test]
