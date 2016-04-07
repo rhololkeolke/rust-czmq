@@ -19,6 +19,7 @@ pub enum ZMonitorEvents {
     Disconnected,
     MonitorStopped,
     All,
+    Unknown,
 }
 
 impl ZMonitorEvents {
@@ -36,6 +37,7 @@ impl ZMonitorEvents {
             &ZMonitorEvents::Disconnected   => "DISCONNECTED",
             &ZMonitorEvents::MonitorStopped => "MONITOR_STOPPED",
             &ZMonitorEvents::All            => "ALL",
+            &ZMonitorEvents::Unknown        => "UNKNOWN",
         }
     }
 
@@ -53,7 +55,7 @@ impl ZMonitorEvents {
             "DISCONNECTED"    => ZMonitorEvents::Disconnected,
             "MONITOR_STOPPED" => ZMonitorEvents::MonitorStopped,
             "ALL"             => ZMonitorEvents::All,
-            _                 => unimplemented!(),
+            _                 => ZMonitorEvents::Unknown,
         }
     }
 }
