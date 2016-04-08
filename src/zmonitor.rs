@@ -1,7 +1,8 @@
 //! Module: czmq-zmonitor
 
 use {czmq_sys, Error, ErrorKind, Result, ZActor, ZMsg, ZSock};
-use std::{error, fmt, ptr, result};
+use std::{error, ptr, result};
+use std::fmt::{Display, Formatter, Result as FmtResult};
 use std::os::raw::c_void;
 use zmsg::ZMsgable;
 
@@ -60,6 +61,12 @@ impl ZMonitorEvents {
     }
 }
 
+impl Display for ZMonitorEvents {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        write!(f, "ZMonitorEvent: {}", self.to_str())
+    }
+}
+
 pub struct ZMonitor {
     zactor: ZActor,
 }
@@ -112,8 +119,8 @@ pub enum ZMonitorError {
     Instantiate,
 }
 
-impl fmt::Display for ZMonitorError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+impl Display for ZMonitorError {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
         match *self {
             ZMonitorError::Instantiate => write!(f, "Could not instantiate new ZMonitor struct"),
         }
