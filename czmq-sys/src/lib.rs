@@ -46,6 +46,7 @@ pub use ffi::{
     //
     // ZCertstore
     //
+    zcertstore_t,
     zcertstore_new,
     zcertstore_destroy,
     zcertstore_lookup,

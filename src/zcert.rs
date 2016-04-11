@@ -10,6 +10,7 @@ const KEY_SIZE: usize = 32;
 
 pub struct ZCert {
     zcert: *mut czmq_sys::zcert_t,
+    persistent: bool,
 }
 
 unsafe impl Send for ZCert {}
@@ -17,7 +18,9 @@ unsafe impl Sync for ZCert {}
 
 impl Drop for ZCert {
     fn drop(&mut self) {
-        unsafe { czmq_sys::zcert_destroy(&mut self.zcert) };
+        if !self.persistent {
+            unsafe { czmq_sys::zcert_destroy(&mut self.zcert) };
+        }
     }
 }
 
@@ -31,13 +34,27 @@ impl ZCert {
 
         Ok(ZCert {
             zcert: zcert,
+            persistent: false,
         })
     }
 
     pub fn from_keys(public_key: &[u8], secret_key: &[u8]) -> ZCert {
         ZCert {
             zcert: unsafe { czmq_sys::zcert_new_from(public_key.as_ptr(), secret_key.as_ptr()) },
+            persistent: false,
         }
+    }
+
+    pub fn from_raw(zcert: *mut czmq_sys::zcert_t, persistent: bool) -> ZCert {
+        ZCert {
+            zcert: zcert,
+            persistent: persistent,
+        }
+    }
+
+    pub fn into_raw(mut self) -> *mut czmq_sys::zcert_t {
+        self.persistent = true;
+        self.zcert
     }
 
     pub fn load(filename: &str) -> Result<ZCert> {
@@ -50,6 +67,7 @@ impl ZCert {
 
         Ok(ZCert {
             zcert: zcert,
+            persistent: false,
         })
     }
 
@@ -155,6 +173,7 @@ impl ZCert {
 
         ZCert {
             zcert: ptr,
+            persistent: false,
         }
     }
 
