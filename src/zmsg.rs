@@ -208,17 +208,7 @@ impl ZMsg {
         }
     }
 
-    // pub fn zmsg_is(_self: *mut ::std::os::raw::c_void) -> u8;
     // pub fn zmsg_test(verbose: u8);
-    // pub fn zmsg_unwrap(_self: *mut zmsg_t) -> *mut zframe_t;
-    // pub fn zmsg_recv_nowait(source: *mut ::std::os::raw::c_void)
-    //  -> *mut zmsg_t;
-    // pub fn zmsg_wrap(_self: *mut zmsg_t, frame: *mut zframe_t);
-    // pub fn zmsg_push(_self: *mut zmsg_t, frame: *mut zframe_t)
-    //  -> ::std::os::raw::c_int;
-    // pub fn zmsg_add(_self: *mut zmsg_t, frame: *mut zframe_t)
-    //  -> ::std::os::raw::c_int;
-    // pub fn zmsg_fprint(_self: *mut zmsg_t, file: *mut FILE);
 
     pub fn borrow_raw(&self) -> *mut czmq_sys::zmsg_t {
         self.zmsg
