@@ -1,7 +1,7 @@
 //! Module: czmq-zsock
 
 use {czmq_sys, Error, ErrorKind, Result};
-use std::{error, fmt, ptr, result};
+use std::{error, fmt, mem, ptr, result};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 use std::str::{Utf8Error};
@@ -612,10 +612,30 @@ impl ZSock {
         }
     }
 
-    // pub fn zsock_identity(_self: *mut ::std::os::raw::c_void)
-    //  -> *mut ::std::os::raw::c_char;
-    // pub fn zsock_set_identity(_self: *mut ::std::os::raw::c_void,
-    //                           identity: *const ::std::os::raw::c_char);
+    pub fn identity<'a>(&'a self) -> Result<result::Result<&'a str, &'a [u8]>> {
+        let ptr = unsafe { czmq_sys::zsock_identity(self.zsock as *mut c_void) };
+
+        if ptr == ptr::null_mut() {
+            Err(Error::new(ErrorKind::NullPtr, ZSockError::CmdFailed))
+        } else {
+            let c_str = unsafe { CStr::from_ptr(ptr) };
+            let bytes = c_str.to_bytes();
+            match c_str.to_str() {
+                Ok(s) => Ok(Ok(s)),
+                Err(_) => Ok(Err(bytes)),
+            }
+        }
+    }
+
+    pub fn set_identity(&self, identity: &str) -> Result<()> {
+        let identity_c = try!(CString::new(identity));
+        unsafe { czmq_sys::zsock_set_identity(self.zsock as *mut c_void, identity_c.as_ptr()) };
+
+        // Deliberately leak this memory, which will be managed by C
+        mem::forget(identity_c);
+        Ok(())
+    }
+
     // pub fn zsock_rate(_self: *mut ::std::os::raw::c_void)
     //  -> ::std::os::raw::c_int;
     // pub fn zsock_set_rate(_self: *mut ::std::os::raw::c_void,
@@ -1050,6 +1070,15 @@ mod tests {
         msg.send(&publisher).unwrap();
 
         assert_eq!(subscriber.recv_str().unwrap().unwrap(), "moo");
+    }
+
+    #[test]
+    fn test_identity() {
+        zsys_init();
+
+        let zsock = ZSock::new(ZSockType::REP);
+        zsock.set_identity("moo").unwrap();
+        assert_eq!(zsock.identity().unwrap().unwrap(), "moo");
     }
 
     #[test]
