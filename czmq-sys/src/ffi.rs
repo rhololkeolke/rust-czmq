@@ -18080,6 +18080,9 @@ extern "C" {
                        flags: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
     pub fn zframe_size(_self: *mut zframe_t) -> size_t;
     pub fn zframe_data(_self: *mut zframe_t) -> *mut byte;
+    pub fn zframe_meta(_self: *mut zframe_t,
+                       property: *const ::std::os::raw::c_char)
+     -> *mut ::std::os::raw::c_char;
     pub fn zframe_dup(_self: *mut zframe_t) -> *mut zframe_t;
     pub fn zframe_strhex(_self: *mut zframe_t) -> *mut ::std::os::raw::c_char;
     pub fn zframe_strdup(_self: *mut zframe_t) -> *mut ::std::os::raw::c_char;

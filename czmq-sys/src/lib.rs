@@ -67,6 +67,7 @@ pub use ffi::{
     zframe_send,
     zframe_size,
     zframe_data,
+    zframe_meta,
     zframe_dup,
     zframe_strhex,
     zframe_strdup,

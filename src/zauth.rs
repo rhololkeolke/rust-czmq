@@ -75,7 +75,7 @@ mod tests {
     use super::*;
     use tempdir::TempDir;
     use tempfile::NamedTempFile;
-    use {ZCert, ZSock, ZSockType, zsys_init};
+    use {ZCert, ZFrame, ZSock, ZSockType, zsys_init};
 
     // There can only be one ZAuth instance per context as each ZAuth
     // instance binds to the same inproc endpoint. The simplest way
@@ -172,13 +172,13 @@ mod tests {
         server.set_rcvtimeo(100);
         let port = server.bind("tcp://127.0.0.1:*[60000-]").unwrap();
 
-        let client = ZSock::new(ZSockType::PUSH);
+        let endpoint = format!("tcp://127.0.0.1:{}", port);
+        let client = ZSock::new_push(&endpoint).unwrap();
         let client_cert = ZCert::new().unwrap();
         client_cert.apply(&client);
         client.set_curve_serverkey(server_cert.public_txt());
         client.set_linger(100);
         client.set_sndtimeo(100);
-        client.connect(&format!("tcp://127.0.0.1:{}", port)).unwrap();
 
         sleep(Duration::from_millis(100));
 
@@ -188,21 +188,34 @@ mod tests {
         zauth.load_curve(None).unwrap();
         sleep(Duration::from_millis(100));
 
-        client.connect(&format!("tcp://127.0.0.1:{}", port)).unwrap();
+        client.connect(&endpoint).unwrap();
         sleep(Duration::from_millis(100));
 
         client.send_str("test").unwrap();
         assert_eq!(server.recv_str().unwrap().unwrap(), "test");
 
+        let auth_client = ZSock::new(ZSockType::PUSH);
+        auth_client.set_curve_serverkey(server_cert.public_txt());
+        auth_client.set_linger(100);
+        auth_client.set_sndtimeo(100);
+
         let dir = TempDir::new("czmq_test").unwrap();
-        client_cert.save_public(&format!("{}/testcert.txt", dir.path().to_str().unwrap())).unwrap();
+        let auth_client_cert = ZCert::new().unwrap();
+        auth_client_cert.set_meta("moo", "cow");
+        auth_client_cert.set_meta("woof", "dog");
+        auth_client_cert.apply(&auth_client);
+        auth_client_cert.save_public(&format!("{}/testcert.txt", dir.path().to_str().unwrap())).unwrap();
+
         zauth.load_curve(dir.path().to_str()).unwrap();
         sleep(Duration::from_millis(100));
 
-        client.connect(&format!("tcp://127.0.0.1:{}", port)).unwrap();
-        sleep(Duration::from_millis(100));
+        auth_client.connect(&endpoint).unwrap();
 
-        client.send_str("test").unwrap();
-        assert_eq!(server.recv_str().unwrap().unwrap(), "test");
+        auth_client.send_str("test").unwrap();
+
+        let frame = ZFrame::recv(&server).unwrap();
+        assert_eq!(frame.data().unwrap().unwrap(), "test");
+        assert_eq!(frame.meta("moo").unwrap().unwrap().unwrap(), "cow");
+        assert_eq!(frame.meta("woof").unwrap().unwrap().unwrap(), "dog");
     }
 }

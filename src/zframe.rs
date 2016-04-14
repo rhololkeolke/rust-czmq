@@ -121,6 +121,22 @@ impl ZFrame {
         }
     }
 
+    pub fn meta<'a>(&'a self, property: &'a str) -> Result<Option<result::Result<&'a str, &[u8]>>> {
+        let property_c = try!(CString::new(property));
+        let meta = unsafe { czmq_sys::zframe_meta(self.zframe, property_c.as_ptr()) };
+
+        if meta == ptr::null_mut() {
+            Ok(None)
+        } else {
+            let c_str = unsafe { CStr::from_ptr(meta) };
+            let bytes = c_str.to_bytes();
+            match c_str.to_str() {
+                Ok(s) => Ok(Some(Ok(s))),
+                Err(_) => Ok(Some(Err(bytes))),
+            }
+        }
+    }
+
     pub fn dup(&self) -> Result<ZFrame> {
         let zframe = unsafe { czmq_sys::zframe_dup(self.zframe) };
 
