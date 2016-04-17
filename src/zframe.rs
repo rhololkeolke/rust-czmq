@@ -121,7 +121,7 @@ impl ZFrame {
         }
     }
 
-    pub fn meta<'a>(&'a self, property: &'a str) -> Result<Option<result::Result<&'a str, &[u8]>>> {
+    pub fn meta<'a>(&'a self, property: &str) -> Result<Option<result::Result<&'a str, &[u8]>>> {
         let property_c = try!(CString::new(property));
         let meta = unsafe { czmq_sys::zframe_meta(self.zframe, property_c.as_ptr()) };
 
