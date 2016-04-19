@@ -1,6 +1,6 @@
 //! Module: czmq-zsock
 
-use {czmq_sys, Error, ErrorKind, Result};
+use {czmq_sys, Error, ErrorKind, Result, ZMonitor};
 use std::{error, fmt, mem, ptr, result};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
@@ -754,6 +754,10 @@ impl ZSock {
     // pub fn zsock_last_endpoint(_self: *mut ::std::os::raw::c_void)
     //  -> *mut ::std::os::raw::c_char;
 
+    pub fn monitor(&self) -> Result<ZMonitor> {
+        ZMonitor::new(self)
+    }
+
     fn concat_endpoints(endpoints: &[&str]) -> String {
         let mut endpoint_str = String::new();
         let mut iter = 0;
@@ -1166,5 +1170,13 @@ mod tests {
         assert_eq!(zsock.curve_serverkey().unwrap().unwrap(), &keypair.secret_key);
         zsock.set_curve_serverkey_bin(&zmq::z85_decode(&keypair.secret_key));
         assert_eq!(zsock.curve_serverkey().unwrap().unwrap(), &keypair.secret_key);
+    }
+
+    #[test]
+    fn test_monitor() {
+        zsys_init();
+
+        let zsock = ZSock::new(ZSockType::REP);
+        assert!(zsock.monitor().is_ok());
     }
 }
