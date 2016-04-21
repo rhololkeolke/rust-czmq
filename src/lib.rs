@@ -22,6 +22,7 @@ mod zmsg;
 mod zsock;
 
 pub use error::{Error, ErrorKind};
+pub use czmq_sys::zcertstore_t as ZCertStoreRaw;
 pub use zactor::ZActor;
 pub use zauth::ZAuth;
 pub use zcert::ZCert;

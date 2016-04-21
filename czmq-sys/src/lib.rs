@@ -47,10 +47,13 @@ pub use ffi::{
     // ZCertstore
     //
     zcertstore_t,
+    zcertstore_loader,
     zcertstore_new,
     zcertstore_destroy,
+    zcertstore_set_loader,
     zcertstore_lookup,
     zcertstore_insert,
+    zcertstore_empty,
     zcertstore_print,
     zcertstore_fprint,
     zcertstore_test,

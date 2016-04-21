@@ -71,17 +71,17 @@ impl ZCert {
         })
     }
 
-    pub fn public_key<'a>(&'a self) -> &'a mut [u8] {
+    pub fn public_key<'a>(&'a self) -> &'a [u8] {
         unsafe {
             let ptr = czmq_sys::zcert_public_key(self.zcert);
-            slice::from_raw_parts_mut(ptr, KEY_SIZE)
+            slice::from_raw_parts(ptr, KEY_SIZE)
         }
     }
 
-    pub fn secret_key<'a>(&'a self) -> &'a mut [u8] {
+    pub fn secret_key<'a>(&'a self) -> &'a [u8] {
         unsafe {
             let ptr = czmq_sys::zcert_secret_key(self.zcert);
-            slice::from_raw_parts_mut(ptr, KEY_SIZE)
+            slice::from_raw_parts(ptr, KEY_SIZE)
         }
     }
 

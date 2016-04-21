@@ -3643,6 +3643,7 @@ pub type mach_voucher_attr_value_handle_array_t =
     *mut mach_voucher_attr_value_handle_t;
 pub type mach_voucher_attr_value_handle_array_size_t = mach_msg_type_number_t;
 pub type mach_voucher_attr_value_reference_t = uint32_t;
+pub type mach_voucher_attr_value_flags_t = uint32_t;
 pub type mach_voucher_attr_control_flags_t = uint32_t;
 pub type mach_voucher_attr_importance_refs = uint32_t;
 pub type processor_info_t = *mut integer_t;
@@ -13349,6 +13350,44 @@ impl ::std::default::Default for Struct_Unnamed453 {
 pub type __Request__mach_memory_info_t = Struct_Unnamed453;
 #[repr(C)]
 #[derive(Copy)]
+pub struct Struct_Unnamed454 {
+    pub Head: mach_msg_header_t,
+    pub NDR: NDR_record_t,
+    pub multiuser_flags: uint32_t,
+}
+impl ::std::clone::Clone for Struct_Unnamed454 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed454 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type __Request__host_set_multiuser_config_flags_t = Struct_Unnamed454;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed455 {
+    pub Head: mach_msg_header_t,
+}
+impl ::std::clone::Clone for Struct_Unnamed455 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed455 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type __Request__host_get_multiuser_config_flags_t = Struct_Unnamed455;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed456 {
+    pub Head: mach_msg_header_t,
+}
+impl ::std::clone::Clone for Struct_Unnamed456 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed456 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type __Request__host_check_multiuser_mode_t = Struct_Unnamed456;
+#[repr(C)]
+#[derive(Copy)]
 pub struct Union___RequestUnion__mach_host_subsystem {
     pub _bindgen_data_: [u32; 1289usize],
 }
@@ -13473,6 +13512,21 @@ impl Union___RequestUnion__mach_host_subsystem {
         let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
         ::std::mem::transmute(raw.offset(0))
     }
+    pub unsafe fn Request_host_set_multiuser_config_flags(&mut self)
+     -> *mut __Request__host_set_multiuser_config_flags_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn Request_host_get_multiuser_config_flags(&mut self)
+     -> *mut __Request__host_get_multiuser_config_flags_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn Request_host_check_multiuser_mode(&mut self)
+     -> *mut __Request__host_check_multiuser_mode_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
 }
 impl ::std::clone::Clone for Union___RequestUnion__mach_host_subsystem {
     fn clone(&self) -> Self { *self }
@@ -13482,58 +13536,12 @@ impl ::std::default::Default for Union___RequestUnion__mach_host_subsystem {
 }
 #[repr(C)]
 #[derive(Copy)]
-pub struct Struct_Unnamed454 {
+pub struct Struct_Unnamed457 {
     pub Head: mach_msg_header_t,
     pub NDR: NDR_record_t,
     pub RetCode: kern_return_t,
     pub host_info_outCnt: mach_msg_type_number_t,
     pub host_info_out: [integer_t; 68usize],
-}
-impl ::std::clone::Clone for Struct_Unnamed454 {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_Unnamed454 {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-pub type __Reply__host_info_t = Struct_Unnamed454;
-#[repr(C)]
-#[derive(Copy)]
-pub struct Struct_Unnamed455 {
-    pub Head: mach_msg_header_t,
-    pub NDR: NDR_record_t,
-    pub RetCode: kern_return_t,
-    pub kernel_versionOffset: mach_msg_type_number_t,
-    pub kernel_versionCnt: mach_msg_type_number_t,
-    pub kernel_version: [::std::os::raw::c_char; 512usize],
-}
-impl ::std::clone::Clone for Struct_Unnamed455 {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_Unnamed455 {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-pub type __Reply__host_kernel_version_t = Struct_Unnamed455;
-#[repr(C)]
-#[derive(Copy)]
-pub struct Struct_Unnamed456 {
-    pub Head: mach_msg_header_t,
-    pub NDR: NDR_record_t,
-    pub RetCode: kern_return_t,
-    pub out_page_size: vm_size_t,
-}
-impl ::std::clone::Clone for Struct_Unnamed456 {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_Unnamed456 {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-pub type __Reply___host_page_size_t = Struct_Unnamed456;
-#[repr(C)]
-#[derive(Copy)]
-pub struct Struct_Unnamed457 {
-    pub Head: mach_msg_header_t,
-    pub msgh_body: mach_msg_body_t,
-    pub entry_handle: mach_msg_port_descriptor_t,
 }
 impl ::std::clone::Clone for Struct_Unnamed457 {
     fn clone(&self) -> Self { *self }
@@ -13541,16 +13549,16 @@ impl ::std::clone::Clone for Struct_Unnamed457 {
 impl ::std::default::Default for Struct_Unnamed457 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type __Reply__mach_memory_object_memory_entry_t = Struct_Unnamed457;
+pub type __Reply__host_info_t = Struct_Unnamed457;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_Unnamed458 {
     pub Head: mach_msg_header_t,
-    pub msgh_body: mach_msg_body_t,
-    pub out_processor_info: mach_msg_ool_descriptor_t,
     pub NDR: NDR_record_t,
-    pub out_processor_count: natural_t,
-    pub out_processor_infoCnt: mach_msg_type_number_t,
+    pub RetCode: kern_return_t,
+    pub kernel_versionOffset: mach_msg_type_number_t,
+    pub kernel_versionCnt: mach_msg_type_number_t,
+    pub kernel_version: [::std::os::raw::c_char; 512usize],
 }
 impl ::std::clone::Clone for Struct_Unnamed458 {
     fn clone(&self) -> Self { *self }
@@ -13558,13 +13566,14 @@ impl ::std::clone::Clone for Struct_Unnamed458 {
 impl ::std::default::Default for Struct_Unnamed458 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type __Reply__host_processor_info_t = Struct_Unnamed458;
+pub type __Reply__host_kernel_version_t = Struct_Unnamed458;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_Unnamed459 {
     pub Head: mach_msg_header_t,
-    pub msgh_body: mach_msg_body_t,
-    pub io_master: mach_msg_port_descriptor_t,
+    pub NDR: NDR_record_t,
+    pub RetCode: kern_return_t,
+    pub out_page_size: vm_size_t,
 }
 impl ::std::clone::Clone for Struct_Unnamed459 {
     fn clone(&self) -> Self { *self }
@@ -13572,13 +13581,13 @@ impl ::std::clone::Clone for Struct_Unnamed459 {
 impl ::std::default::Default for Struct_Unnamed459 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type __Reply__host_get_io_master_t = Struct_Unnamed459;
+pub type __Reply___host_page_size_t = Struct_Unnamed459;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_Unnamed460 {
     pub Head: mach_msg_header_t,
     pub msgh_body: mach_msg_body_t,
-    pub clock_serv: mach_msg_port_descriptor_t,
+    pub entry_handle: mach_msg_port_descriptor_t,
 }
 impl ::std::clone::Clone for Struct_Unnamed460 {
     fn clone(&self) -> Self { *self }
@@ -13586,15 +13595,16 @@ impl ::std::clone::Clone for Struct_Unnamed460 {
 impl ::std::default::Default for Struct_Unnamed460 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type __Reply__host_get_clock_service_t = Struct_Unnamed460;
+pub type __Reply__mach_memory_object_memory_entry_t = Struct_Unnamed460;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_Unnamed461 {
     pub Head: mach_msg_header_t,
     pub msgh_body: mach_msg_body_t,
-    pub modules: mach_msg_ool_descriptor_t,
+    pub out_processor_info: mach_msg_ool_descriptor_t,
     pub NDR: NDR_record_t,
-    pub modulesCnt: mach_msg_type_number_t,
+    pub out_processor_count: natural_t,
+    pub out_processor_infoCnt: mach_msg_type_number_t,
 }
 impl ::std::clone::Clone for Struct_Unnamed461 {
     fn clone(&self) -> Self { *self }
@@ -13602,17 +13612,13 @@ impl ::std::clone::Clone for Struct_Unnamed461 {
 impl ::std::default::Default for Struct_Unnamed461 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type __Reply__kmod_get_info_t = Struct_Unnamed461;
+pub type __Reply__host_processor_info_t = Struct_Unnamed461;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_Unnamed462 {
     pub Head: mach_msg_header_t,
     pub msgh_body: mach_msg_body_t,
-    pub names: mach_msg_ool_descriptor_t,
-    pub info: mach_msg_ool_descriptor_t,
-    pub NDR: NDR_record_t,
-    pub namesCnt: mach_msg_type_number_t,
-    pub infoCnt: mach_msg_type_number_t,
+    pub io_master: mach_msg_port_descriptor_t,
 }
 impl ::std::clone::Clone for Struct_Unnamed462 {
     fn clone(&self) -> Self { *self }
@@ -13620,15 +13626,13 @@ impl ::std::clone::Clone for Struct_Unnamed462 {
 impl ::std::default::Default for Struct_Unnamed462 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type __Reply__host_zone_info_t = Struct_Unnamed462;
+pub type __Reply__host_get_io_master_t = Struct_Unnamed462;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_Unnamed463 {
     pub Head: mach_msg_header_t,
     pub msgh_body: mach_msg_body_t,
-    pub info: mach_msg_ool_descriptor_t,
-    pub NDR: NDR_record_t,
-    pub infoCnt: mach_msg_type_number_t,
+    pub clock_serv: mach_msg_port_descriptor_t,
 }
 impl ::std::clone::Clone for Struct_Unnamed463 {
     fn clone(&self) -> Self { *self }
@@ -13636,13 +13640,15 @@ impl ::std::clone::Clone for Struct_Unnamed463 {
 impl ::std::default::Default for Struct_Unnamed463 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type __Reply__host_virtual_physical_table_info_t = Struct_Unnamed463;
+pub type __Reply__host_get_clock_service_t = Struct_Unnamed463;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_Unnamed464 {
     pub Head: mach_msg_header_t,
     pub msgh_body: mach_msg_body_t,
-    pub default_set: mach_msg_port_descriptor_t,
+    pub modules: mach_msg_ool_descriptor_t,
+    pub NDR: NDR_record_t,
+    pub modulesCnt: mach_msg_type_number_t,
 }
 impl ::std::clone::Clone for Struct_Unnamed464 {
     fn clone(&self) -> Self { *self }
@@ -13650,101 +13656,10 @@ impl ::std::clone::Clone for Struct_Unnamed464 {
 impl ::std::default::Default for Struct_Unnamed464 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type __Reply__processor_set_default_t = Struct_Unnamed464;
+pub type __Reply__kmod_get_info_t = Struct_Unnamed464;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_Unnamed465 {
-    pub Head: mach_msg_header_t,
-    pub msgh_body: mach_msg_body_t,
-    pub new_set: mach_msg_port_descriptor_t,
-    pub new_name: mach_msg_port_descriptor_t,
-}
-impl ::std::clone::Clone for Struct_Unnamed465 {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_Unnamed465 {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-pub type __Reply__processor_set_create_t = Struct_Unnamed465;
-#[repr(C)]
-#[derive(Copy)]
-pub struct Struct_Unnamed466 {
-    pub Head: mach_msg_header_t,
-    pub msgh_body: mach_msg_body_t,
-    pub entry_handle: mach_msg_port_descriptor_t,
-}
-impl ::std::clone::Clone for Struct_Unnamed466 {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_Unnamed466 {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-pub type __Reply__mach_memory_object_memory_entry_64_t = Struct_Unnamed466;
-#[repr(C)]
-#[derive(Copy)]
-pub struct Struct_Unnamed467 {
-    pub Head: mach_msg_header_t,
-    pub NDR: NDR_record_t,
-    pub RetCode: kern_return_t,
-    pub host_info_outCnt: mach_msg_type_number_t,
-    pub host_info_out: [integer_t; 68usize],
-}
-impl ::std::clone::Clone for Struct_Unnamed467 {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_Unnamed467 {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-pub type __Reply__host_statistics_t = Struct_Unnamed467;
-#[repr(C)]
-#[derive(Copy)]
-pub struct Struct_Unnamed468 {
-    pub Head: mach_msg_header_t,
-    pub NDR: NDR_record_t,
-    pub RetCode: kern_return_t,
-}
-impl ::std::clone::Clone for Struct_Unnamed468 {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_Unnamed468 {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-pub type __Reply__host_request_notification_t = Struct_Unnamed468;
-#[repr(C)]
-#[derive(Copy)]
-pub struct Struct_Unnamed469 {
-    pub Head: mach_msg_header_t,
-    pub msgh_body: mach_msg_body_t,
-    pub lockgroup_info: mach_msg_ool_descriptor_t,
-    pub NDR: NDR_record_t,
-    pub lockgroup_infoCnt: mach_msg_type_number_t,
-}
-impl ::std::clone::Clone for Struct_Unnamed469 {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_Unnamed469 {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-pub type __Reply__host_lockgroup_info_t = Struct_Unnamed469;
-#[repr(C)]
-#[derive(Copy)]
-pub struct Struct_Unnamed470 {
-    pub Head: mach_msg_header_t,
-    pub NDR: NDR_record_t,
-    pub RetCode: kern_return_t,
-    pub host_info64_outCnt: mach_msg_type_number_t,
-    pub host_info64_out: [integer_t; 256usize],
-}
-impl ::std::clone::Clone for Struct_Unnamed470 {
-    fn clone(&self) -> Self { *self }
-}
-impl ::std::default::Default for Struct_Unnamed470 {
-    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
-}
-pub type __Reply__host_statistics64_t = Struct_Unnamed470;
-#[repr(C)]
-#[derive(Copy)]
-pub struct Struct_Unnamed471 {
     pub Head: mach_msg_header_t,
     pub msgh_body: mach_msg_body_t,
     pub names: mach_msg_ool_descriptor_t,
@@ -13753,19 +13668,110 @@ pub struct Struct_Unnamed471 {
     pub namesCnt: mach_msg_type_number_t,
     pub infoCnt: mach_msg_type_number_t,
 }
+impl ::std::clone::Clone for Struct_Unnamed465 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed465 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type __Reply__host_zone_info_t = Struct_Unnamed465;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed466 {
+    pub Head: mach_msg_header_t,
+    pub msgh_body: mach_msg_body_t,
+    pub info: mach_msg_ool_descriptor_t,
+    pub NDR: NDR_record_t,
+    pub infoCnt: mach_msg_type_number_t,
+}
+impl ::std::clone::Clone for Struct_Unnamed466 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed466 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type __Reply__host_virtual_physical_table_info_t = Struct_Unnamed466;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed467 {
+    pub Head: mach_msg_header_t,
+    pub msgh_body: mach_msg_body_t,
+    pub default_set: mach_msg_port_descriptor_t,
+}
+impl ::std::clone::Clone for Struct_Unnamed467 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed467 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type __Reply__processor_set_default_t = Struct_Unnamed467;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed468 {
+    pub Head: mach_msg_header_t,
+    pub msgh_body: mach_msg_body_t,
+    pub new_set: mach_msg_port_descriptor_t,
+    pub new_name: mach_msg_port_descriptor_t,
+}
+impl ::std::clone::Clone for Struct_Unnamed468 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed468 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type __Reply__processor_set_create_t = Struct_Unnamed468;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed469 {
+    pub Head: mach_msg_header_t,
+    pub msgh_body: mach_msg_body_t,
+    pub entry_handle: mach_msg_port_descriptor_t,
+}
+impl ::std::clone::Clone for Struct_Unnamed469 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed469 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type __Reply__mach_memory_object_memory_entry_64_t = Struct_Unnamed469;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed470 {
+    pub Head: mach_msg_header_t,
+    pub NDR: NDR_record_t,
+    pub RetCode: kern_return_t,
+    pub host_info_outCnt: mach_msg_type_number_t,
+    pub host_info_out: [integer_t; 68usize],
+}
+impl ::std::clone::Clone for Struct_Unnamed470 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed470 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type __Reply__host_statistics_t = Struct_Unnamed470;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed471 {
+    pub Head: mach_msg_header_t,
+    pub NDR: NDR_record_t,
+    pub RetCode: kern_return_t,
+}
 impl ::std::clone::Clone for Struct_Unnamed471 {
     fn clone(&self) -> Self { *self }
 }
 impl ::std::default::Default for Struct_Unnamed471 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type __Reply__mach_zone_info_t = Struct_Unnamed471;
+pub type __Reply__host_request_notification_t = Struct_Unnamed471;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_Unnamed472 {
     pub Head: mach_msg_header_t,
     pub msgh_body: mach_msg_body_t,
-    pub voucher: mach_msg_port_descriptor_t,
+    pub lockgroup_info: mach_msg_ool_descriptor_t,
+    pub NDR: NDR_record_t,
+    pub lockgroup_infoCnt: mach_msg_type_number_t,
 }
 impl ::std::clone::Clone for Struct_Unnamed472 {
     fn clone(&self) -> Self { *self }
@@ -13773,15 +13779,15 @@ impl ::std::clone::Clone for Struct_Unnamed472 {
 impl ::std::default::Default for Struct_Unnamed472 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type __Reply__host_create_mach_voucher_t = Struct_Unnamed472;
+pub type __Reply__host_lockgroup_info_t = Struct_Unnamed472;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_Unnamed473 {
     pub Head: mach_msg_header_t,
-    pub msgh_body: mach_msg_body_t,
-    pub new_attr_control: mach_msg_port_descriptor_t,
     pub NDR: NDR_record_t,
-    pub new_key: mach_voucher_attr_key_t,
+    pub RetCode: kern_return_t,
+    pub host_info64_outCnt: mach_msg_type_number_t,
+    pub host_info64_out: [integer_t; 256usize],
 }
 impl ::std::clone::Clone for Struct_Unnamed473 {
     fn clone(&self) -> Self { *self }
@@ -13789,14 +13795,17 @@ impl ::std::clone::Clone for Struct_Unnamed473 {
 impl ::std::default::Default for Struct_Unnamed473 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type __Reply__host_register_mach_voucher_attr_manager_t =
-    Struct_Unnamed473;
+pub type __Reply__host_statistics64_t = Struct_Unnamed473;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_Unnamed474 {
     pub Head: mach_msg_header_t,
     pub msgh_body: mach_msg_body_t,
-    pub new_attr_control: mach_msg_port_descriptor_t,
+    pub names: mach_msg_ool_descriptor_t,
+    pub info: mach_msg_ool_descriptor_t,
+    pub NDR: NDR_record_t,
+    pub namesCnt: mach_msg_type_number_t,
+    pub infoCnt: mach_msg_type_number_t,
 }
 impl ::std::clone::Clone for Struct_Unnamed474 {
     fn clone(&self) -> Self { *self }
@@ -13804,14 +13813,13 @@ impl ::std::clone::Clone for Struct_Unnamed474 {
 impl ::std::default::Default for Struct_Unnamed474 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type __Reply__host_register_well_known_mach_voucher_attr_manager_t =
-    Struct_Unnamed474;
+pub type __Reply__mach_zone_info_t = Struct_Unnamed474;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_Unnamed475 {
     pub Head: mach_msg_header_t,
-    pub NDR: NDR_record_t,
-    pub RetCode: kern_return_t,
+    pub msgh_body: mach_msg_body_t,
+    pub voucher: mach_msg_port_descriptor_t,
 }
 impl ::std::clone::Clone for Struct_Unnamed475 {
     fn clone(&self) -> Self { *self }
@@ -13819,14 +13827,15 @@ impl ::std::clone::Clone for Struct_Unnamed475 {
 impl ::std::default::Default for Struct_Unnamed475 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type __Reply__host_set_atm_diagnostic_flag_t = Struct_Unnamed475;
+pub type __Reply__host_create_mach_voucher_t = Struct_Unnamed475;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_Unnamed476 {
     pub Head: mach_msg_header_t,
+    pub msgh_body: mach_msg_body_t,
+    pub new_attr_control: mach_msg_port_descriptor_t,
     pub NDR: NDR_record_t,
-    pub RetCode: kern_return_t,
-    pub diagnostic_flag: uint32_t,
+    pub new_key: mach_voucher_attr_key_t,
 }
 impl ::std::clone::Clone for Struct_Unnamed476 {
     fn clone(&self) -> Self { *self }
@@ -13834,10 +13843,55 @@ impl ::std::clone::Clone for Struct_Unnamed476 {
 impl ::std::default::Default for Struct_Unnamed476 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type __Reply__host_get_atm_diagnostic_flag_t = Struct_Unnamed476;
+pub type __Reply__host_register_mach_voucher_attr_manager_t =
+    Struct_Unnamed476;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct_Unnamed477 {
+    pub Head: mach_msg_header_t,
+    pub msgh_body: mach_msg_body_t,
+    pub new_attr_control: mach_msg_port_descriptor_t,
+}
+impl ::std::clone::Clone for Struct_Unnamed477 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed477 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type __Reply__host_register_well_known_mach_voucher_attr_manager_t =
+    Struct_Unnamed477;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed478 {
+    pub Head: mach_msg_header_t,
+    pub NDR: NDR_record_t,
+    pub RetCode: kern_return_t,
+}
+impl ::std::clone::Clone for Struct_Unnamed478 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed478 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type __Reply__host_set_atm_diagnostic_flag_t = Struct_Unnamed478;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed479 {
+    pub Head: mach_msg_header_t,
+    pub NDR: NDR_record_t,
+    pub RetCode: kern_return_t,
+    pub diagnostic_flag: uint32_t,
+}
+impl ::std::clone::Clone for Struct_Unnamed479 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed479 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type __Reply__host_get_atm_diagnostic_flag_t = Struct_Unnamed479;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed480 {
     pub Head: mach_msg_header_t,
     pub msgh_body: mach_msg_body_t,
     pub names: mach_msg_ool_descriptor_t,
@@ -13848,13 +13902,57 @@ pub struct Struct_Unnamed477 {
     pub infoCnt: mach_msg_type_number_t,
     pub memory_infoCnt: mach_msg_type_number_t,
 }
-impl ::std::clone::Clone for Struct_Unnamed477 {
+impl ::std::clone::Clone for Struct_Unnamed480 {
     fn clone(&self) -> Self { *self }
 }
-impl ::std::default::Default for Struct_Unnamed477 {
+impl ::std::default::Default for Struct_Unnamed480 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type __Reply__mach_memory_info_t = Struct_Unnamed477;
+pub type __Reply__mach_memory_info_t = Struct_Unnamed480;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed481 {
+    pub Head: mach_msg_header_t,
+    pub NDR: NDR_record_t,
+    pub RetCode: kern_return_t,
+}
+impl ::std::clone::Clone for Struct_Unnamed481 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed481 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type __Reply__host_set_multiuser_config_flags_t = Struct_Unnamed481;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed482 {
+    pub Head: mach_msg_header_t,
+    pub NDR: NDR_record_t,
+    pub RetCode: kern_return_t,
+    pub multiuser_flags: uint32_t,
+}
+impl ::std::clone::Clone for Struct_Unnamed482 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed482 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type __Reply__host_get_multiuser_config_flags_t = Struct_Unnamed482;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_Unnamed483 {
+    pub Head: mach_msg_header_t,
+    pub NDR: NDR_record_t,
+    pub RetCode: kern_return_t,
+    pub multiuser_mode: uint32_t,
+}
+impl ::std::clone::Clone for Struct_Unnamed483 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_Unnamed483 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type __Reply__host_check_multiuser_mode_t = Struct_Unnamed483;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Union___ReplyUnion__mach_host_subsystem {
@@ -13980,6 +14078,21 @@ impl Union___ReplyUnion__mach_host_subsystem {
         let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
         ::std::mem::transmute(raw.offset(0))
     }
+    pub unsafe fn Reply_host_set_multiuser_config_flags(&mut self)
+     -> *mut __Reply__host_set_multiuser_config_flags_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn Reply_host_get_multiuser_config_flags(&mut self)
+     -> *mut __Reply__host_get_multiuser_config_flags_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn Reply_host_check_multiuser_mode(&mut self)
+     -> *mut __Reply__host_check_multiuser_mode_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
 }
 impl ::std::clone::Clone for Union___ReplyUnion__mach_host_subsystem {
     fn clone(&self) -> Self { *self }
@@ -14066,22 +14179,22 @@ pub type inaddr_t = Struct_sockaddr_in;
 pub type in6addr_t = Struct_sockaddr_in6;
 #[repr(C)]
 #[derive(Copy)]
-pub struct Struct_Unnamed478 {
-    pub __inaddr_u: Union_Unnamed479,
+pub struct Struct_Unnamed484 {
+    pub __inaddr_u: Union_Unnamed485,
     pub inaddrlen: ::std::os::raw::c_int,
 }
-impl ::std::clone::Clone for Struct_Unnamed478 {
+impl ::std::clone::Clone for Struct_Unnamed484 {
     fn clone(&self) -> Self { *self }
 }
-impl ::std::default::Default for Struct_Unnamed478 {
+impl ::std::default::Default for Struct_Unnamed484 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
 #[repr(C)]
 #[derive(Copy)]
-pub struct Union_Unnamed479 {
+pub struct Union_Unnamed485 {
     pub _bindgen_data_: [u32; 7usize],
 }
-impl Union_Unnamed479 {
+impl Union_Unnamed485 {
     pub unsafe fn __addr(&mut self) -> *mut inaddr_t {
         let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
         ::std::mem::transmute(raw.offset(0))
@@ -14091,13 +14204,13 @@ impl Union_Unnamed479 {
         ::std::mem::transmute(raw.offset(0))
     }
 }
-impl ::std::clone::Clone for Union_Unnamed479 {
+impl ::std::clone::Clone for Union_Unnamed485 {
     fn clone(&self) -> Self { *self }
 }
-impl ::std::default::Default for Union_Unnamed479 {
+impl ::std::default::Default for Union_Unnamed485 {
     fn default() -> Self { unsafe { ::std::mem::zeroed() } }
 }
-pub type inaddr_storage_t = Struct_Unnamed478;
+pub type inaddr_storage_t = Struct_Unnamed484;
 pub type ulong = ::std::os::raw::c_ulong;
 pub type SOCKET = ::std::os::raw::c_int;
 pub enum Struct__zactor_t { }
@@ -14181,6 +14294,7 @@ pub type zthread_t = Struct__zthread_t;
 pub type zactor_fn =
     unsafe extern "C" fn(pipe: *mut zsock_t,
                          args: *mut ::std::os::raw::c_void);
+pub type zcertstore_loader = unsafe extern "C" fn(_self: *mut zcertstore_t);
 pub type zconfig_fct =
     unsafe extern "C" fn(_self: *mut zconfig_t,
                          arg: *mut ::std::os::raw::c_void,
@@ -14249,8 +14363,7 @@ pub type zthread_detached_fn =
 pub type zthread_attached_fn =
     unsafe extern "C" fn(args: *mut ::std::os::raw::c_void, ctx: *mut zctx_t,
                          pipe: *mut ::std::os::raw::c_void);
-pub type __builtin_va_list = [__va_list_tag; 1usize];
-pub type __va_list_tag = Struct___va_list_tag;
+pub type __builtin_va_list = [Struct___va_list_tag; 1usize];
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct___va_list_tag {
@@ -15034,10 +15147,12 @@ extern "C" {
                   arg2: *const ::std::os::raw::c_char)
      -> *mut ::std::os::raw::c_char;
     pub fn strcspn(arg1: *const ::std::os::raw::c_char,
-                   arg2: *const ::std::os::raw::c_char) -> size_t;
+                   arg2: *const ::std::os::raw::c_char)
+     -> ::std::os::raw::c_ulong;
     pub fn strerror(arg1: ::std::os::raw::c_int)
      -> *mut ::std::os::raw::c_char;
-    pub fn strlen(arg1: *const ::std::os::raw::c_char) -> size_t;
+    pub fn strlen(arg1: *const ::std::os::raw::c_char)
+     -> ::std::os::raw::c_ulong;
     pub fn strncat(arg1: *mut ::std::os::raw::c_char,
                    arg2: *const ::std::os::raw::c_char, arg3: size_t)
      -> *mut ::std::os::raw::c_char;
@@ -15054,7 +15169,8 @@ extern "C" {
                    arg2: ::std::os::raw::c_int)
      -> *mut ::std::os::raw::c_char;
     pub fn strspn(arg1: *const ::std::os::raw::c_char,
-                  arg2: *const ::std::os::raw::c_char) -> size_t;
+                  arg2: *const ::std::os::raw::c_char)
+     -> ::std::os::raw::c_ulong;
     pub fn strstr(arg1: *const ::std::os::raw::c_char,
                   arg2: *const ::std::os::raw::c_char)
      -> *mut ::std::os::raw::c_char;
@@ -15063,7 +15179,7 @@ extern "C" {
      -> *mut ::std::os::raw::c_char;
     pub fn strxfrm(arg1: *mut ::std::os::raw::c_char,
                    arg2: *const ::std::os::raw::c_char, arg3: size_t)
-     -> size_t;
+     -> ::std::os::raw::c_ulong;
     pub fn strtok_r(arg1: *mut ::std::os::raw::c_char,
                     arg2: *const ::std::os::raw::c_char,
                     arg3: *mut *mut ::std::os::raw::c_char)
@@ -15109,10 +15225,10 @@ extern "C" {
      -> *mut ::std::os::raw::c_char;
     pub fn strlcat(arg1: *mut ::std::os::raw::c_char,
                    arg2: *const ::std::os::raw::c_char, arg3: size_t)
-     -> size_t;
+     -> ::std::os::raw::c_ulong;
     pub fn strlcpy(arg1: *mut ::std::os::raw::c_char,
                    arg2: *const ::std::os::raw::c_char, arg3: size_t)
-     -> size_t;
+     -> ::std::os::raw::c_ulong;
     pub fn strmode(arg1: ::std::os::raw::c_int,
                    arg2: *mut ::std::os::raw::c_char);
     pub fn strsep(arg1: *mut *mut ::std::os::raw::c_char,
@@ -16042,7 +16158,7 @@ extern "C" {
      -> ::std::os::raw::c_int;
     pub fn ualarm(arg1: useconds_t, arg2: useconds_t) -> useconds_t;
     pub fn usleep(arg1: useconds_t) -> ::std::os::raw::c_int;
-    pub fn vfork() -> pid_t;
+    pub fn vfork() -> ::std::os::raw::c_int;
     pub fn fsync(arg1: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
     pub fn ftruncate(arg1: ::std::os::raw::c_int, arg2: off_t)
      -> ::std::os::raw::c_int;
@@ -17731,6 +17847,15 @@ extern "C" {
                             memory_info: *mut mach_memory_info_array_t,
                             memory_infoCnt: *mut mach_msg_type_number_t)
      -> kern_return_t;
+    pub fn host_set_multiuser_config_flags(host_priv: host_priv_t,
+                                           multiuser_flags: uint32_t)
+     -> kern_return_t;
+    pub fn host_get_multiuser_config_flags(host: host_t,
+                                           multiuser_flags: *mut uint32_t)
+     -> kern_return_t;
+    pub fn host_check_multiuser_mode(host: host_t,
+                                     multiuser_mode: *mut uint32_t)
+     -> kern_return_t;
     pub fn mach_error_string(error_value: mach_error_t)
      -> *mut ::std::os::raw::c_char;
     pub fn mach_error(str: *const ::std::os::raw::c_char,
@@ -17837,18 +17962,18 @@ extern "C" {
     pub fn zcert_load(filename: *const ::std::os::raw::c_char)
      -> *mut zcert_t;
     pub fn zcert_destroy(self_p: *mut *mut zcert_t);
-    pub fn zcert_public_key(_self: *mut zcert_t) -> *mut byte;
-    pub fn zcert_secret_key(_self: *mut zcert_t) -> *mut byte;
+    pub fn zcert_public_key(_self: *mut zcert_t) -> *const byte;
+    pub fn zcert_secret_key(_self: *mut zcert_t) -> *const byte;
     pub fn zcert_public_txt(_self: *mut zcert_t)
-     -> *mut ::std::os::raw::c_char;
+     -> *const ::std::os::raw::c_char;
     pub fn zcert_secret_txt(_self: *mut zcert_t)
-     -> *mut ::std::os::raw::c_char;
+     -> *const ::std::os::raw::c_char;
     pub fn zcert_set_meta(_self: *mut zcert_t,
                           name: *const ::std::os::raw::c_char,
                           format: *const ::std::os::raw::c_char, ...);
     pub fn zcert_meta(_self: *mut zcert_t,
                       name: *const ::std::os::raw::c_char)
-     -> *mut ::std::os::raw::c_char;
+     -> *const ::std::os::raw::c_char;
     pub fn zcert_meta_keys(_self: *mut zcert_t) -> *mut zlist_t;
     pub fn zcert_save(_self: *mut zcert_t,
                       filename: *const ::std::os::raw::c_char)
@@ -17860,7 +17985,7 @@ extern "C" {
                              filename: *const ::std::os::raw::c_char)
      -> ::std::os::raw::c_int;
     pub fn zcert_apply(_self: *mut zcert_t,
-                       zocket: *mut ::std::os::raw::c_void);
+                       socket: *mut ::std::os::raw::c_void);
     pub fn zcert_dup(_self: *mut zcert_t) -> *mut zcert_t;
     pub fn zcert_eq(_self: *mut zcert_t, compare: *mut zcert_t) -> u8;
     pub fn zcert_print(_self: *mut zcert_t);
@@ -17869,11 +17994,14 @@ extern "C" {
     pub fn zcertstore_new(location: *const ::std::os::raw::c_char)
      -> *mut zcertstore_t;
     pub fn zcertstore_destroy(self_p: *mut *mut zcertstore_t);
+    pub fn zcertstore_set_loader(_self: *mut zcertstore_t,
+                                 loader: zcertstore_loader);
     pub fn zcertstore_lookup(_self: *mut zcertstore_t,
                              public_key: *const ::std::os::raw::c_char)
      -> *mut zcert_t;
     pub fn zcertstore_insert(_self: *mut zcertstore_t,
                              cert_p: *mut *mut zcert_t);
+    pub fn zcertstore_empty(_self: *mut zcertstore_t);
     pub fn zcertstore_print(_self: *mut zcertstore_t);
     pub fn zcertstore_fprint(_self: *mut zcertstore_t, file: *mut FILE);
     pub fn zcertstore_test(verbose: u8);
@@ -17982,9 +18110,9 @@ extern "C" {
     pub fn zconfig_test(verbose: u8);
     pub fn zdigest_new() -> *mut zdigest_t;
     pub fn zdigest_destroy(self_p: *mut *mut zdigest_t);
-    pub fn zdigest_update(_self: *mut zdigest_t, buffer: *mut byte,
+    pub fn zdigest_update(_self: *mut zdigest_t, buffer: *const byte,
                           length: size_t);
-    pub fn zdigest_data(_self: *mut zdigest_t) -> *mut byte;
+    pub fn zdigest_data(_self: *mut zdigest_t) -> *const byte;
     pub fn zdigest_size(_self: *mut zdigest_t) -> size_t;
     pub fn zdigest_string(_self: *mut zdigest_t)
      -> *mut ::std::os::raw::c_char;
@@ -18082,7 +18210,7 @@ extern "C" {
     pub fn zframe_data(_self: *mut zframe_t) -> *mut byte;
     pub fn zframe_meta(_self: *mut zframe_t,
                        property: *const ::std::os::raw::c_char)
-     -> *mut ::std::os::raw::c_char;
+     -> *const ::std::os::raw::c_char;
     pub fn zframe_dup(_self: *mut zframe_t) -> *mut zframe_t;
     pub fn zframe_strhex(_self: *mut zframe_t) -> *mut ::std::os::raw::c_char;
     pub fn zframe_strdup(_self: *mut zframe_t) -> *mut ::std::os::raw::c_char;
@@ -18352,10 +18480,11 @@ extern "C" {
      -> ::std::os::raw::c_int;
     pub fn zmsg_pop(_self: *mut zmsg_t) -> *mut zframe_t;
     pub fn zmsg_pushmem(_self: *mut zmsg_t,
-                        src: *const ::std::os::raw::c_void, size: size_t)
+                        data: *const ::std::os::raw::c_void, size: size_t)
      -> ::std::os::raw::c_int;
-    pub fn zmsg_addmem(_self: *mut zmsg_t, src: *const ::std::os::raw::c_void,
-                       size: size_t) -> ::std::os::raw::c_int;
+    pub fn zmsg_addmem(_self: *mut zmsg_t,
+                       data: *const ::std::os::raw::c_void, size: size_t)
+     -> ::std::os::raw::c_int;
     pub fn zmsg_pushstr(_self: *mut zmsg_t,
                         string: *const ::std::os::raw::c_char)
      -> ::std::os::raw::c_int;
@@ -18782,7 +18911,7 @@ extern "C" {
     pub fn zuuid_neq(_self: *mut zuuid_t, compare: *const byte) -> u8;
     pub fn zuuid_dup(_self: *mut zuuid_t) -> *mut zuuid_t;
     pub fn zuuid_test(verbose: u8);
-    pub fn zauth(pipe: *mut zsock_t, unused: *mut ::std::os::raw::c_void);
+    pub fn zauth(pipe: *mut zsock_t, certstore: *mut ::std::os::raw::c_void);
     pub fn zauth_test(verbose: u8);
     pub fn zbeacon(pipe: *mut zsock_t, unused: *mut ::std::os::raw::c_void);
     pub fn zbeacon_test(verbose: u8);

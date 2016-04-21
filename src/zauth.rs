@@ -1,6 +1,10 @@
 //! Module: czmq-zauth
 
-use {czmq_sys, Result, ZActor, ZMsg};
+use {czmq_sys, Result, ZActor, ZCertStore, ZMsg};
+use error::{Error, ErrorKind};
+use std::{error, ptr};
+use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::os::raw::c_void;
 
 pub struct ZAuth {
     zactor: ZActor,
@@ -9,10 +13,21 @@ pub struct ZAuth {
 unsafe impl Send for ZAuth {}
 
 impl ZAuth {
-    pub fn new() -> Result<ZAuth> {
-        Ok(ZAuth {
-            zactor: try!(ZActor::new(czmq_sys::zauth)),
-        })
+    pub fn new(certstore: Option<ZCertStore>) -> Result<ZAuth> {
+        let ptr = if let Some(cs) = certstore {
+            cs.to_raw()
+        } else {
+            ptr::null_mut()
+        };
+        let zactor = unsafe { czmq_sys::zactor_new(czmq_sys::zauth, ptr as *mut c_void) };
+
+        if zactor == ptr::null_mut() {
+            Err(Error::new(ErrorKind::NullPtr, ZAuthError::Instantiate))
+        } else {
+            Ok(ZAuth {
+                zactor: ZActor::from_raw(zactor),
+            })
+        }
     }
 
     pub fn allow(&self, address: &str) -> Result<()> {
@@ -67,6 +82,27 @@ impl ZAuth {
     }
 }
 
+#[derive(Debug)]
+pub enum ZAuthError {
+    Instantiate,
+}
+
+impl Display for ZAuthError {
+    fn fmt(&self, f: &mut Formatter) -> FmtResult {
+        match *self {
+            ZAuthError::Instantiate => write!(f, "Could not instantiate new ZAuth struct"),
+        }
+    }
+}
+
+impl error::Error for ZAuthError {
+    fn description(&self) -> &str {
+        match *self {
+            ZAuthError::Instantiate => "Could not instantiate new ZAuth struct",
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::io::Write;
@@ -75,7 +111,7 @@ mod tests {
     use super::*;
     use tempdir::TempDir;
     use tempfile::NamedTempFile;
-    use {ZCert, ZFrame, ZSock, ZSockType, zsys_init};
+    use {ZCert, ZCertStore, ZCertStoreRaw, ZFrame, ZSock, ZSockType, zsys_init};
 
     // There can only be one ZAuth instance per context as each ZAuth
     // instance binds to the same inproc endpoint. The simplest way
@@ -88,10 +124,11 @@ mod tests {
         test_allow_deny();
         test_plain();
         test_curve();
+        test_zcertstore();
     }
 
     fn test_verbose() {
-        let zauth = ZAuth::new().unwrap();
+        let zauth = ZAuth::new(None).unwrap();
         assert!(zauth.verbose().is_ok());
     }
 
@@ -104,7 +141,7 @@ mod tests {
         client.set_linger(100);
         client.set_sndtimeo(100);
 
-        let zauth = ZAuth::new().unwrap();
+        let zauth = ZAuth::new(None).unwrap();
 
         assert!(zauth.deny("127.0.0.1").is_ok());
         sleep(Duration::from_millis(100));
@@ -128,7 +165,7 @@ mod tests {
     }
 
     fn test_plain() {
-        let zauth = ZAuth::new().unwrap();
+        let zauth = ZAuth::new(None).unwrap();
 
         let server = ZSock::new(ZSockType::PULL);
         server.set_zap_domain("sky.net");
@@ -162,7 +199,7 @@ mod tests {
     }
 
     fn test_curve() {
-        let zauth = ZAuth::new().unwrap();
+        let zauth = ZAuth::new(None).unwrap();
 
         let server = ZSock::new(ZSockType::PULL);
         let server_cert = ZCert::new().unwrap();
@@ -217,5 +254,58 @@ mod tests {
         assert_eq!(frame.data().unwrap().unwrap(), "test");
         assert_eq!(frame.meta("moo").unwrap().unwrap().unwrap(), "cow");
         assert_eq!(frame.meta("woof").unwrap().unwrap().unwrap(), "dog");
+    }
+
+    fn test_zcertstore() {
+        let certstore = ZCertStore::new(None).unwrap();
+        certstore.set_loader(test_loader_fn);
+
+        let _zauth = ZAuth::new(Some(certstore)).unwrap();
+
+        let public_key = [ 105, 76, 150, 58, 214, 191, 218, 65, 50, 172,
+                           131, 188, 247, 211, 136, 170, 227, 26, 57, 170,
+                           185, 63, 246, 225, 177, 230, 12, 8, 134, 136,
+                           105, 106 ];
+        let secret_key = [ 245, 217, 172, 73, 106, 28, 195, 17, 218, 132,
+                           135, 209, 99, 240, 98, 232, 7, 137, 244, 100,
+                           242, 23, 29, 114, 70, 223, 83, 1, 113, 207,
+                           132, 149 ];
+        let cert = ZCert::from_keys(&public_key, &secret_key);
+
+        let server = ZSock::new(ZSockType::PULL);
+        server.set_zap_domain("sky.net");
+        server.set_curve_server(true);
+        server.set_rcvtimeo(100);
+        cert.apply(&server);
+        let port = server.bind("tcp://127.0.0.1:*[60000-]").unwrap();
+
+        let client = ZSock::new(ZSockType::PUSH);
+        client.set_curve_serverkey(cert.public_txt());
+        client.set_linger(100);
+        client.set_sndtimeo(100);
+        cert.apply(&client);
+        client.connect(&format!("tcp://127.0.0.1:{}", port)).unwrap();
+
+        sleep(Duration::from_millis(200));
+
+        client.send_str("test").unwrap();
+        assert_eq!(server.recv_str().unwrap().unwrap(), "test");
+    }
+
+    unsafe extern "C" fn test_loader_fn(raw: *mut ZCertStoreRaw) {
+        let store = ZCertStore::from_raw(raw, false);
+        store.empty();
+        store.insert(ZCert::new().unwrap());
+
+        let public_key = [ 105, 76, 150, 58, 214, 191, 218, 65, 50, 172,
+                           131, 188, 247, 211, 136, 170, 227, 26, 57, 170,
+                           185, 63, 246, 225, 177, 230, 12, 8, 134, 136,
+                           105, 106 ];
+        let secret_key = [ 245, 217, 172, 73, 106, 28, 195, 17, 218, 132,
+                           135, 209, 99, 240, 98, 232, 7, 137, 244, 100,
+                           242, 23, 29, 114, 70, 223, 83, 1, 113, 207,
+                           132, 149 ];
+        let cert = ZCert::from_keys(&public_key, &secret_key);
+        store.insert(cert);
     }
 }
