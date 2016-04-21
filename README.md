@@ -62,6 +62,36 @@ fn test_my_thing() {
 }
 ```
 
+## Bindgen
+
+To generate the FFI code (_czmq-sys/src/ffi.rs_), we need [rust-bindgen](https://github.com/crabtw/rust-bindgen). Clone and build this repo, then use it to generate the binding.
+
+Here's a sample command:
+
+```bash
+/path/to/bindgen -l czmq -o /path/to/rust-czmq/czmq-sys/src/ffi.rs -builtins /usr/local/include/czmq.h
+```
+
+For OS X, we will probably also need to help Clang find some missing headers. If you see an error like this...
+
+```
+/usr/local/include/czmq_prelude.h:177:13: fatal error: 'TargetConditionals.h' file not found
+```
+
+...then you'll need to manually specify the include directory (or directories) where the missing headers reside.
+
+Note: You'll need Xcode installed to get the missing headers.
+
+Here's a sample command with the missing headers' include path:
+
+```bash
+/path/to/bindgen -l czmq -o /path/to/rust-czmq/czmq-sys/src/ffi.rs -builtins -I/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk/usr/include/ /usr/local/include/czmq.h
+```
+
+If the path above doesn't exist (it probably doesn't), or you're still getting errors about missing headers (.h files), use `find` to locate the headers on your machine. When you've found them, manually specify their paths using one or more `-I` flags as in the example above.
+
+If you're still struggling, feel free to raise a ticket and someone might be able to point you in the right direction.
+
 ## Roadmap
 
 1. Finish existing modules by replacing the FFI stubs with Rust fns
