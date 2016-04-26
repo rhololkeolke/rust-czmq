@@ -97,9 +97,13 @@ impl ZMonitor {
 
     pub fn get_attr(&self) -> Result<result::Result<ZMonitorEvents, Vec<u8>>> {
         let msg = try!(ZMsg::recv(&self.zactor));
-        match try!(msg.popstr()) {
-            Ok(s) => Ok(Ok(ZMonitorEvents::from_str(&s))),
-            Err(v) => Ok(Err(v))
+
+        match msg.popstr() {
+            Some(result) => match result {
+                Ok(s) => Ok(Ok(ZMonitorEvents::from_str(&s))),
+                Err(v) => Ok(Err(v)),
+            },
+            None => Err(Error::new(ErrorKind::MissingFrame, ZMonitorError::MissingAttr))
         }
     }
 
@@ -116,12 +120,14 @@ impl ZMonitor {
 #[derive(Debug)]
 pub enum ZMonitorError {
     Instantiate,
+    MissingAttr,
 }
 
 impl Display for ZMonitorError {
     fn fmt(&self, f: &mut Formatter) -> FmtResult {
         match *self {
             ZMonitorError::Instantiate => write!(f, "Could not instantiate new ZMonitor struct"),
+            ZMonitorError::MissingAttr => write!(f, "ZMonitor didn't reply with attribute"),
         }
     }
 }
@@ -130,6 +136,7 @@ impl error::Error for ZMonitorError {
     fn description(&self) -> &str {
         match *self {
             ZMonitorError::Instantiate => "Could not instantiate new ZMonitor struct",
+            ZMonitorError::MissingAttr => "ZMonitor didn't reply with attribute",
         }
     }
 }

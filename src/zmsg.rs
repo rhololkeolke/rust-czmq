@@ -120,13 +120,13 @@ impl ZMsg {
     // pub fn zmsg_append(_self: *mut zmsg_t, frame_p: *mut *mut zframe_t)
     //  -> ::std::os::raw::c_int;
 
-    pub fn pop(&self) -> Result<ZFrame> {
+    pub fn pop(&self) -> Option<ZFrame> {
         let ptr = unsafe { czmq_sys::zmsg_pop(self.zmsg) };
 
         if ptr == ptr::null_mut() {
-            Err(Error::new(ErrorKind::NullPtr, ZMsgError::CmdFailed))
+            None
         } else {
-            Ok(ZFrame::from_raw(ptr))
+            Some(ZFrame::from_raw(ptr))
         }
     }
 
@@ -160,29 +160,29 @@ impl ZMsg {
     //                     format: *const ::std::os::raw::c_char, ...)
     //  -> ::std::os::raw::c_int;
 
-    pub fn popstr(&self) -> Result<result::Result<String, Vec<u8>>> {
+    pub fn popstr(&self) -> Option<result::Result<String, Vec<u8>>> {
         let ptr = unsafe { czmq_sys::zmsg_popstr(self.zmsg) };
 
         if ptr == ptr::null_mut() {
-            Err(Error::new(ErrorKind::NullPtr, ZMsgError::CmdFailed))
+            None
         } else {
             let c_string = unsafe { CStr::from_ptr(ptr).to_owned() };
             let bytes = c_string.as_bytes().to_vec();
             match c_string.into_string() {
-                Ok(s) => Ok(Ok(s)),
-                Err(_) => Ok(Err(bytes))
+                Ok(s) => Some(Ok(s)),
+                Err(_) => Some(Err(bytes)),
             }
         }
     }
 
-    pub fn popbytes(&self) -> Result<Vec<u8>> {
+    pub fn popbytes(&self) -> Option<Vec<u8>> {
         let ptr = unsafe { czmq_sys::zmsg_popstr(self.zmsg) };
 
         if ptr == ptr::null_mut() {
-            Err(Error::new(ErrorKind::NullPtr, ZMsgError::CmdFailed))
+            None
         } else {
             let c_string = unsafe { CStr::from_ptr(ptr).to_owned() };
-            Ok(c_string.to_bytes().to_vec())
+            Some(c_string.to_bytes().to_vec())
         }
     }
 
@@ -212,6 +212,14 @@ impl ZMsg {
 
     pub fn borrow_raw(&self) -> *mut czmq_sys::zmsg_t {
         self.zmsg
+    }
+}
+
+impl Iterator for ZMsg {
+    type Item = ZFrame;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.pop()
     }
 }
 
