@@ -14213,13 +14213,499 @@ impl ::std::default::Default for Union_Unnamed485 {
 pub type inaddr_storage_t = Struct_Unnamed484;
 pub type ulong = ::std::os::raw::c_ulong;
 pub type SOCKET = ::std::os::raw::c_int;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_net_event_data {
+    pub if_family: u_int32_t,
+    pub if_unit: u_int32_t,
+    pub if_name: [::std::os::raw::c_char; 16usize],
+}
+impl ::std::clone::Clone for Struct_net_event_data {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_net_event_data {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_timeval32 {
+    pub tv_sec: __int32_t,
+    pub tv_usec: __int32_t,
+}
+impl ::std::clone::Clone for Struct_timeval32 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_timeval32 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_if_data {
+    pub ifi_type: u_char,
+    pub ifi_typelen: u_char,
+    pub ifi_physical: u_char,
+    pub ifi_addrlen: u_char,
+    pub ifi_hdrlen: u_char,
+    pub ifi_recvquota: u_char,
+    pub ifi_xmitquota: u_char,
+    pub ifi_unused1: u_char,
+    pub ifi_mtu: u_int32_t,
+    pub ifi_metric: u_int32_t,
+    pub ifi_baudrate: u_int32_t,
+    pub ifi_ipackets: u_int32_t,
+    pub ifi_ierrors: u_int32_t,
+    pub ifi_opackets: u_int32_t,
+    pub ifi_oerrors: u_int32_t,
+    pub ifi_collisions: u_int32_t,
+    pub ifi_ibytes: u_int32_t,
+    pub ifi_obytes: u_int32_t,
+    pub ifi_imcasts: u_int32_t,
+    pub ifi_omcasts: u_int32_t,
+    pub ifi_iqdrops: u_int32_t,
+    pub ifi_noproto: u_int32_t,
+    pub ifi_recvtiming: u_int32_t,
+    pub ifi_xmittiming: u_int32_t,
+    pub ifi_lastchange: Struct_timeval32,
+    pub ifi_unused2: u_int32_t,
+    pub ifi_hwassist: u_int32_t,
+    pub ifi_reserved1: u_int32_t,
+    pub ifi_reserved2: u_int32_t,
+}
+impl ::std::clone::Clone for Struct_if_data {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_if_data {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_if_data64 {
+    pub ifi_type: u_char,
+    pub ifi_typelen: u_char,
+    pub ifi_physical: u_char,
+    pub ifi_addrlen: u_char,
+    pub ifi_hdrlen: u_char,
+    pub ifi_recvquota: u_char,
+    pub ifi_xmitquota: u_char,
+    pub ifi_unused1: u_char,
+    pub ifi_mtu: u_int32_t,
+    pub ifi_metric: u_int32_t,
+    pub ifi_baudrate: u_int64_t,
+    pub ifi_ipackets: u_int64_t,
+    pub ifi_ierrors: u_int64_t,
+    pub ifi_opackets: u_int64_t,
+    pub ifi_oerrors: u_int64_t,
+    pub ifi_collisions: u_int64_t,
+    pub ifi_ibytes: u_int64_t,
+    pub ifi_obytes: u_int64_t,
+    pub ifi_imcasts: u_int64_t,
+    pub ifi_omcasts: u_int64_t,
+    pub ifi_iqdrops: u_int64_t,
+    pub ifi_noproto: u_int64_t,
+    pub ifi_recvtiming: u_int32_t,
+    pub ifi_xmittiming: u_int32_t,
+    pub ifi_lastchange: Struct_timeval32,
+}
+impl ::std::clone::Clone for Struct_if_data64 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_if_data64 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_ifqueue {
+    pub ifq_head: *mut ::std::os::raw::c_void,
+    pub ifq_tail: *mut ::std::os::raw::c_void,
+    pub ifq_len: ::std::os::raw::c_int,
+    pub ifq_maxlen: ::std::os::raw::c_int,
+    pub ifq_drops: ::std::os::raw::c_int,
+}
+impl ::std::clone::Clone for Struct_ifqueue {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ifqueue {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_if_clonereq {
+    pub ifcr_total: ::std::os::raw::c_int,
+    pub ifcr_count: ::std::os::raw::c_int,
+    pub ifcr_buffer: *mut ::std::os::raw::c_char,
+}
+impl ::std::clone::Clone for Struct_if_clonereq {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_if_clonereq {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_if_msghdr {
+    pub ifm_msglen: ::std::os::raw::c_ushort,
+    pub ifm_version: ::std::os::raw::c_uchar,
+    pub ifm_type: ::std::os::raw::c_uchar,
+    pub ifm_addrs: ::std::os::raw::c_int,
+    pub ifm_flags: ::std::os::raw::c_int,
+    pub ifm_index: ::std::os::raw::c_ushort,
+    pub ifm_data: Struct_if_data,
+}
+impl ::std::clone::Clone for Struct_if_msghdr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_if_msghdr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_ifa_msghdr {
+    pub ifam_msglen: ::std::os::raw::c_ushort,
+    pub ifam_version: ::std::os::raw::c_uchar,
+    pub ifam_type: ::std::os::raw::c_uchar,
+    pub ifam_addrs: ::std::os::raw::c_int,
+    pub ifam_flags: ::std::os::raw::c_int,
+    pub ifam_index: ::std::os::raw::c_ushort,
+    pub ifam_metric: ::std::os::raw::c_int,
+}
+impl ::std::clone::Clone for Struct_ifa_msghdr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ifa_msghdr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_ifma_msghdr {
+    pub ifmam_msglen: ::std::os::raw::c_ushort,
+    pub ifmam_version: ::std::os::raw::c_uchar,
+    pub ifmam_type: ::std::os::raw::c_uchar,
+    pub ifmam_addrs: ::std::os::raw::c_int,
+    pub ifmam_flags: ::std::os::raw::c_int,
+    pub ifmam_index: ::std::os::raw::c_ushort,
+}
+impl ::std::clone::Clone for Struct_ifma_msghdr {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ifma_msghdr {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_if_msghdr2 {
+    pub ifm_msglen: u_short,
+    pub ifm_version: u_char,
+    pub ifm_type: u_char,
+    pub ifm_addrs: ::std::os::raw::c_int,
+    pub ifm_flags: ::std::os::raw::c_int,
+    pub ifm_index: u_short,
+    pub ifm_snd_len: ::std::os::raw::c_int,
+    pub ifm_snd_maxlen: ::std::os::raw::c_int,
+    pub ifm_snd_drops: ::std::os::raw::c_int,
+    pub ifm_timer: ::std::os::raw::c_int,
+    pub ifm_data: Struct_if_data64,
+}
+impl ::std::clone::Clone for Struct_if_msghdr2 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_if_msghdr2 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_ifma_msghdr2 {
+    pub ifmam_msglen: u_short,
+    pub ifmam_version: u_char,
+    pub ifmam_type: u_char,
+    pub ifmam_addrs: ::std::os::raw::c_int,
+    pub ifmam_flags: ::std::os::raw::c_int,
+    pub ifmam_index: u_short,
+    pub ifmam_refcount: int32_t,
+}
+impl ::std::clone::Clone for Struct_ifma_msghdr2 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ifma_msghdr2 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_ifdevmtu {
+    pub ifdm_current: ::std::os::raw::c_int,
+    pub ifdm_min: ::std::os::raw::c_int,
+    pub ifdm_max: ::std::os::raw::c_int,
+}
+impl ::std::clone::Clone for Struct_ifdevmtu {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ifdevmtu {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_ifkpi {
+    pub ifk_module_id: ::std::os::raw::c_uint,
+    pub ifk_type: ::std::os::raw::c_uint,
+    pub ifk_data: Union_Unnamed486,
+}
+impl ::std::clone::Clone for Struct_ifkpi {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ifkpi {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Union_Unnamed486 {
+    pub _bindgen_data_: [u32; 2usize],
+}
+impl Union_Unnamed486 {
+    pub unsafe fn ifk_ptr(&mut self) -> *mut *mut ::std::os::raw::c_void {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn ifk_value(&mut self) -> *mut ::std::os::raw::c_int {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+}
+impl ::std::clone::Clone for Union_Unnamed486 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Union_Unnamed486 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_ifreq {
+    pub ifr_name: [::std::os::raw::c_char; 16usize],
+    pub ifr_ifru: Union_Unnamed487,
+}
+impl ::std::clone::Clone for Struct_ifreq {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ifreq {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Union_Unnamed487 {
+    pub _bindgen_data_: [u64; 2usize],
+}
+impl Union_Unnamed487 {
+    pub unsafe fn ifru_addr(&mut self) -> *mut Struct_sockaddr {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn ifru_dstaddr(&mut self) -> *mut Struct_sockaddr {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn ifru_broadaddr(&mut self) -> *mut Struct_sockaddr {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn ifru_flags(&mut self) -> *mut ::std::os::raw::c_short {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn ifru_metric(&mut self) -> *mut ::std::os::raw::c_int {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn ifru_mtu(&mut self) -> *mut ::std::os::raw::c_int {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn ifru_phys(&mut self) -> *mut ::std::os::raw::c_int {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn ifru_media(&mut self) -> *mut ::std::os::raw::c_int {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn ifru_intval(&mut self) -> *mut ::std::os::raw::c_int {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn ifru_data(&mut self) -> *mut caddr_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn ifru_devmtu(&mut self) -> *mut Struct_ifdevmtu {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn ifru_kpi(&mut self) -> *mut Struct_ifkpi {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn ifru_wake_flags(&mut self) -> *mut u_int32_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn ifru_route_refcnt(&mut self) -> *mut u_int32_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn ifru_cap(&mut self)
+     -> *mut [::std::os::raw::c_int; 2usize] {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+}
+impl ::std::clone::Clone for Union_Unnamed487 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Union_Unnamed487 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_ifaliasreq {
+    pub ifra_name: [::std::os::raw::c_char; 16usize],
+    pub ifra_addr: Struct_sockaddr,
+    pub ifra_broadaddr: Struct_sockaddr,
+    pub ifra_mask: Struct_sockaddr,
+}
+impl ::std::clone::Clone for Struct_ifaliasreq {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ifaliasreq {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_rslvmulti_req {
+    pub sa: *mut Struct_sockaddr,
+    pub llsa: *mut *mut Struct_sockaddr,
+}
+impl ::std::clone::Clone for Struct_rslvmulti_req {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_rslvmulti_req {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_ifmediareq {
+    pub ifm_name: [::std::os::raw::c_char; 16usize],
+    pub ifm_current: ::std::os::raw::c_int,
+    pub ifm_mask: ::std::os::raw::c_int,
+    pub ifm_status: ::std::os::raw::c_int,
+    pub ifm_active: ::std::os::raw::c_int,
+    pub ifm_count: ::std::os::raw::c_int,
+    pub ifm_ulist: *mut ::std::os::raw::c_int,
+}
+impl ::std::clone::Clone for Struct_ifmediareq {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ifmediareq {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_ifdrv {
+    pub ifd_name: [::std::os::raw::c_char; 16usize],
+    pub ifd_cmd: ::std::os::raw::c_ulong,
+    pub ifd_len: size_t,
+    pub ifd_data: *mut ::std::os::raw::c_void,
+}
+impl ::std::clone::Clone for Struct_ifdrv {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ifdrv {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_ifstat {
+    pub ifs_name: [::std::os::raw::c_char; 16usize],
+    pub ascii: [::std::os::raw::c_char; 801usize],
+}
+impl ::std::clone::Clone for Struct_ifstat {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ifstat {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_ifconf {
+    pub ifc_len: ::std::os::raw::c_int,
+    pub ifc_ifcu: Union_Unnamed488,
+}
+impl ::std::clone::Clone for Struct_ifconf {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ifconf {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Union_Unnamed488 {
+    pub _bindgen_data_: [u32; 2usize],
+}
+impl Union_Unnamed488 {
+    pub unsafe fn ifcu_buf(&mut self) -> *mut caddr_t {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+    pub unsafe fn ifcu_req(&mut self) -> *mut *mut Struct_ifreq {
+        let raw: *mut u8 = ::std::mem::transmute(&self._bindgen_data_);
+        ::std::mem::transmute(raw.offset(0))
+    }
+}
+impl ::std::clone::Clone for Union_Unnamed488 {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Union_Unnamed488 {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_kev_dl_proto_data {
+    pub link_data: Struct_net_event_data,
+    pub proto_family: u_int32_t,
+    pub proto_remaining_count: u_int32_t,
+}
+impl ::std::clone::Clone for Struct_kev_dl_proto_data {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_kev_dl_proto_data {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_if_nameindex {
+    pub if_index: ::std::os::raw::c_uint,
+    pub if_name: *mut ::std::os::raw::c_char,
+}
+impl ::std::clone::Clone for Struct_if_nameindex {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_if_nameindex {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct_ifmedia_description {
+    pub ifmt_word: ::std::os::raw::c_int,
+    pub ifmt_string: *const ::std::os::raw::c_char,
+}
+impl ::std::clone::Clone for Struct_ifmedia_description {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct_ifmedia_description {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
 pub enum Struct__zactor_t { }
 pub type zactor_t = Struct__zactor_t;
 pub enum Struct__zarmour_t { }
 pub type zarmour_t = Struct__zarmour_t;
 pub enum Struct__zcert_t { }
 pub type zcert_t = Struct__zcert_t;
-pub enum Struct__zcertstore_t { }
 pub type zcertstore_t = Struct__zcertstore_t;
 pub enum Struct__zchunk_t { }
 pub type zchunk_t = Struct__zchunk_t;
@@ -14291,10 +14777,18 @@ pub enum Struct__zsockopt_t { }
 pub type zsockopt_t = Struct__zsockopt_t;
 pub enum Struct__zthread_t { }
 pub type zthread_t = Struct__zthread_t;
+pub enum Struct__zproc_t { }
+pub type zproc_t = Struct__zproc_t;
+pub enum Struct__ztimerset_t { }
+pub type ztimerset_t = Struct__ztimerset_t;
+pub enum Struct__ztrie_t { }
+pub type ztrie_t = Struct__ztrie_t;
 pub type zactor_fn =
     unsafe extern "C" fn(pipe: *mut zsock_t,
                          args: *mut ::std::os::raw::c_void);
 pub type zcertstore_loader = unsafe extern "C" fn(_self: *mut zcertstore_t);
+pub type zcertstore_destructor =
+    unsafe extern "C" fn(self_p: *mut *mut ::std::os::raw::c_void);
 pub type zconfig_fct =
     unsafe extern "C" fn(_self: *mut zconfig_t,
                          arg: *mut ::std::os::raw::c_void,
@@ -14363,7 +14857,56 @@ pub type zthread_detached_fn =
 pub type zthread_attached_fn =
     unsafe extern "C" fn(args: *mut ::std::os::raw::c_void, ctx: *mut zctx_t,
                          pipe: *mut ::std::os::raw::c_void);
-pub type __builtin_va_list = [Struct___va_list_tag; 1usize];
+pub type ztimerset_fn =
+    unsafe extern "C" fn(timer_id: ::std::os::raw::c_int,
+                         arg: *mut ::std::os::raw::c_void);
+pub type ztrie_destroy_data_fn =
+    unsafe extern "C" fn(data: *mut *mut ::std::os::raw::c_void);
+pub enum Struct__zgossip_msg_t { }
+pub type zgossip_msg_t = Struct__zgossip_msg_t;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct__disk_loader_state {
+    pub location: *mut ::std::os::raw::c_char,
+    pub modified: time_t,
+    pub count: size_t,
+    pub cursize: size_t,
+}
+impl ::std::clone::Clone for Struct__disk_loader_state {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct__disk_loader_state {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type disk_loader_state = Struct__disk_loader_state;
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct__zcertstore_t {
+    pub loader: *mut zcertstore_loader,
+    pub destructor: *mut zcertstore_destructor,
+    pub state: *mut ::std::os::raw::c_void,
+    pub certs: *mut zhashx_t,
+}
+impl ::std::clone::Clone for Struct__zcertstore_t {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct__zcertstore_t {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+#[repr(C)]
+#[derive(Copy)]
+pub struct Struct__test_loader_state {
+    pub index: ::std::os::raw::c_int,
+}
+impl ::std::clone::Clone for Struct__test_loader_state {
+    fn clone(&self) -> Self { *self }
+}
+impl ::std::default::Default for Struct__test_loader_state {
+    fn default() -> Self { unsafe { ::std::mem::zeroed() } }
+}
+pub type test_loader_state = Struct__test_loader_state;
+pub type __builtin_va_list = [__va_list_tag; 1usize];
+pub type __va_list_tag = Struct___va_list_tag;
 #[repr(C)]
 #[derive(Copy)]
 pub struct Struct___va_list_tag {
@@ -15147,12 +15690,10 @@ extern "C" {
                   arg2: *const ::std::os::raw::c_char)
      -> *mut ::std::os::raw::c_char;
     pub fn strcspn(arg1: *const ::std::os::raw::c_char,
-                   arg2: *const ::std::os::raw::c_char)
-     -> ::std::os::raw::c_ulong;
+                   arg2: *const ::std::os::raw::c_char) -> size_t;
     pub fn strerror(arg1: ::std::os::raw::c_int)
      -> *mut ::std::os::raw::c_char;
-    pub fn strlen(arg1: *const ::std::os::raw::c_char)
-     -> ::std::os::raw::c_ulong;
+    pub fn strlen(arg1: *const ::std::os::raw::c_char) -> size_t;
     pub fn strncat(arg1: *mut ::std::os::raw::c_char,
                    arg2: *const ::std::os::raw::c_char, arg3: size_t)
      -> *mut ::std::os::raw::c_char;
@@ -15169,8 +15710,7 @@ extern "C" {
                    arg2: ::std::os::raw::c_int)
      -> *mut ::std::os::raw::c_char;
     pub fn strspn(arg1: *const ::std::os::raw::c_char,
-                  arg2: *const ::std::os::raw::c_char)
-     -> ::std::os::raw::c_ulong;
+                  arg2: *const ::std::os::raw::c_char) -> size_t;
     pub fn strstr(arg1: *const ::std::os::raw::c_char,
                   arg2: *const ::std::os::raw::c_char)
      -> *mut ::std::os::raw::c_char;
@@ -15179,7 +15719,7 @@ extern "C" {
      -> *mut ::std::os::raw::c_char;
     pub fn strxfrm(arg1: *mut ::std::os::raw::c_char,
                    arg2: *const ::std::os::raw::c_char, arg3: size_t)
-     -> ::std::os::raw::c_ulong;
+     -> size_t;
     pub fn strtok_r(arg1: *mut ::std::os::raw::c_char,
                     arg2: *const ::std::os::raw::c_char,
                     arg3: *mut *mut ::std::os::raw::c_char)
@@ -15225,10 +15765,10 @@ extern "C" {
      -> *mut ::std::os::raw::c_char;
     pub fn strlcat(arg1: *mut ::std::os::raw::c_char,
                    arg2: *const ::std::os::raw::c_char, arg3: size_t)
-     -> ::std::os::raw::c_ulong;
+     -> size_t;
     pub fn strlcpy(arg1: *mut ::std::os::raw::c_char,
                    arg2: *const ::std::os::raw::c_char, arg3: size_t)
-     -> ::std::os::raw::c_ulong;
+     -> size_t;
     pub fn strmode(arg1: ::std::os::raw::c_int,
                    arg2: *mut ::std::os::raw::c_char);
     pub fn strsep(arg1: *mut *mut ::std::os::raw::c_char,
@@ -16158,7 +16698,7 @@ extern "C" {
      -> ::std::os::raw::c_int;
     pub fn ualarm(arg1: useconds_t, arg2: useconds_t) -> useconds_t;
     pub fn usleep(arg1: useconds_t) -> ::std::os::raw::c_int;
-    pub fn vfork() -> ::std::os::raw::c_int;
+    pub fn vfork() -> pid_t;
     pub fn fsync(arg1: ::std::os::raw::c_int) -> ::std::os::raw::c_int;
     pub fn ftruncate(arg1: ::std::os::raw::c_int, arg2: off_t)
      -> ::std::os::raw::c_int;
@@ -17921,6 +18461,13 @@ extern "C" {
     pub fn _NSGetEnviron() -> *mut *mut *mut ::std::os::raw::c_char;
     pub fn _NSGetProgname() -> *mut *mut ::std::os::raw::c_char;
     pub fn _NSGetMachExecuteHeader() -> *mut Struct_mach_header_64;
+    pub fn if_nametoindex(arg1: *const ::std::os::raw::c_char)
+     -> ::std::os::raw::c_uint;
+    pub fn if_indextoname(arg1: ::std::os::raw::c_uint,
+                          arg2: *mut ::std::os::raw::c_char)
+     -> *mut ::std::os::raw::c_char;
+    pub fn if_nameindex() -> *mut Struct_if_nameindex;
+    pub fn if_freenameindex(arg1: *mut Struct_if_nameindex);
     pub fn zactor_new(task: zactor_fn, args: *mut ::std::os::raw::c_void)
      -> *mut zactor_t;
     pub fn zactor_destroy(self_p: *mut *mut zactor_t);
@@ -17991,20 +18538,24 @@ extern "C" {
     pub fn zcert_print(_self: *mut zcert_t);
     pub fn zcert_fprint(_self: *mut zcert_t, file: *mut FILE);
     pub fn zcert_test(verbose: u8);
+    pub fn zcert_unset_meta(_self: *mut zcert_t,
+                            name: *const ::std::os::raw::c_char);
     pub fn zcertstore_new(location: *const ::std::os::raw::c_char)
      -> *mut zcertstore_t;
     pub fn zcertstore_destroy(self_p: *mut *mut zcertstore_t);
-    pub fn zcertstore_set_loader(_self: *mut zcertstore_t,
-                                 loader: zcertstore_loader);
     pub fn zcertstore_lookup(_self: *mut zcertstore_t,
                              public_key: *const ::std::os::raw::c_char)
      -> *mut zcert_t;
     pub fn zcertstore_insert(_self: *mut zcertstore_t,
                              cert_p: *mut *mut zcert_t);
-    pub fn zcertstore_empty(_self: *mut zcertstore_t);
     pub fn zcertstore_print(_self: *mut zcertstore_t);
     pub fn zcertstore_fprint(_self: *mut zcertstore_t, file: *mut FILE);
     pub fn zcertstore_test(verbose: u8);
+    pub fn zcertstore_set_loader(_self: *mut zcertstore_t,
+                                 loader: zcertstore_loader,
+                                 destructor: zcertstore_destructor,
+                                 state: *mut ::std::os::raw::c_void);
+    pub fn zcertstore_empty(_self: *mut zcertstore_t);
     pub fn zchunk_new(data: *const ::std::os::raw::c_void, size: size_t)
      -> *mut zchunk_t;
     pub fn zchunk_destroy(self_p: *mut *mut zchunk_t);
@@ -18225,6 +18776,13 @@ extern "C" {
                         prefix: *const ::std::os::raw::c_char);
     pub fn zframe_is(_self: *mut ::std::os::raw::c_void) -> u8;
     pub fn zframe_test(verbose: u8);
+    pub fn zframe_routing_id(_self: *mut zframe_t) -> uint32_t;
+    pub fn zframe_set_routing_id(_self: *mut zframe_t, routing_id: uint32_t);
+    pub fn zframe_group(_self: *mut zframe_t)
+     -> *const ::std::os::raw::c_char;
+    pub fn zframe_set_group(_self: *mut zframe_t,
+                            group: *const ::std::os::raw::c_char)
+     -> ::std::os::raw::c_int;
     pub fn zframe_recv_nowait(source: *mut ::std::os::raw::c_void)
      -> *mut zframe_t;
     pub fn zframe_fprint(_self: *mut zframe_t,
@@ -18460,6 +19018,7 @@ extern "C" {
     pub fn zloop_set_verbose(_self: *mut zloop_t, verbose: u8);
     pub fn zloop_start(_self: *mut zloop_t) -> ::std::os::raw::c_int;
     pub fn zloop_test(verbose: u8);
+    pub fn zloop_set_nonstop(_self: *mut zloop_t, nonstop: u8);
     pub fn zmsg_new() -> *mut zmsg_t;
     pub fn zmsg_recv(source: *mut ::std::os::raw::c_void) -> *mut zmsg_t;
     pub fn zmsg_load(file: *mut FILE) -> *mut zmsg_t;
@@ -18514,6 +19073,8 @@ extern "C" {
     pub fn zmsg_signal(_self: *mut zmsg_t) -> ::std::os::raw::c_int;
     pub fn zmsg_is(_self: *mut ::std::os::raw::c_void) -> u8;
     pub fn zmsg_test(verbose: u8);
+    pub fn zmsg_routing_id(_self: *mut zmsg_t) -> uint32_t;
+    pub fn zmsg_set_routing_id(_self: *mut zmsg_t, routing_id: uint32_t);
     pub fn zmsg_unwrap(_self: *mut zmsg_t) -> *mut zframe_t;
     pub fn zmsg_recv_nowait(source: *mut ::std::os::raw::c_void)
      -> *mut zmsg_t;
@@ -18537,6 +19098,7 @@ extern "C" {
     pub fn zpoller_expired(_self: *mut zpoller_t) -> u8;
     pub fn zpoller_terminated(_self: *mut zpoller_t) -> u8;
     pub fn zpoller_test(verbose: u8);
+    pub fn zpoller_set_nonstop(_self: *mut zpoller_t, nonstop: u8);
     pub fn zsock_new(_type: ::std::os::raw::c_int) -> *mut zsock_t;
     pub fn zsock_new_pub(endpoint: *const ::std::os::raw::c_char)
      -> *mut zsock_t;
@@ -18815,6 +19377,43 @@ extern "C" {
     pub fn zsock_last_endpoint(_self: *mut ::std::os::raw::c_void)
      -> *mut ::std::os::raw::c_char;
     pub fn zsock_test(verbose: u8);
+    pub fn zsock_new_server(endpoint: *const ::std::os::raw::c_char)
+     -> *mut zsock_t;
+    pub fn zsock_new_client(endpoint: *const ::std::os::raw::c_char)
+     -> *mut zsock_t;
+    pub fn zsock_new_radio(endpoint: *const ::std::os::raw::c_char)
+     -> *mut zsock_t;
+    pub fn zsock_new_dish(endpoint: *const ::std::os::raw::c_char)
+     -> *mut zsock_t;
+    pub fn zsock_new_gather(endpoint: *const ::std::os::raw::c_char)
+     -> *mut zsock_t;
+    pub fn zsock_new_scatter(endpoint: *const ::std::os::raw::c_char)
+     -> *mut zsock_t;
+    pub fn zsock_routing_id(_self: *mut zsock_t) -> uint32_t;
+    pub fn zsock_set_routing_id(_self: *mut zsock_t, routing_id: uint32_t);
+    pub fn zsock_join(_self: *mut ::std::os::raw::c_void,
+                      group: *const ::std::os::raw::c_char)
+     -> ::std::os::raw::c_int;
+    pub fn zsock_leave(_self: *mut ::std::os::raw::c_void,
+                       group: *const ::std::os::raw::c_char)
+     -> ::std::os::raw::c_int;
+    pub fn zsock_heartbeat_ivl(_self: *mut ::std::os::raw::c_void)
+     -> ::std::os::raw::c_int;
+    pub fn zsock_set_heartbeat_ivl(_self: *mut ::std::os::raw::c_void,
+                                   heartbeat_ivl: ::std::os::raw::c_int);
+    pub fn zsock_heartbeat_ttl(_self: *mut ::std::os::raw::c_void)
+     -> ::std::os::raw::c_int;
+    pub fn zsock_set_heartbeat_ttl(_self: *mut ::std::os::raw::c_void,
+                                   heartbeat_ttl: ::std::os::raw::c_int);
+    pub fn zsock_heartbeat_timeout(_self: *mut ::std::os::raw::c_void)
+     -> ::std::os::raw::c_int;
+    pub fn zsock_set_heartbeat_timeout(_self: *mut ::std::os::raw::c_void,
+                                       heartbeat_timeout:
+                                           ::std::os::raw::c_int);
+    pub fn zsock_use_fd(_self: *mut ::std::os::raw::c_void)
+     -> ::std::os::raw::c_int;
+    pub fn zsock_set_use_fd(_self: *mut ::std::os::raw::c_void,
+                            use_fd: ::std::os::raw::c_int);
     pub fn zsock_new_checked(_type: ::std::os::raw::c_int,
                              filename: *const ::std::os::raw::c_char,
                              line_nbr: size_t) -> *mut zsock_t;
@@ -18870,6 +19469,12 @@ extern "C" {
     pub fn zsock_new_dish_checked(endpoint: *const ::std::os::raw::c_char,
                                   filename: *const ::std::os::raw::c_char,
                                   line_nbr: size_t) -> *mut zsock_t;
+    pub fn zsock_new_gather_checked(endpoint: *const ::std::os::raw::c_char,
+                                    filename: *const ::std::os::raw::c_char,
+                                    line_nbr: size_t) -> *mut zsock_t;
+    pub fn zsock_new_scatter_checked(endpoint: *const ::std::os::raw::c_char,
+                                     filename: *const ::std::os::raw::c_char,
+                                     line_nbr: size_t) -> *mut zsock_t;
     pub fn zstr_recv(source: *mut ::std::os::raw::c_void)
      -> *mut ::std::os::raw::c_char;
     pub fn zstr_recvx(source: *mut ::std::os::raw::c_void,
@@ -18892,6 +19497,8 @@ extern "C" {
      -> ::std::os::raw::c_int;
     pub fn zstr_free(string_p: *mut *mut ::std::os::raw::c_char);
     pub fn zstr_test(verbose: u8);
+    pub fn zstr_str(source: *mut ::std::os::raw::c_void)
+     -> *mut ::std::os::raw::c_char;
     pub fn zstr_recv_nowait(source: *mut ::std::os::raw::c_void)
      -> *mut ::std::os::raw::c_char;
     pub fn zuuid_new() -> *mut zuuid_t;
@@ -19363,4 +19970,90 @@ extern "C" {
                         args: *mut ::std::os::raw::c_void)
      -> *mut ::std::os::raw::c_void;
     pub fn zthread_test(verbose: u8);
+    pub fn zproc_czmq_version() -> ::std::os::raw::c_int;
+    pub fn zproc_interrupted() -> u8;
+    pub fn zproc_has_curve() -> u8;
+    pub fn zproc_hostname() -> *mut ::std::os::raw::c_char;
+    pub fn zproc_daemonize(workdir: *const ::std::os::raw::c_char);
+    pub fn zproc_run_as(lockfile: *const ::std::os::raw::c_char,
+                        group: *const ::std::os::raw::c_char,
+                        user: *const ::std::os::raw::c_char);
+    pub fn zproc_set_io_threads(io_threads: size_t);
+    pub fn zproc_set_max_sockets(max_sockets: size_t);
+    pub fn zproc_set_biface(value: *const ::std::os::raw::c_char);
+    pub fn zproc_biface() -> *const ::std::os::raw::c_char;
+    pub fn zproc_set_log_ident(value: *const ::std::os::raw::c_char);
+    pub fn zproc_set_log_sender(endpoint: *const ::std::os::raw::c_char);
+    pub fn zproc_set_log_system(logsystem: u8);
+    pub fn zproc_log_error(format: *const ::std::os::raw::c_char, ...);
+    pub fn zproc_log_warning(format: *const ::std::os::raw::c_char, ...);
+    pub fn zproc_log_notice(format: *const ::std::os::raw::c_char, ...);
+    pub fn zproc_log_info(format: *const ::std::os::raw::c_char, ...);
+    pub fn zproc_log_debug(format: *const ::std::os::raw::c_char, ...);
+    pub fn zproc_test(verbose: u8);
+    pub fn ztimerset_new() -> *mut ztimerset_t;
+    pub fn ztimerset_destroy(self_p: *mut *mut ztimerset_t);
+    pub fn ztimerset_add(_self: *mut ztimerset_t, interval: size_t,
+                         handler: ztimerset_fn,
+                         arg: *mut ::std::os::raw::c_void)
+     -> ::std::os::raw::c_int;
+    pub fn ztimerset_cancel(_self: *mut ztimerset_t,
+                            timer_id: ::std::os::raw::c_int)
+     -> ::std::os::raw::c_int;
+    pub fn ztimerset_set_interval(_self: *mut ztimerset_t,
+                                  timer_id: ::std::os::raw::c_int,
+                                  interval: size_t) -> ::std::os::raw::c_int;
+    pub fn ztimerset_reset(_self: *mut ztimerset_t,
+                           timer_id: ::std::os::raw::c_int)
+     -> ::std::os::raw::c_int;
+    pub fn ztimerset_timeout(_self: *mut ztimerset_t)
+     -> ::std::os::raw::c_int;
+    pub fn ztimerset_execute(_self: *mut ztimerset_t)
+     -> ::std::os::raw::c_int;
+    pub fn ztimerset_test(verbose: u8);
+    pub fn ztrie_new(delimiter: ::std::os::raw::c_char) -> *mut ztrie_t;
+    pub fn ztrie_destroy(self_p: *mut *mut ztrie_t);
+    pub fn ztrie_insert_route(_self: *mut ztrie_t,
+                              path: *const ::std::os::raw::c_char,
+                              data: *mut ::std::os::raw::c_void,
+                              destroy_data_fn: ztrie_destroy_data_fn)
+     -> ::std::os::raw::c_int;
+    pub fn ztrie_remove_route(_self: *mut ztrie_t,
+                              path: *const ::std::os::raw::c_char)
+     -> ::std::os::raw::c_int;
+    pub fn ztrie_matches(_self: *mut ztrie_t,
+                         path: *const ::std::os::raw::c_char) -> u8;
+    pub fn ztrie_hit_data(_self: *mut ztrie_t) -> *mut ::std::os::raw::c_void;
+    pub fn ztrie_hit_parameter_count(_self: *mut ztrie_t) -> size_t;
+    pub fn ztrie_hit_parameters(_self: *mut ztrie_t) -> *mut zhashx_t;
+    pub fn ztrie_hit_asterisk_match(_self: *mut ztrie_t)
+     -> *const ::std::os::raw::c_char;
+    pub fn ztrie_print(_self: *mut ztrie_t);
+    pub fn ztrie_test(verbose: u8);
+    pub fn zgossip_msg_new() -> *mut zgossip_msg_t;
+    pub fn zgossip_msg_destroy(self_p: *mut *mut zgossip_msg_t);
+    pub fn zgossip_msg_recv(_self: *mut zgossip_msg_t, input: *mut zsock_t)
+     -> ::std::os::raw::c_int;
+    pub fn zgossip_msg_send(_self: *mut zgossip_msg_t, output: *mut zsock_t)
+     -> ::std::os::raw::c_int;
+    pub fn zgossip_msg_print(_self: *mut zgossip_msg_t);
+    pub fn zgossip_msg_routing_id(_self: *mut zgossip_msg_t) -> *mut zframe_t;
+    pub fn zgossip_msg_set_routing_id(_self: *mut zgossip_msg_t,
+                                      routing_id: *mut zframe_t);
+    pub fn zgossip_msg_id(_self: *mut zgossip_msg_t) -> ::std::os::raw::c_int;
+    pub fn zgossip_msg_set_id(_self: *mut zgossip_msg_t,
+                              id: ::std::os::raw::c_int);
+    pub fn zgossip_msg_command(_self: *mut zgossip_msg_t)
+     -> *const ::std::os::raw::c_char;
+    pub fn zgossip_msg_key(_self: *mut zgossip_msg_t)
+     -> *const ::std::os::raw::c_char;
+    pub fn zgossip_msg_set_key(_self: *mut zgossip_msg_t,
+                               key: *const ::std::os::raw::c_char);
+    pub fn zgossip_msg_value(_self: *mut zgossip_msg_t)
+     -> *const ::std::os::raw::c_char;
+    pub fn zgossip_msg_set_value(_self: *mut zgossip_msg_t,
+                                 value: *const ::std::os::raw::c_char);
+    pub fn zgossip_msg_ttl(_self: *mut zgossip_msg_t) -> uint32_t;
+    pub fn zgossip_msg_set_ttl(_self: *mut zgossip_msg_t, ttl: uint32_t);
+    pub fn zgossip_msg_test(verbose: u8);
 }

@@ -48,6 +48,7 @@ pub use ffi::{
     //
     zcertstore_t,
     zcertstore_loader,
+    zcertstore_destructor,
     zcertstore_new,
     zcertstore_destroy,
     zcertstore_set_loader,

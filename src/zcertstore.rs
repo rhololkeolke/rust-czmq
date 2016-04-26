@@ -1,8 +1,10 @@
-//! Module: czmq-zcert
+//! Module: czmq-zcertstore
 
 use {czmq_sys, Error, ErrorKind, Result, ZCert};
+use std::{error, fmt, mem, ptr};
+use std::any::Any;
 use std::ffi::CString;
-use std::{error, fmt, ptr};
+use std::os::raw::c_void;
 
 pub struct ZCertStore {
     zcertstore: *mut czmq_sys::zcertstore_t,
@@ -22,11 +24,12 @@ impl Drop for ZCertStore {
 
 impl ZCertStore {
     pub fn new(location: Option<&str>) -> Result<ZCertStore> {
-        let zcertstore = if let Some(l) = location {
-            let location_c = try!(CString::new(l));
-            unsafe { czmq_sys::zcertstore_new(location_c.as_ptr()) }
-        } else {
-            unsafe { czmq_sys::zcertstore_new(ptr::null()) }
+        let zcertstore = match location {
+            Some(l) => {
+                let location_c = try!(CString::new(l));
+                unsafe { czmq_sys::zcertstore_new(location_c.as_ptr()) }
+            },
+            None => unsafe { czmq_sys::zcertstore_new(ptr::null()) },
         };
 
         if zcertstore == ptr::null_mut() {
@@ -52,7 +55,16 @@ impl ZCertStore {
     }
 
     pub fn set_loader(&self, loader: czmq_sys::zcertstore_loader) {
-        unsafe { czmq_sys::zcertstore_set_loader(self.zcertstore, loader) };
+        unsafe { czmq_sys::zcertstore_set_loader(self.zcertstore, loader, default_destructor, ptr::null_mut::<c_void>()) };
+    }
+
+    pub fn set_loader_with_state(&self, loader: czmq_sys::zcertstore_loader, state: Box<Any>, destructor: Option<czmq_sys::zcertstore_destructor>) {
+        let destructor_ptr = match destructor {
+            Some(d) => d,
+            None => default_destructor as czmq_sys::zcertstore_destructor,
+        };
+
+        unsafe { czmq_sys::zcertstore_set_loader(self.zcertstore, loader, destructor_ptr, Box::into_raw(state) as *mut c_void) };
     }
 
     pub fn lookup(&self, public_key: &str) -> Result<Option<ZCert>> {
@@ -70,8 +82,42 @@ impl ZCertStore {
         unsafe { czmq_sys::zcertstore_empty(self.zcertstore) };
     }
 
+    // DANGER ZONE!
+    // This should only be called from the loader fn.
+    // Failure to call ZCertStore::release_state() will result in a
+    // SIGSEGV due to the Box destructor freeing the ptr, leaving it
+    // dangling for the C lib to fall over.
+    pub fn get_state<S>(&self) -> Option<Box<S>> {
+        // The underlying pointer should never be null, but just to
+        // be sure...
+        assert!(self.zcertstore != ptr::null_mut());
+
+        let internal = unsafe { ptr::read(self.zcertstore) };
+
+        if internal.state != ptr::null_mut() {
+            Some(unsafe { mem::transmute(Box::from_raw(internal.state)) })
+        } else {
+            None
+        }
+    }
+
+    // DANGER ZONE!
+    // This should only be called from the loader fn.
+    // Failure to call ZCertStore::release_state() will result in a
+    // SIGSEGV due to the Box destructor freeing the ptr, leaving it
+    // dangling for the C lib to fall over.
+    pub fn release_state(&self, state: Box<Any>) {
+        Box::into_raw(state);
+    }
+
     pub fn print(&self) {
         unsafe { czmq_sys::zcertstore_print(self.zcertstore) };
+    }
+}
+
+unsafe extern "C" fn default_destructor(state: *mut *mut c_void) {
+    if state != ptr::null_mut() && *state != ptr::null_mut() {
+        Box::from_raw(*state);
     }
 }
 
@@ -115,8 +161,27 @@ mod tests {
         assert!(store.lookup("nonexistent_key").unwrap().is_none()); // Idiot check
 
         store.set_loader(test_loader_fn);
+
         let public_key = "abcdefghijklmnopqrstuvwxyzabcdefghijklmn";
         assert_eq!(store.lookup(public_key).unwrap().unwrap().public_txt(), public_key);
+    }
+
+    #[test]
+    fn test_loader_with_state_default() {
+        let store = ZCertStore::new(None).unwrap();
+        assert!(store.lookup("nonexistent_key").unwrap().is_none()); // Idiot check
+
+        let test_state = TestState {
+            index: 0,
+        };
+        store.set_loader_with_state(test_loader_fn, Box::new(test_state), None);
+
+        let public_key = "abcdefghijklmnopqrstuvwxyzabcdefghijklmn";
+        assert_eq!(store.lookup(public_key).unwrap().unwrap().public_txt(), public_key);
+
+        let state = store.get_state::<TestState>().unwrap();
+        assert_eq!(state.index, 2);
+        store.release_state(state);
     }
 
     #[test]
@@ -158,6 +223,10 @@ mod tests {
         assert!(store.lookup(&public_txt).unwrap().is_none());
     }
 
+    struct TestState {
+        index: u32,
+    }
+
     unsafe extern "C" fn test_loader_fn(raw: *mut ZCertStoreRaw) {
         let store = ZCertStore::from_raw(raw, false);
         store.empty();
@@ -168,5 +237,10 @@ mod tests {
 
         let cert = ZCert::from_keys(&public_key, &secret_key);
         store.insert(cert);
+
+        if let Some(mut state) = store.get_state::<TestState>() {
+            state.index += 1;
+            store.release_state(state);
+        }
     }
 }
