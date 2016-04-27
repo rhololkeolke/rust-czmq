@@ -83,6 +83,41 @@ pub use ffi::{
     zframe_print,
 
     //
+    // ZHashX
+    //
+    zhashx_t,
+    zhashx_new,
+    zhashx_unpack,
+    zhashx_destroy,
+    zhashx_insert,
+    zhashx_update,
+    zhashx_delete,
+    zhashx_purge,
+    zhashx_lookup,
+    zhashx_rename,
+    zhashx_freefn,
+    zhashx_size,
+    zhashx_keys,
+    zhashx_values,
+    zhashx_first,
+    zhashx_next,
+    zhashx_cursor,
+    zhashx_comment,
+    zhashx_save,
+    zhashx_load,
+    zhashx_refresh,
+    zhashx_pack,
+    zhashx_dup,
+    zhashx_set_destructor,
+    zhashx_set_duplicator,
+    zhashx_set_key_destructor,
+    zhashx_set_key_duplicator,
+    zhashx_set_key_comparator,
+    zhashx_set_key_hasher,
+    zhashx_autofree,
+    zhashx_foreach,
+
+    //
     // ZList
     //
     zlist_t,

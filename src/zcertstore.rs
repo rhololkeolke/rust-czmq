@@ -1,6 +1,6 @@
 //! Module: czmq-zcertstore
 
-use {czmq_sys, Error, ErrorKind, Result, ZCert};
+use {czmq_sys, Colander, Error, ErrorKind, Result, ZCert};
 use std::{error, fmt, mem, ptr};
 use std::any::Any;
 use std::ffi::CString;
@@ -82,12 +82,7 @@ impl ZCertStore {
         unsafe { czmq_sys::zcertstore_empty(self.zcertstore) };
     }
 
-    // DANGER ZONE!
-    // This should only be called from the loader fn.
-    // Failure to call ZCertStore::release_state() will result in a
-    // SIGSEGV due to the Box destructor freeing the ptr, leaving it
-    // dangling for the C lib to fall over.
-    pub fn get_state<S>(&self) -> Option<Box<S>> {
+    pub fn get_state<S>(&self) -> Option<Colander<S>> {
         // The underlying pointer should never be null, but just to
         // be sure...
         assert!(self.zcertstore != ptr::null_mut());
@@ -95,19 +90,10 @@ impl ZCertStore {
         let internal = unsafe { ptr::read(self.zcertstore) };
 
         if internal.state != ptr::null_mut() {
-            Some(unsafe { mem::transmute(Box::from_raw(internal.state)) })
+            Some(unsafe { mem::transmute(Colander::from_raw(internal.state)) })
         } else {
             None
         }
-    }
-
-    // DANGER ZONE!
-    // This should only be called from the loader fn.
-    // Failure to call ZCertStore::release_state() will result in a
-    // SIGSEGV due to the Box destructor freeing the ptr, leaving it
-    // dangling for the C lib to fall over.
-    pub fn release_state(&self, state: Box<Any>) {
-        Box::into_raw(state);
     }
 
     pub fn print(&self) {
@@ -181,7 +167,6 @@ mod tests {
 
         let state = store.get_state::<TestState>().unwrap();
         assert_eq!(state.index, 2);
-        store.release_state(state);
     }
 
     #[test]
@@ -240,7 +225,6 @@ mod tests {
 
         if let Some(mut state) = store.get_state::<TestState>() {
             state.index += 1;
-            store.release_state(state);
         }
     }
 }
