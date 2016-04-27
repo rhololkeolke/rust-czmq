@@ -1,6 +1,6 @@
 //! Module: czmq-zcertstore
 
-use {czmq_sys, Colander, Error, ErrorKind, Result, ZCert};
+use {czmq_sys, Colander, Error, ErrorKind, Result, ZCert, ZHashX};
 use std::{error, fmt, mem, ptr};
 use std::any::Any;
 use std::ffi::CString;
@@ -71,7 +71,7 @@ impl ZCertStore {
         let public_key_c = try!(CString::new(public_key));
         let zcert = unsafe { czmq_sys::zcertstore_lookup(self.zcertstore, public_key_c.as_ptr()) };
 
-        if zcert == ptr::null_mut() { Ok(None) } else { Ok(Some(ZCert::from_raw(zcert, true))) }
+        if zcert == ptr::null_mut() { Ok(None) } else { Ok(Some(ZCert::from_raw(zcert, false))) }
     }
 
     pub fn insert(&self, zcert: ZCert) {
@@ -94,6 +94,19 @@ impl ZCertStore {
         } else {
             None
         }
+    }
+
+    pub fn get_certs(&self) -> ZHashX {
+        // The underlying pointer should never be null, but just to
+        // be sure...
+        assert!(self.zcertstore != ptr::null_mut());
+
+        let internal = unsafe { ptr::read(self.zcertstore) };
+
+        // This also should never be null
+        assert!(internal.certs != ptr::null_mut());
+
+        ZHashX::from_raw(internal.certs, false)
     }
 
     pub fn print(&self) {
@@ -130,9 +143,9 @@ impl error::Error for ZCertStoreError {
 
 #[cfg(test)]
 mod tests {
+    use {czmq_sys, ZCertStoreRaw, ZCert};
     use super::*;
     use tempdir::TempDir;
-    use {ZCertStoreRaw, ZCert};
     use zmq::z85_decode;
 
     #[test]
@@ -206,6 +219,19 @@ mod tests {
 
         store.empty();
         assert!(store.lookup(&public_txt).unwrap().is_none());
+    }
+
+    #[test]
+    fn test_get_certs() {
+        let cert = ZCert::new().unwrap();
+        let cert_c = ZCert::from_keys(cert.public_key(), cert.secret_key());
+
+        let store = ZCertStore::new(None).unwrap();
+        store.insert(cert);
+
+        let certs = store.get_certs();
+        let cert = ZCert::from_raw(certs.lookup::<czmq_sys::zcert_t>(cert_c.public_txt()).unwrap().into_raw(), false);
+        assert_eq!(cert.secret_key(), cert_c.secret_key());
     }
 
     struct TestState {

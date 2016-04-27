@@ -8,6 +8,7 @@ use std::os::raw::c_void;
 
 pub struct ZHashX {
     zhashx: *mut czmq_sys::zhashx_t,
+    owned: bool
 }
 
 unsafe impl Send for ZHashX {}
@@ -15,7 +16,9 @@ unsafe impl Sync for ZHashX {}
 
 impl Drop for ZHashX {
     fn drop(&mut self) {
-        unsafe { czmq_sys::zhashx_destroy(&mut self.zhashx) };
+        if self.owned {
+            unsafe { czmq_sys::zhashx_destroy(&mut self.zhashx) };
+        }
     }
 }
 
@@ -23,6 +26,14 @@ impl ZHashX {
     pub fn new() -> ZHashX {
         ZHashX {
             zhashx: unsafe { czmq_sys::zhashx_new() },
+            owned: true,
+        }
+    }
+
+    pub fn from_raw(zhashx: *mut czmq_sys::zhashx_t, owned: bool) -> ZHashX {
+        ZHashX {
+            zhashx: zhashx,
+            owned: owned,
         }
     }
 
