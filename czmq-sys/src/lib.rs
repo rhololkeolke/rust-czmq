@@ -178,6 +178,19 @@ pub use ffi::{
     zmsg_fprint,
 
     //
+    // ZPoller
+    //
+    zpoller_t,
+    zpoller_new,
+    zpoller_destroy,
+    zpoller_add,
+    zpoller_remove,
+    zpoller_wait,
+    zpoller_expired,
+    zpoller_terminated,
+    zpoller_set_nonstop,
+
+    //
     // ZSock
     //
     zsock_t,

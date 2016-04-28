@@ -10,6 +10,7 @@ use std::str::Utf8Error;
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ErrorKind {
     InvalidPath,
+    InvalidPtr,
     MissingFrame,
     NonZero,
     NullPtr,
@@ -36,6 +37,7 @@ impl Display for Error {
     fn fmt(&self, f: &mut Formatter) -> Result {
         match self.kind {
             ErrorKind::InvalidPath => write!(f, "File path was invalid: {}", self.cause),
+            ErrorKind::InvalidPtr => write!(f, "CZMQ returned invalid pointer: {}", self.cause),
             ErrorKind::MissingFrame => write!(f, "Missing frame in CZMQ reply: {}", self.cause),
             ErrorKind::NonZero => write!(f, "CZMQ returned non-zero code: {}", self.cause),
             ErrorKind::NullPtr => write!(f, "CZMQ returned null pointer: {}", self.cause),
@@ -48,6 +50,7 @@ impl error::Error for Error {
     fn description(&self) -> &str {
         match self.kind {
             ErrorKind::InvalidPath => "File path was invalid",
+            ErrorKind::InvalidPtr => "CZMQ returned invalid pointer",
             ErrorKind::MissingFrame => "Missing frame in CZMQ reply",
             ErrorKind::NonZero => "CZMQ returned non-zero code",
             ErrorKind::NullPtr => "CZMQ returned null pointer",

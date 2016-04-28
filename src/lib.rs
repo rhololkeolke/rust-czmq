@@ -20,6 +20,7 @@ mod zhashx;
 mod zlist;
 mod zmonitor;
 mod zmsg;
+mod zpoller;
 mod zsock;
 
 pub use error::{Error, ErrorKind};
@@ -33,6 +34,7 @@ pub use zhashx::ZHashX;
 pub use zlist::ZList;
 pub use zmonitor::{ZMonitor, ZMonitorEvents};
 pub use zmsg::ZMsg;
+pub use zpoller::ZPoller;
 pub use zsock::{ZSock, ZSockMechanism, ZSockType};
 
 use std::result;
