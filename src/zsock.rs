@@ -39,14 +39,14 @@ impl Copy for ZSockMechanism {}
 
 pub struct ZSock {
     zsock: *mut czmq_sys::zsock_t,
-    closed: bool,
+    owned: bool,
 }
 
 unsafe impl Send for ZSock {}
 
 impl Drop for ZSock {
     fn drop(&mut self) {
-        if !self.closed {
+        if self.owned {
             unsafe { czmq_sys::zsock_destroy(&mut self.zsock) };
         }
     }
@@ -56,7 +56,7 @@ impl ZSock {
     pub fn new(sock_type: ZSockType) -> ZSock {
         ZSock {
             zsock: unsafe { czmq_sys::zsock_new(sock_type as i32) },
-            closed: false,
+            owned: true,
         }
     }
 
@@ -68,7 +68,7 @@ impl ZSock {
         } else {
             Ok(ZSock {
                 zsock: zsock,
-                closed: false,
+                owned: true,
             })
         }
     }
@@ -86,7 +86,7 @@ impl ZSock {
         } else {
             Ok(ZSock {
                 zsock: zsock,
-                closed: false,
+                owned: true,
             })
         }
     }
@@ -99,7 +99,7 @@ impl ZSock {
         } else {
             Ok(ZSock {
                 zsock: zsock,
-                closed: false,
+                owned: true,
             })
         }
     }
@@ -112,7 +112,7 @@ impl ZSock {
         } else {
             Ok(ZSock {
                 zsock: zsock,
-                closed: false,
+                owned: true,
             })
         }
     }
@@ -125,7 +125,7 @@ impl ZSock {
         } else {
             Ok(ZSock {
                 zsock: zsock,
-                closed: false,
+                owned: true,
             })
         }
     }
@@ -138,7 +138,7 @@ impl ZSock {
         } else {
             Ok(ZSock {
                 zsock: zsock,
-                closed: false,
+                owned: true,
             })
         }
     }
@@ -151,7 +151,7 @@ impl ZSock {
         } else {
             Ok(ZSock {
                 zsock: zsock,
-                closed: false,
+                owned: true,
             })
         }
     }
@@ -164,7 +164,7 @@ impl ZSock {
         } else {
             Ok(ZSock {
                 zsock: zsock,
-                closed: false,
+                owned: true,
             })
         }
     }
@@ -177,7 +177,7 @@ impl ZSock {
         } else {
             Ok(ZSock {
                 zsock: zsock,
-                closed: false,
+                owned: true,
             })
         }
     }
@@ -190,7 +190,7 @@ impl ZSock {
         } else {
             Ok(ZSock {
                 zsock: zsock,
-                closed: false,
+                owned: true,
             })
         }
     }
@@ -203,7 +203,7 @@ impl ZSock {
         } else {
             Ok(ZSock {
                 zsock: zsock,
-                closed: false,
+                owned: true,
             })
         }
     }
@@ -216,15 +216,15 @@ impl ZSock {
         } else {
             Ok(ZSock {
                 zsock: zsock,
-                closed: false,
+                owned: true,
             })
         }
     }
 
-    pub fn from_raw(zsock: *mut czmq_sys::zsock_t, persistent: bool) -> ZSock {
+    pub fn from_raw(zsock: *mut czmq_sys::zsock_t, owned: bool) -> ZSock {
         ZSock {
             zsock: zsock,
-            closed: persistent,
+            owned: owned,
         }
     }
 

@@ -62,7 +62,7 @@ impl ZActor {
     }
 
     pub fn sock(&self) -> ZSock {
-        ZSock::from_raw(unsafe { czmq_sys::zactor_sock(self.zactor) }, true)
+        ZSock::from_raw(unsafe { czmq_sys::zactor_sock(self.zactor) }, false)
     }
 }
 
