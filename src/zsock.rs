@@ -42,8 +42,6 @@ pub struct ZSock {
     owned: bool,
 }
 
-unsafe impl Send for ZSock {}
-
 impl Drop for ZSock {
     fn drop(&mut self) {
         if self.owned {
@@ -51,6 +49,14 @@ impl Drop for ZSock {
         }
     }
 }
+
+impl PartialEq for ZSock {
+    fn eq(&self, other: &ZSock) -> bool {
+        self.zsock == other.zsock
+    }
+}
+
+unsafe impl Send for ZSock {}
 
 impl ZSock {
     pub fn new(sock_type: ZSockType) -> ZSock {
