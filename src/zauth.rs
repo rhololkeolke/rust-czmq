@@ -135,11 +135,11 @@ mod tests {
     fn test_allow_deny() {
         let server = ZSock::new(ZSockType::PULL);
         server.set_zap_domain("compuglobalhypermega.net");
-        server.set_rcvtimeo(100);
+        server.set_rcvtimeo(Some(100));
 
         let client = ZSock::new(ZSockType::PUSH);
         client.set_linger(100);
-        client.set_sndtimeo(100);
+        client.set_sndtimeo(Some(100));
 
         let zauth = ZAuth::new(None).unwrap();
 
@@ -170,14 +170,14 @@ mod tests {
         let server = ZSock::new(ZSockType::PULL);
         server.set_zap_domain("sky.net");
         server.set_plain_server(true);
-        server.set_rcvtimeo(100);
+        server.set_rcvtimeo(Some(100));
         let port = server.bind("tcp://127.0.0.1:*[60000-]").unwrap();
 
         let client = ZSock::new(ZSockType::PUSH);
         client.set_plain_username("moo");
         client.set_plain_password("cow");
         client.set_linger(100);
-        client.set_sndtimeo(100);
+        client.set_sndtimeo(Some(100));
         client.connect(&format!("tcp://127.0.0.1:{}", port)).unwrap();
 
         sleep(Duration::from_millis(100));
@@ -206,7 +206,7 @@ mod tests {
         server_cert.apply(&server);
         server.set_zap_domain("sky.net");
         server.set_curve_server(true);
-        server.set_rcvtimeo(100);
+        server.set_rcvtimeo(Some(100));
         let port = server.bind("tcp://127.0.0.1:*[60000-]").unwrap();
 
         let endpoint = format!("tcp://127.0.0.1:{}", port);
@@ -215,7 +215,7 @@ mod tests {
         client_cert.apply(&client);
         client.set_curve_serverkey(server_cert.public_txt());
         client.set_linger(100);
-        client.set_sndtimeo(100);
+        client.set_sndtimeo(Some(100));
 
         sleep(Duration::from_millis(100));
 
@@ -234,7 +234,7 @@ mod tests {
         let auth_client = ZSock::new(ZSockType::PUSH);
         auth_client.set_curve_serverkey(server_cert.public_txt());
         auth_client.set_linger(100);
-        auth_client.set_sndtimeo(100);
+        auth_client.set_sndtimeo(Some(100));
 
         let dir = TempDir::new("czmq_test").unwrap();
         let auth_client_cert = ZCert::new().unwrap();
@@ -275,14 +275,14 @@ mod tests {
         let server = ZSock::new(ZSockType::PULL);
         server.set_zap_domain("sky.net");
         server.set_curve_server(true);
-        server.set_rcvtimeo(100);
+        server.set_rcvtimeo(Some(100));
         cert.apply(&server);
         let port = server.bind("tcp://127.0.0.1:*[60000-]").unwrap();
 
         let client = ZSock::new(ZSockType::PUSH);
         client.set_curve_serverkey(cert.public_txt());
         client.set_linger(100);
-        client.set_sndtimeo(100);
+        client.set_sndtimeo(Some(100));
         cert.apply(&client);
         client.connect(&format!("tcp://127.0.0.1:{}", port)).unwrap();
 

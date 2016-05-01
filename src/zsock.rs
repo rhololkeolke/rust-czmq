@@ -689,32 +689,32 @@ impl ZSock {
     // pub fn zsock_set_multicast_hops(_self: *mut ::std::os::raw::c_void,
     //                                 multicast_hops: ::std::os::raw::c_int);
 
-    pub fn rcvtimeo(&self) -> Result<i32> {
+    pub fn rcvtimeo(&self) -> Option<i32> {
         let timeout = unsafe { czmq_sys::zsock_rcvtimeo(self.zsock as *mut c_void) };
 
         if timeout == -1 {
-            Err(Error::new(ErrorKind::NonZero, ZSockError::CmdFailed))
+            None
         } else {
-            Ok(timeout)
+            Some(timeout)
         }
     }
 
-    pub fn set_rcvtimeo(&self, timeout: i32) {
-        unsafe { czmq_sys::zsock_set_rcvtimeo(self.zsock as *mut c_void, timeout) };
+    pub fn set_rcvtimeo(&self, timeout: Option<i32>) {
+        unsafe { czmq_sys::zsock_set_rcvtimeo(self.zsock as *mut c_void, timeout.unwrap_or(-1)) };
     }
 
-    pub fn sndtimeo(&self) -> Result<i32> {
+    pub fn sndtimeo(&self) -> Option<i32> {
         let timeout = unsafe { czmq_sys::zsock_sndtimeo(self.zsock as *mut c_void) };
 
         if timeout == -1 {
-            Err(Error::new(ErrorKind::NonZero, ZSockError::CmdFailed))
+            None
         } else {
-            Ok(timeout)
+            Some(timeout)
         }
     }
 
-    pub fn set_sndtimeo(&self, timeout: i32) {
-        unsafe { czmq_sys::zsock_set_sndtimeo(self.zsock as *mut c_void, timeout) };
+    pub fn set_sndtimeo(&self, timeout: Option<i32>) {
+        unsafe { czmq_sys::zsock_set_sndtimeo(self.zsock as *mut c_void, timeout.unwrap_or(-1)) };
     }
 
     // pub fn zsock_set_xpub_verbose(_self: *mut ::std::os::raw::c_void,
@@ -1005,7 +1005,7 @@ mod tests {
         zsys_init();
 
         let zsock = ZSock::new(ZSockType::REP);
-        zsock.set_rcvtimeo(2000);
+        zsock.set_rcvtimeo(Some(2000));
         assert_eq!(zsock.rcvtimeo().unwrap(), 2000);
     }
 
@@ -1014,7 +1014,7 @@ mod tests {
         zsys_init();
 
         let zsock = ZSock::new(ZSockType::REP);
-        zsock.set_sndtimeo(2000);
+        zsock.set_sndtimeo(Some(2000));
         assert_eq!(zsock.sndtimeo().unwrap(), 2000);
     }
 
@@ -1042,7 +1042,7 @@ mod tests {
 
         let publisher = ZSock::new_pub("inproc://zsock_test_subscribe").unwrap();
         let subscriber = ZSock::new(ZSockType::SUB);
-        subscriber.set_rcvtimeo(200);
+        subscriber.set_rcvtimeo(Some(200));
         subscriber.connect("inproc://zsock_test_subscribe").unwrap();
 
         // Wait for subscriber to connect
