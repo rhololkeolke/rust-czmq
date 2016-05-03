@@ -1,6 +1,6 @@
 //! Module: czmq-zcert
 
-use {czmq_sys, Error, ErrorKind, Result, ZList};
+use {czmq_sys, Error, ErrorKind, Result, ZList, zmq};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::{error, fmt, ptr, slice};
@@ -43,6 +43,10 @@ impl ZCert {
             zcert: unsafe { czmq_sys::zcert_new_from(public_key.as_ptr(), secret_key.as_ptr()) },
             owned: true,
         }
+    }
+
+    pub fn from_txt(public_txt: &str, secret_txt: &str) -> ZCert {
+        ZCert::from_keys(&zmq::z85_decode(public_txt), &zmq::z85_decode(secret_txt))
     }
 
     pub fn from_raw(zcert: *mut czmq_sys::zcert_t, owned: bool) -> ZCert {
@@ -313,8 +317,6 @@ mod tests {
     }
 
     fn create_cert() -> ZCert {
-        let public_key = zmq::z85_decode(PUBLIC_TXT);
-        let secret_key = zmq::z85_decode(SECRET_TXT);
-        ZCert::from_keys(&public_key, &secret_key)
+        ZCert::from_txt(PUBLIC_TXT, SECRET_TXT)
     }
 }
