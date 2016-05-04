@@ -81,11 +81,15 @@ impl ZSock {
 
     pub fn new_sub(endpoint: &str, subscribe: Option<&str>) -> Result<ZSock> {
         let subscribe_ptr = match subscribe {
-            Some(p) => CString::new(p).unwrap_or(CString::new("").unwrap()).as_ptr(),
-            None => ptr::null(),
+            Some(s) => try!(CString::new(s)).into_raw(),
+            None => ptr::null_mut(),
         };
 
-        let zsock = unsafe { czmq_sys::zsock_new_sub(CString::new(endpoint).unwrap().as_ptr(), subscribe_ptr) };
+        let zsock = unsafe { czmq_sys::zsock_new_sub(CString::new(endpoint).unwrap().as_ptr(), subscribe_ptr as *const ::std::os::raw::c_char) };
+
+        if subscribe_ptr != ptr::null_mut() {
+            unsafe { CString::from_raw(subscribe_ptr) };
+        }
 
         if zsock == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZSockError::CreateSock))
@@ -834,6 +838,27 @@ mod tests {
         assert!(zsock.is_ok());
         let zsock = ZSock::new_sub("inproc://test_sub2", Some("moo"));
         assert!(zsock.is_ok());
+    }
+
+    #[test]
+    fn test_pubsub() {
+        zsys_init();
+
+        let zpub = ZSock::new_pub("inproc://zsock_test_pubsub").unwrap();
+        let zsub = ZSock::new_sub("inproc://zsock_test_pubsub", Some("moo")).unwrap();
+
+        sleep(Duration::from_millis(200));
+
+        let outgoing = ZMsg::new();
+        outgoing.addstr("moo").unwrap();
+        outgoing.addstr("cow").unwrap();
+        outgoing.send(&zpub).unwrap();
+
+        sleep(Duration::from_millis(200));
+
+        let incoming = ZMsg::recv(&zsub).unwrap();
+        assert_eq!(incoming.popstr().unwrap().unwrap(), "moo");
+        assert_eq!(incoming.popstr().unwrap().unwrap(), "cow");
     }
 
     #[test]
