@@ -41,8 +41,12 @@ impl ZHashX {
     // pub fn zhashx_destroy(self_p: *mut *mut zhashx_t);
 
     pub fn insert(&self, key: &str, item: Box<Any>) -> Result<()> {
+        self.insert_raw(key, Box::into_raw(item) as *mut c_void)
+    }
+
+    pub fn insert_raw(&self, key: &str, item: *mut c_void) -> Result<()> {
         let key_c = try!(CString::new(key));
-        let rc = unsafe { czmq_sys::zhashx_insert(self.zhashx, key_c.as_ptr() as *const c_void, Box::into_raw(item) as *mut c_void) };
+        let rc = unsafe { czmq_sys::zhashx_insert(self.zhashx, key_c.as_ptr() as *const c_void, item) };
 
         // Deliberately leak this memory, which will be managed by C
         mem::forget(key_c);
