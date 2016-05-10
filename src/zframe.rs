@@ -110,14 +110,17 @@ impl ZFrame {
         unsafe { czmq_sys::zframe_size(self.zframe) as usize }
     }
 
-    pub fn data<'a>(&'a self) -> Result<result::Result<&'a str, Utf8Error>> {
+    pub fn data<'a>(&'a self) -> Result<result::Result<&'a str, &[u8]>> {
         let data = unsafe { czmq_sys::zframe_data(self.zframe) };
 
         if data == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZFrameError::CmdFailed))
         } else {
-            let s = unsafe { slice::from_raw_parts(data, self.size()) };
-            Ok(str::from_utf8(s))
+            let bytes = unsafe { slice::from_raw_parts(data, self.size()) };
+            match str::from_utf8(bytes) {
+                Ok(s) => Ok(Ok(s)),
+                Err(_) => Ok(Err(bytes))
+            }
         }
     }
 
