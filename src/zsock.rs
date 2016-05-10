@@ -354,7 +354,10 @@ impl ZSock {
         }
     }
 
-    // pub fn zsock_flush(_self: *mut ::std::os::raw::c_void);
+    pub fn flush(&self) {
+        unsafe { czmq_sys::zsock_flush(self.zsock as *mut c_void) };
+    }
+
     // pub fn zsock_is(_self: *mut ::std::os::raw::c_void) -> u8;
     // pub fn zsock_resolve(_self: *mut ::std::os::raw::c_void)
     //  -> *mut ::std::os::raw::c_void;
@@ -820,7 +823,7 @@ mod tests {
     use std::thread::sleep;
     use std::time::Duration;
     use super::*;
-    use {zmq, ZMsg, zsys_init};
+    use {zmq, ZFrame, ZMsg, zsys_init};
 
     #[test]
     fn test_new_pub() {
@@ -1029,6 +1032,23 @@ mod tests {
         let msg = ZMsg::new_signal(1).unwrap();
         msg.send(&client).unwrap();
         assert!(server.wait().is_ok());
+    }
+
+    #[test]
+    fn test_flush() {
+        zsys_init();
+
+        let server = ZSock::new_rep("inproc://zsock_flush").unwrap();
+        let client = ZSock::new_req("inproc://zsock_flush").unwrap();
+
+        let msg = ZMsg::new();
+        msg.addstr("one").unwrap();
+        msg.addstr("two").unwrap();
+        msg.send(&client).unwrap();
+
+        ZFrame::recv(&server).unwrap();
+        server.flush();
+        assert!(server.recv_str().is_err());
     }
 
     #[test]
