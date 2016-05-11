@@ -1,6 +1,6 @@
 # rust-czmq [![Build Status](https://travis-ci.org/petehayes102/rust-czmq.svg?branch=master)](https://travis-ci.org/petehayes102/rust-czmq)
 
-Rust binding for [CZMQ](http://czmq.zeromq.org). Find the docs at [https://petehayes102.github.io/rust-czmq]().
+Rust binding for [CZMQ](http://czmq.zeromq.org). Find the docs at [https://petehayes102.github.io/rust-czmq](https://petehayes102.github.io/rust-czmq).
 
 This library is laid out in the same style and uses the same dual licence as the [Rust ZMQ binding](https://github.com/erickt/rust-zmq).
 
