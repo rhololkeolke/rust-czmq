@@ -5,6 +5,10 @@ authors = ["Pete Hayes <pete@hayes.id.au>"]
 license = "MIT/Apache-2.0"
 description = "Low-level bindings to the CZMQ library"
 repository = "https://github.com/petehayes102/rust-czmq"
+homepage = "https://petehayes102.github.io/rust-czmq"
+exclude = [
+  "bindgen.h"
+]
 
 [dependencies]
 libc = "0.2.*"

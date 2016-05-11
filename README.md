@@ -1,6 +1,6 @@
 # rust-czmq [![Build Status](https://travis-ci.org/petehayes102/rust-czmq.svg?branch=master)](https://travis-ci.org/petehayes102/rust-czmq)
 
-Rust binding for [CZMQ](http://czmq.zeromq.org).
+Rust binding for [CZMQ](http://czmq.zeromq.org). Find the docs at [https://petehayes102.github.io/rust-czmq]().
 
 This library is laid out in the same style and uses the same dual licence as the [Rust ZMQ binding](https://github.com/erickt/rust-zmq).
 
@@ -98,5 +98,8 @@ If you're still struggling, feel free to raise a ticket and someone might be abl
 2. Solve the variadic fn issue with ZSock::send/recv - marrying Rust's typesystem with C's void pointers is difficult
 3. Reproduce CZMQ examples in Rust
 4. Documentation for the library
-5. Publish docs to GitHub pages
-6. Continue the soul crushing pursuit of full library support
+5. Continue the soul crushing pursuit of full library support
+
+## Thanks
+
+Cheers to [Andrew Hobden](https://github.com/hoverbear) for the [tutorial](http://hoverbear.org/2015/03/07/rust-travis-github-pages/) about auto-publishing Rust docs to GitHub Pages!

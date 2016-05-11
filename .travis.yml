@@ -48,6 +48,14 @@ before_script:
   cd czmq &&
   ./autogen.sh && ./configure --prefix=$HOME && make && make install &&
   cd ..
+after_success: |
+  [ $TRAVIS_BRANCH = master ] &&
+  [ $TRAVIS_PULL_REQUEST = false ] &&
+  cargo doc &&
+  echo "<meta http-equiv=refresh content=0;url=`echo $TRAVIS_REPO_SLUG | cut -d '/' -f 2`/index.html>" > target/doc/index.html &&
+  sudo pip install ghp-import &&
+  ghp-import -n target/doc &&
+  git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
 script:
 - travis-cargo build
 - travis-cargo test
@@ -55,3 +63,4 @@ script:
 env:
   global:
   - TRAVIS_CARGO_NIGHTLY_FEATURE=""
+  - secure: G5Oxqug4L77b5twxNicrx8tUUYf3g2yKbCnLmkxYmOWfmMOz/oLys3zB0LHo/MW+OxHqOszjO2Wa3N+vVFjaC6PnZZU4Q+InsHFs3T2H1JRTPGyOaKh5FsDcI3oF68HNop/7V5IhEGhw11W/QVH2Q0JNQvu8bZeZPjUKC/CRLKyafUHm4LZiOF2FTV8Y4za6RhiousCbrFXeoore3hPqaTaCpMREa4SiYQgCjgg3wghIyr+pLiyQjEQo6Ss2zZ3e/LHkz26N+D4c64c8JPNdUo1B7SLaHtKMjPmTNmC6TFK/q9HzdVlIp0HhSWnf/Cd+Qwjud3LZgd0L6jtoairuFxqFPrho/zy8jQBxAp+J+JAPyQ+ql6Yb0D8FhFjg2tpDVvq70xPGoCk4HLG0y/ynhZjafMi5IDysuzUkkhnlwbAdhlitFyUxrd1bxaHcQTeCGBQ5CmcXosGyQQjdbpvGz5CYXJN93HuWp1Ao402jH/XTkrjTkQ0JGj8dB9t76T5b/EN6VWgWxjSzLwIp207iVyC6EdyKXHDnt4LmPvlwTvsmE989EFrelU3TsE4yWYNsf6jtyVEJ10+ENd1SPBxSvAf4ILJjB6LCiSx/UqjlT8JCqDGJwowhBRnXQvluQZtGBeRyQfd9nTZNPr4TO3AuocHBLeQ2pOGvkr2CcLYLIj0=

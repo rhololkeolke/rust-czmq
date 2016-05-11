@@ -1,4 +1,5 @@
 //! Module: czmq
+#![doc(html_root_url = "https://petehayes102.github.io/rust-czmq/")]
 
 #[macro_use]
 extern crate bitflags;
