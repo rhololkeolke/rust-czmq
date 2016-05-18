@@ -2,8 +2,6 @@
 
 Rust binding for [CZMQ](http://czmq.zeromq.org). Find the docs at [https://petehayes102.github.io/rust-czmq](https://petehayes102.github.io/rust-czmq).
 
-This library is laid out in the same style and uses the same dual licence as the [Rust ZMQ binding](https://github.com/erickt/rust-zmq).
-
 Note that much of this library is incomplete. For the modules that do exist, you can find comments like this one:
 
 _from src/zmsg.rs_
@@ -103,3 +101,5 @@ If you're still struggling, feel free to raise a ticket and someone might be abl
 ## Thanks
 
 Cheers to [Andrew Hobden](https://github.com/hoverbear) for the [tutorial](http://hoverbear.org/2015/03/07/rust-travis-github-pages/) about auto-publishing Rust docs to GitHub Pages!
+
+This library is inspired by erickt's [Rust ZMQ binding](https://github.com/erickt/rust-zmq).
