@@ -1,11 +1,10 @@
 //! Module: czmq-zsock
 
-use {czmq_sys, Error, ErrorKind, Result, ZMonitor};
+use {czmq_sys, Error, ErrorKind, RawInterface, Result, Sockish, ZMonitor};
 use std::{error, fmt, mem, ptr, result};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
 use std::str::{Utf8Error};
-use zmsg::ZMsgable;
 
 // Duplicate this from rust-zmq to avoid users having to depend on
 // both libs.
@@ -228,13 +227,6 @@ impl ZSock {
                 zsock: zsock,
                 owned: true,
             })
-        }
-    }
-
-    pub fn from_raw(zsock: *mut czmq_sys::zsock_t, owned: bool) -> ZSock {
-        ZSock {
-            zsock: zsock,
-            owned: owned,
         }
     }
 
@@ -788,11 +780,24 @@ impl ZSock {
     }
 }
 
-impl ZMsgable for ZSock {
+impl RawInterface<c_void> for ZSock {
+    fn from_raw(ptr: *mut c_void, owned: bool) -> ZSock {
+        ZSock {
+            zsock: ptr as *mut czmq_sys::zsock_t,
+            owned: owned,
+        }
+    }
+
+    fn into_raw(self) -> *mut c_void {
+        self.zsock as *mut c_void
+    }
+
     fn borrow_raw(&self) -> *mut c_void {
         self.zsock as *mut c_void
     }
 }
+
+impl Sockish for ZSock {}
 
 #[derive(Debug)]
 pub enum ZSockError {

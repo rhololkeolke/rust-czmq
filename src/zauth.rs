@@ -1,6 +1,6 @@
 //! Module: czmq-zauth
 
-use {czmq_sys, Result, ZActor, ZCertStore, ZMsg};
+use {czmq_sys, RawInterface, Result, ZActor, ZCertStore, ZMsg};
 use error::{Error, ErrorKind};
 use std::{error, ptr};
 use std::fmt::{Display, Formatter, Result as FmtResult};
@@ -15,7 +15,7 @@ unsafe impl Send for ZAuth {}
 impl ZAuth {
     pub fn new(certstore: Option<ZCertStore>) -> Result<ZAuth> {
         let ptr = if let Some(cs) = certstore {
-            cs.to_raw()
+            cs.into_raw()
         } else {
             ptr::null_mut()
         };
@@ -25,7 +25,7 @@ impl ZAuth {
             Err(Error::new(ErrorKind::NullPtr, ZAuthError::Instantiate))
         } else {
             Ok(ZAuth {
-                zactor: ZActor::from_raw(zactor),
+                zactor: ZActor::from_raw(zactor as *mut c_void, true),
             })
         }
     }
@@ -111,7 +111,7 @@ mod tests {
     use super::*;
     use tempdir::TempDir;
     use tempfile::NamedTempFile;
-    use {ZCert, ZCertStore, ZCertStoreRaw, ZFrame, ZSock, ZSockType, zsys_init};
+    use {RawInterface, ZCert, ZCertStore, ZCertStoreRaw, ZFrame, ZSock, ZSockType, zsys_init};
 
     // There can only be one ZAuth instance per context as each ZAuth
     // instance binds to the same inproc endpoint. The simplest way

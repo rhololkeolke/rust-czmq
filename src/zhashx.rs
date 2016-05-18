@@ -1,6 +1,6 @@
 //! Module: czmq-zhashx
 
-use {czmq_sys, Colander, Error, ErrorKind, Result};
+use {czmq_sys, Colander, Error, ErrorKind, RawInterface, Result};
 use std::{error, fmt, mem, ptr};
 use std::any::Any;
 use std::ffi::CString;
@@ -27,13 +27,6 @@ impl ZHashX {
         ZHashX {
             zhashx: unsafe { czmq_sys::zhashx_new() },
             owned: true,
-        }
-    }
-
-    pub fn from_raw(zhashx: *mut czmq_sys::zhashx_t, owned: bool) -> ZHashX {
-        ZHashX {
-            zhashx: zhashx,
-            owned: owned,
         }
     }
 
@@ -128,6 +121,24 @@ impl ZHashX {
     // pub fn zhashx_foreach(_self: *mut zhashx_t, callback: zhashx_foreach_fn,
     //                       argument: *mut ::std::os::raw::c_void)
     //  -> ::std::os::raw::c_int;
+}
+
+impl RawInterface<czmq_sys::zhashx_t> for ZHashX {
+    fn from_raw(ptr: *mut czmq_sys::zhashx_t, owned: bool) -> ZHashX {
+        ZHashX {
+            zhashx: ptr,
+            owned: owned,
+        }
+    }
+
+    fn into_raw(mut self) -> *mut czmq_sys::zhashx_t {
+        self.owned = false;
+        self.zhashx
+    }
+
+    fn borrow_raw(&self) -> *mut czmq_sys::zhashx_t {
+        self.zhashx
+    }
 }
 
 #[derive(Debug)]

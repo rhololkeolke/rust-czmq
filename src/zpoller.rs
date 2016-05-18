@@ -1,26 +1,23 @@
 //! Module: czmq-zpoller
 
-use {czmq_sys, Error, ErrorKind, Result};
-use std::{error, fmt, mem, ptr};
-use std::collections::HashMap;
-use std::os::raw::{c_int, c_void};
-use zmsg::ZMsgable;
+use {czmq_sys, Error, ErrorKind, Result, Sockish};
+use std::{error, fmt, ptr};
+use std::os::raw::c_int;
 
-pub struct ZPoller<'a, S: 'a> {
+pub struct ZPoller {
     zpoller: *mut czmq_sys::zpoller_t,
-    readers: HashMap<*mut c_void, &'a S>,
 }
 
-unsafe impl<'a, S> Send for ZPoller<'a, S> {}
+unsafe impl Send for ZPoller {}
 
-impl<'a, S> Drop for ZPoller<'a, S> {
+impl Drop for ZPoller {
     fn drop(&mut self) {
         unsafe { czmq_sys::zpoller_destroy(&mut self.zpoller) };
     }
 }
 
-impl<'a, S: ZMsgable> ZPoller<'a, S> {
-    pub fn new() -> Result<ZPoller<'a, S>> {
+impl ZPoller {
+    pub fn new() -> Result<ZPoller> {
         // zpoller_new() can take one or more readers, though Rust
         // doesn't support variadic fns except through macros.
         let zpoller = unsafe { czmq_sys::zpoller_new(ptr::null_mut()) };
@@ -31,33 +28,30 @@ impl<'a, S: ZMsgable> ZPoller<'a, S> {
 
         Ok(ZPoller {
             zpoller: zpoller,
-            readers: HashMap::new(),
         })
     }
 
-    pub fn add(&mut self, reader: &'a S) -> Result<()> {
+    pub fn add<S: Sockish>(&mut self, reader: &S) -> Result<()> {
         let rc = unsafe { czmq_sys::zpoller_add(self.zpoller, reader.borrow_raw()) };
 
         if rc == -1 {
             Err(Error::new(ErrorKind::NonZero, ZPollerError::CmdFailed))
         } else {
-            self.readers.insert(reader.borrow_raw(), reader);
             Ok(())
         }
     }
 
-    pub fn remove(&mut self, reader: &S) -> Result<()> {
+    pub fn remove<S: Sockish>(&mut self, reader: &S) -> Result<()> {
         let rc = unsafe { czmq_sys::zpoller_remove(self.zpoller, reader.borrow_raw()) };
 
         if rc == -1 {
             Err(Error::new(ErrorKind::NonZero, ZPollerError::CmdFailed))
         } else {
-            self.readers.remove(&reader.borrow_raw());
             Ok(())
         }
     }
 
-    pub fn wait(&self, timeout: Option<u32>) -> Result<Option<&&S>> {
+    pub fn wait<S: Sockish>(&self, timeout: Option<u32>) -> Result<Option<S>> {
         let t = match timeout {
             Some(time) => time as c_int,
             None => -1 as c_int,
@@ -68,7 +62,7 @@ impl<'a, S: ZMsgable> ZPoller<'a, S> {
         if ptr == ptr::null_mut() {
             Ok(None)
         } else {
-            Ok(Some(try!(self.ptr_to_sock(ptr))))
+            Ok(Some(S::from_raw(ptr, false)))
         }
     }
 
@@ -82,13 +76,6 @@ impl<'a, S: ZMsgable> ZPoller<'a, S> {
 
     pub fn set_nonstop(&self, nonstop: bool) {
         unsafe { czmq_sys::zpoller_set_nonstop(self.zpoller, if nonstop { 1 } else { 0 }) }
-    }
-
-    fn ptr_to_sock(&self, ptr: *mut c_void) -> Result<&&S> {
-        match self.readers.get(&ptr) {
-            Some(r) => Ok(unsafe { mem::transmute(r) }),
-            None => Err(Error::new(ErrorKind::InvalidPtr, ZPollerError::CmdFailed))
-        }
     }
 }
 
@@ -123,7 +110,7 @@ mod tests {
 
     #[test]
     fn test_new() {
-        assert!(ZPoller::<ZSock>::new().is_ok());
+        assert!(ZPoller::new().is_ok());
     }
 
     #[test]
@@ -148,17 +135,20 @@ mod tests {
         let client2 = ZSock::new_req("inproc://zpoller_test_wait2").unwrap();
         client2.send_str("cow").unwrap();
 
-        let mut poller = ZPoller::<ZSock>::new().unwrap();
+        let mut poller = ZPoller::new().unwrap();
         poller.add(&server1).unwrap();
         poller.add(&server2).unwrap();
 
-        assert_eq!(poller.wait(Some(500)).unwrap().unwrap().endpoint().unwrap(), "inproc://zpoller_test_wait1");
+        let sock: ZSock = poller.wait(Some(500)).unwrap().unwrap();
+        assert_eq!(sock.endpoint().unwrap(), "inproc://zpoller_test_wait1");
         server1.recv_str().unwrap().unwrap();
 
-        assert_eq!(poller.wait(Some(500)).unwrap().unwrap().endpoint().unwrap(), "inproc://zpoller_test_wait2");
+        let sock: ZSock = poller.wait(Some(500)).unwrap().unwrap();
+        assert_eq!(sock.endpoint().unwrap(), "inproc://zpoller_test_wait2");
         server2.recv_str().unwrap().unwrap();
 
-        assert!(poller.wait(Some(0)).unwrap().is_none());
+        let sock: Option<ZSock> = poller.wait(Some(0)).unwrap();
+        assert!(sock.is_none());
         assert!(poller.expired());
         assert!(!poller.terminated());
     }

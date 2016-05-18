@@ -1,10 +1,9 @@
 //! Module: czmq-zcert
 
-use {czmq_sys, Error, ErrorKind, Result, ZList, zmq};
+use {czmq_sys, Error, ErrorKind, RawInterface, Result, Sockish, ZList, zmq};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::{error, fmt, ptr, slice};
-use zmsg::ZMsgable;
 
 const KEY_SIZE: usize = 32;
 
@@ -47,18 +46,6 @@ impl ZCert {
 
     pub fn from_txt(public_txt: &str, secret_txt: &str) -> ZCert {
         ZCert::from_keys(&zmq::z85_decode(public_txt), &zmq::z85_decode(secret_txt))
-    }
-
-    pub fn from_raw(zcert: *mut czmq_sys::zcert_t, owned: bool) -> ZCert {
-        ZCert {
-            zcert: zcert,
-            owned: owned,
-        }
-    }
-
-    pub fn into_raw(mut self) -> *mut czmq_sys::zcert_t {
-        self.owned = false;
-        self.zcert
     }
 
     pub fn load(filename: &str) -> Result<ZCert> {
@@ -126,7 +113,7 @@ impl ZCert {
 
     pub fn meta_keys<'a>(&'a self) -> ZList {
         let ptr = unsafe { czmq_sys::zcert_meta_keys(self.zcert) };
-        ZList::from_raw(ptr)
+        ZList::from_raw(ptr, true)
     }
 
     pub fn save(&self, filename: &str) -> Result<()> {
@@ -168,7 +155,7 @@ impl ZCert {
         }
     }
 
-    pub fn apply<S: ZMsgable>(&self, sock: &S) {
+    pub fn apply<S: Sockish>(&self, sock: &S) {
         unsafe { czmq_sys::zcert_apply(self.zcert, sock.borrow_raw()) };
     }
 
@@ -188,6 +175,24 @@ impl ZCert {
 
     pub fn print(&self) {
         unsafe { czmq_sys::zcert_print(self.zcert) };
+    }
+}
+
+impl RawInterface<czmq_sys::zcert_t> for ZCert {
+    fn from_raw(ptr: *mut czmq_sys::zcert_t, owned: bool) -> ZCert {
+        ZCert {
+            zcert: ptr,
+            owned: owned,
+        }
+    }
+
+    fn into_raw(mut self) -> *mut czmq_sys::zcert_t {
+        self.owned = false;
+        self.zcert
+    }
+
+    fn borrow_raw(&self) -> *mut czmq_sys::zcert_t {
+        self.zcert
     }
 }
 

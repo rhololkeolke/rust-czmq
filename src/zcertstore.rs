@@ -1,6 +1,6 @@
 //! Module: czmq-zcertstore
 
-use {czmq_sys, Colander, Error, ErrorKind, Result, ZCert, ZHashX};
+use {czmq_sys, Colander, Error, ErrorKind, RawInterface, Result, ZCert, ZHashX};
 use std::{error, fmt, mem, ptr};
 use std::any::Any;
 use std::ffi::CString;
@@ -8,7 +8,7 @@ use std::os::raw::c_void;
 
 pub struct ZCertStore {
     zcertstore: *mut czmq_sys::zcertstore_t,
-    persistent: bool,
+    owned: bool,
 }
 
 unsafe impl Send for ZCertStore {}
@@ -16,7 +16,7 @@ unsafe impl Sync for ZCertStore {}
 
 impl Drop for ZCertStore {
     fn drop(&mut self) {
-        if self.persistent {
+        if self.owned {
             unsafe { czmq_sys::zcertstore_destroy(&mut self.zcertstore) };
         }
     }
@@ -38,20 +38,8 @@ impl ZCertStore {
 
         Ok(ZCertStore {
             zcertstore: zcertstore,
-            persistent: true,
+            owned: true,
         })
-    }
-
-    pub fn from_raw(zcertstore: *mut czmq_sys::zcertstore_t, persistent: bool) -> ZCertStore {
-        ZCertStore {
-            zcertstore: zcertstore,
-            persistent: persistent,
-        }
-    }
-
-    pub fn to_raw(mut self) -> *mut czmq_sys::zcertstore_t {
-        self.persistent = false;
-        self.zcertstore
     }
 
     pub fn set_loader(&self, loader: czmq_sys::zcertstore_loader) {
@@ -114,6 +102,24 @@ impl ZCertStore {
     }
 }
 
+impl RawInterface<czmq_sys::zcertstore_t> for ZCertStore {
+    fn from_raw(ptr: *mut czmq_sys::zcertstore_t, owned: bool) -> ZCertStore {
+        ZCertStore {
+            zcertstore: ptr,
+            owned: owned,
+        }
+    }
+
+    fn into_raw(mut self) -> *mut czmq_sys::zcertstore_t {
+        self.owned = false;
+        self.zcertstore
+    }
+
+    fn borrow_raw(&self) -> *mut czmq_sys::zcertstore_t {
+        self.zcertstore
+    }
+}
+
 unsafe extern "C" fn default_destructor(state: *mut *mut c_void) {
     if state != ptr::null_mut() && *state != ptr::null_mut() {
         Box::from_raw(*state);
@@ -143,7 +149,7 @@ impl error::Error for ZCertStoreError {
 
 #[cfg(test)]
 mod tests {
-    use {czmq_sys, ZCertStoreRaw, ZCert};
+    use {czmq_sys, RawInterface, ZCertStoreRaw, ZCert};
     use super::*;
     use tempdir::TempDir;
     use zmq::z85_decode;

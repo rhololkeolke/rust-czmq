@@ -1,6 +1,6 @@
 //! Module: czmq-zlist
 
-use czmq_sys;
+use {czmq_sys, RawInterface};
 use std::ffi::CStr;
 #[cfg(test)]
 use std::ffi::CString;
@@ -11,6 +11,7 @@ use std::ptr;
 
 pub struct ZList {
     zlist: *mut czmq_sys::zlist_t,
+    owned: bool,
 }
 
 unsafe impl Send for ZList {}
@@ -18,7 +19,9 @@ unsafe impl Sync for ZList {}
 
 impl Drop for ZList {
     fn drop(&mut self) {
-        unsafe { czmq_sys::zlist_destroy(&mut self.zlist) };
+        if self.owned {
+            unsafe { czmq_sys::zlist_destroy(&mut self.zlist) };
+        }
     }
 }
 
@@ -27,12 +30,7 @@ impl ZList {
     fn new() -> ZList {
         ZList {
             zlist: unsafe { czmq_sys::zlist_new() },
-        }
-    }
-
-    pub fn from_raw(zlist: *mut czmq_sys::zlist_t) -> ZList {
-        ZList {
-            zlist: zlist,
+            owned: true,
         }
     }
 
@@ -66,6 +64,24 @@ impl ZList {
         let value_c = CString::new(value).unwrap_or(CString::new("").unwrap());
         let rc = unsafe { czmq_sys::zlist_append(self.zlist, value_c.into_raw() as *mut c_void) };
         if rc == -1 { Err(()) } else { Ok(()) }
+    }
+}
+
+impl RawInterface<czmq_sys::zlist_t> for ZList {
+    fn from_raw(ptr: *mut czmq_sys::zlist_t, owned: bool) -> ZList {
+        ZList {
+            zlist: ptr,
+            owned: owned,
+        }
+    }
+
+    fn into_raw(mut self) -> *mut czmq_sys::zlist_t {
+        self.owned = false;
+        self.zlist
+    }
+
+    fn borrow_raw(&self) -> *mut czmq_sys::zlist_t {
+        self.zlist
     }
 }
 

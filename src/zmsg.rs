@@ -1,13 +1,12 @@
 //! Module: czmq-zmsg
 
-use {czmq_sys, Error, ErrorKind, Result, ZFrame};
+use {czmq_sys, Error, ErrorKind, RawInterface, Result, Sockish, ZFrame};
 use std::{error, fmt, mem, ptr, result};
 use std::ffi::{CStr, CString};
-use std::os::raw::c_void;
 
 pub struct ZMsg {
     zmsg: *mut czmq_sys::zmsg_t,
-    destroyed: bool,
+    owned: bool,
 }
 
 unsafe impl Send for ZMsg {}
@@ -15,7 +14,7 @@ unsafe impl Sync for ZMsg {}
 
 impl Drop for ZMsg {
     fn drop(&mut self) {
-        if !self.destroyed {
+        if self.owned {
             unsafe { czmq_sys::zmsg_destroy(&mut self.zmsg) };
         }
     }
@@ -25,24 +24,11 @@ impl ZMsg {
     pub fn new() -> ZMsg {
         ZMsg {
             zmsg: unsafe { czmq_sys::zmsg_new() },
-            destroyed: false,
+            owned: true,
         }
     }
 
-    pub fn from_raw(zmsg: *mut czmq_sys::zmsg_t) -> ZMsg {
-        ZMsg {
-            zmsg: zmsg,
-            destroyed: false,
-        }
-    }
-
-    pub fn into_raw(self) -> *mut czmq_sys::zmsg_t {
-        let mut msg = self;
-        msg.destroyed = true;
-        msg.zmsg
-    }
-
-    pub fn recv<S: ZMsgable>(source: &S) -> Result<ZMsg> {
+    pub fn recv<S: Sockish>(source: &S) -> Result<ZMsg> {
         let zmsg = unsafe { czmq_sys::zmsg_recv(source.borrow_raw()) };
 
         if zmsg == ptr::null_mut() {
@@ -50,7 +36,7 @@ impl ZMsg {
         } else {
             Ok(ZMsg {
                 zmsg: zmsg,
-                destroyed: false,
+                owned: true,
             })
         }
     }
@@ -65,7 +51,7 @@ impl ZMsg {
         if zframe == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZMsgError::CmdFailed))
         } else {
-            Ok(ZFrame::from_raw(zframe))
+            Ok(ZFrame::from_raw(zframe, true))
         }
     }
 
@@ -77,7 +63,7 @@ impl ZMsg {
         } else {
             Ok(ZMsg {
                 zmsg: zmsg,
-                destroyed: false,
+                owned: true,
             })
         }
     }
@@ -90,12 +76,12 @@ impl ZMsg {
         } else {
             Ok(ZMsg {
                 zmsg: zmsg,
-                destroyed: false,
+                owned: true,
             })
         }
     }
 
-    pub fn send<D: ZMsgable>(self, dest: &D) -> Result<()> {
+    pub fn send<D: Sockish>(self, dest: &D) -> Result<()> {
         let mut zmsg = self;
 
         let rc = unsafe { czmq_sys::zmsg_send(&mut zmsg.zmsg, dest.borrow_raw()) };
@@ -126,7 +112,7 @@ impl ZMsg {
         if ptr == ptr::null_mut() {
             None
         } else {
-            Some(ZFrame::from_raw(ptr))
+            Some(ZFrame::from_raw(ptr, true))
         }
     }
 
@@ -215,16 +201,30 @@ impl ZMsg {
     }
 }
 
+impl RawInterface<czmq_sys::zmsg_t> for ZMsg {
+    fn from_raw(ptr: *mut czmq_sys::zmsg_t, owned: bool) -> ZMsg {
+        ZMsg {
+            zmsg: ptr,
+            owned: owned,
+        }
+    }
+
+    fn into_raw(mut self) -> *mut czmq_sys::zmsg_t {
+        self.owned = false;
+        self.zmsg
+    }
+
+    fn borrow_raw(&self) -> *mut czmq_sys::zmsg_t {
+        self.zmsg
+    }
+}
+
 impl Iterator for ZMsg {
     type Item = ZFrame;
 
     fn next(&mut self) -> Option<Self::Item> {
         self.pop()
     }
-}
-
-pub trait ZMsgable {
-    fn borrow_raw(&self) -> *mut c_void;
 }
 
 #[derive(Debug)]

@@ -1,11 +1,10 @@
 //! Module: czmq-zframe
 
-use {czmq_sys, Error, ErrorKind, Result};
+use {czmq_sys, Error, ErrorKind, RawInterface, Result, Sockish};
 use std::{error, fmt, ptr, result, slice};
 use std::ffi::{CStr, CString};
 use std::str::{self, Utf8Error};
 use std::os::raw::c_void;
-use zmsg::ZMsgable;
 
 bitflags! {
     pub flags Flags: i32 {
@@ -17,6 +16,7 @@ bitflags! {
 
 pub struct ZFrame {
     zframe: *mut czmq_sys::zframe_t,
+    owned: bool,
 }
 
 unsafe impl Send for ZFrame {}
@@ -24,7 +24,9 @@ unsafe impl Sync for ZFrame {}
 
 impl Drop for ZFrame {
     fn drop(&mut self) {
-        unsafe { czmq_sys::zframe_destroy(&mut self.zframe) };
+        if self.owned {
+            unsafe { czmq_sys::zframe_destroy(&mut self.zframe) };
+        }
     }
 }
 
@@ -40,6 +42,7 @@ impl ZFrame {
 
         Ok(ZFrame {
             zframe: zframe,
+            owned: true,
         })
     }
 
@@ -52,6 +55,7 @@ impl ZFrame {
 
         Ok(ZFrame {
             zframe: zframe,
+            owned: true,
         })
     }
 
@@ -62,13 +66,7 @@ impl ZFrame {
         Self::new(frame.as_bytes())
     }
 
-    pub fn from_raw(zframe: *mut czmq_sys::zframe_t) -> ZFrame {
-        ZFrame {
-            zframe: zframe,
-        }
-    }
-
-    pub fn recv<S: ZMsgable>(source: &S) -> Result<ZFrame> {
+    pub fn recv<S: Sockish>(source: &S) -> Result<ZFrame> {
         let zframe = unsafe { czmq_sys::zframe_recv(source.borrow_raw()) };
 
         if zframe == ptr::null_mut() {
@@ -77,17 +75,18 @@ impl ZFrame {
 
         Ok(ZFrame {
             zframe: zframe,
+            owned: true,
         })
     }
 
     // This fn consumes the ZFrame, implying no REUSE flag
-    pub fn send<D: ZMsgable>(self, dest: &D, flags: Option<Flags>) -> Result<i32> {
+    pub fn send<D: Sockish>(self, dest: &D, flags: Option<Flags>) -> Result<i32> {
         let mut zframe = self;
         zframe.do_send(dest.borrow_raw(), flags)
     }
 
     // This fn doesn't consume the ZFrame, which implies REUSE flag
-    pub fn send_reuse<D: ZMsgable>(&mut self, dest: &D, flags: Option<Flags>) -> Result<i32> {
+    pub fn send_reuse<D: Sockish>(&mut self, dest: &D, flags: Option<Flags>) -> Result<i32> {
         let flags = if let Some(f) = flags {
             f | ZFRAME_REUSE
         } else {
@@ -148,6 +147,7 @@ impl ZFrame {
         } else {
             Ok(ZFrame {
                 zframe: zframe,
+                owned: true,
             })
         }
     }
@@ -203,8 +203,22 @@ impl ZFrame {
         };
         unsafe { czmq_sys::zframe_print(self.zframe, prefix_ptr) };
     }
+}
 
-    pub fn borrow_raw(&self) -> *mut czmq_sys::zframe_t {
+impl RawInterface<czmq_sys::zframe_t> for ZFrame {
+    fn from_raw(ptr: *mut czmq_sys::zframe_t, owned: bool) -> ZFrame {
+        ZFrame {
+            zframe: ptr,
+            owned: owned,
+        }
+    }
+
+    fn into_raw(mut self) -> *mut czmq_sys::zframe_t {
+        self.owned = false;
+        self.zframe
+    }
+
+    fn borrow_raw(&self) -> *mut czmq_sys::zframe_t {
         self.zframe
     }
 }

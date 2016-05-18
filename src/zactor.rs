@@ -1,19 +1,21 @@
 //! Module: czmq-zactor
 
-use {czmq_sys, Error, ErrorKind, Result, ZMsg, ZSock};
+use {czmq_sys, Error, ErrorKind, RawInterface, Result, Sockish, ZMsg, ZSock};
 use std::{error, fmt, ptr};
 use std::os::raw::c_void;
-use zmsg::ZMsgable;
 
 pub struct ZActor {
     zactor: *mut czmq_sys::zactor_t,
+    owned: bool,
 }
 
 unsafe impl Send for ZActor {}
 
 impl Drop for ZActor {
     fn drop(&mut self) {
-        unsafe { czmq_sys::zactor_destroy(&mut self.zactor) };
+        if self.owned {
+            unsafe { czmq_sys::zactor_destroy(&mut self.zactor) };
+        }
     }
 }
 
@@ -26,13 +28,8 @@ impl ZActor {
         } else {
             Ok(ZActor {
                 zactor: zactor,
+                owned: true,
             })
-        }
-    }
-
-    pub fn from_raw(zactor: *mut czmq_sys::zactor_t) -> ZActor {
-        ZActor {
-            zactor: zactor
         }
     }
 
@@ -57,20 +54,33 @@ impl ZActor {
         if zmsg_ptr == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZActorError::CmdFailed))
         } else {
-            Ok(ZMsg::from_raw(zmsg_ptr))
+            Ok(ZMsg::from_raw(zmsg_ptr, true))
         }
     }
 
     pub fn sock(&self) -> ZSock {
-        ZSock::from_raw(unsafe { czmq_sys::zactor_sock(self.zactor) }, false)
+        ZSock::from_raw(unsafe { czmq_sys::zactor_sock(self.zactor) } as *mut c_void, false)
     }
 }
 
-impl ZMsgable for ZActor {
+impl RawInterface<c_void> for ZActor {
+    fn from_raw(ptr: *mut c_void, owned: bool) -> ZActor {
+        ZActor {
+            zactor: ptr as *mut czmq_sys::zactor_t,
+            owned: owned,
+        }
+    }
+
+    fn into_raw(self) -> *mut c_void {
+        self.zactor as *mut c_void
+    }
+
     fn borrow_raw(&self) -> *mut c_void {
         self.zactor as *mut c_void
     }
 }
+
+impl Sockish for ZActor {}
 
 #[derive(Debug)]
 pub enum ZActorError {

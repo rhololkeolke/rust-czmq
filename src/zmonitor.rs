@@ -1,9 +1,9 @@
 //! Module: czmq-zmonitor
 
-use {czmq_sys, Error, ErrorKind, Result, ZActor, ZMsg};
+use {czmq_sys, Error, ErrorKind, RawInterface, Result, Sockish, ZActor, ZMsg};
 use std::{error, ptr, result};
 use std::fmt::{Display, Formatter, Result as FmtResult};
-use zmsg::ZMsgable;
+use std::os::raw::c_void;
 
 #[derive(Debug, PartialEq)]
 pub enum ZMonitorEvents {
@@ -73,14 +73,14 @@ pub struct ZMonitor {
 unsafe impl Send for ZMonitor {}
 
 impl ZMonitor {
-    pub fn new<S: ZMsgable>(zsock: &S) -> Result<ZMonitor> {
+    pub fn new<S: Sockish>(zsock: &S) -> Result<ZMonitor> {
         let zactor = unsafe { czmq_sys::zactor_new(czmq_sys::zmonitor, zsock.borrow_raw()) };
 
         if zactor == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZMonitorError::Instantiate))
         } else {
             Ok(ZMonitor {
-                zactor: ZActor::from_raw(zactor),
+                zactor: ZActor::from_raw(zactor as *mut c_void, true),
             })
         }
     }
