@@ -176,9 +176,39 @@ impl ZMsg {
     //  -> ::std::os::raw::c_int;
     // pub fn zmsg_popmsg(_self: *mut zmsg_t) -> *mut zmsg_t;
     // pub fn zmsg_remove(_self: *mut zmsg_t, frame: *mut zframe_t);
-    // pub fn zmsg_first(_self: *mut zmsg_t) -> *mut zframe_t;
-    // pub fn zmsg_next(_self: *mut zmsg_t) -> *mut zframe_t;
-    // pub fn zmsg_last(_self: *mut zmsg_t) -> *mut zframe_t;
+
+    pub fn first(&self) -> Option<ZFrame> {
+        let ptr = unsafe { czmq_sys::zmsg_first(self.zmsg) };
+
+        if ptr == ptr::null_mut() {
+            None
+        } else {
+            Some(ZFrame::from_raw(ptr, false))
+        }
+    }
+
+    pub fn next(&self) -> Option<ZFrame> {
+        let ptr = unsafe { czmq_sys::zmsg_next(self.zmsg) };
+
+        if ptr == ptr::null_mut() {
+            None
+        } else {
+            Some(ZFrame::from_raw(ptr, false))
+        }
+    }
+
+    // We can't call this fn last() as it conflicts with
+    // Iterator::last(), which is implemented for ZMsg.
+    pub fn ref_last(&self) -> Option<ZFrame> {
+        let ptr = unsafe { czmq_sys::zmsg_last(self.zmsg) };
+
+        if ptr == ptr::null_mut() {
+            None
+        } else {
+            Some(ZFrame::from_raw(ptr, false))
+        }
+    }
+
     // pub fn zmsg_save(_self: *mut zmsg_t, file: *mut FILE)
     //  -> ::std::os::raw::c_int;
     // pub fn zmsg_dup(_self: *mut zmsg_t) -> *mut zmsg_t;
@@ -223,7 +253,7 @@ impl Iterator for ZMsg {
     type Item = ZFrame;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.pop()
+        ZMsg::next(self)
     }
 }
 
@@ -326,5 +356,36 @@ mod tests {
         let msg = ZMsg::new();
         msg.addstr("123").unwrap();
         assert_eq!(msg.popbytes().unwrap(), "123".as_bytes());
+    }
+
+    #[test]
+    fn test_iter_fns() {
+        let msg = ZMsg::new();
+        msg.addstr("1").unwrap();
+        msg.addstr("2").unwrap();
+        msg.addstr("3").unwrap();
+
+        let frame = msg.first().unwrap();
+        assert_eq!(frame.data().unwrap().unwrap(), "1");
+
+        let frame = msg.next().unwrap();
+        assert_eq!(frame.data().unwrap().unwrap(), "2");
+
+        let frame = msg.ref_last().unwrap();
+        assert_eq!(frame.data().unwrap().unwrap(), "3");
+    }
+
+    #[test]
+    fn test_iter() {
+        let msg = ZMsg::new();
+        msg.addstr("1").unwrap();
+        msg.addstr("2").unwrap();
+        msg.addstr("3").unwrap();
+
+        let mut i = 1;
+        for x in msg {
+            assert_eq!(x.data().unwrap().unwrap(), i.to_string());
+            i += 1;
+        }
     }
 }
