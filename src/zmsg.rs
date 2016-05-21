@@ -101,10 +101,26 @@ impl ZMsg {
     }
 
     // pub fn zmsg_content_size(_self: *mut zmsg_t) -> size_t;
-    // pub fn zmsg_prepend(_self: *mut zmsg_t, frame_p: *mut *mut zframe_t)
-    //  -> ::std::os::raw::c_int;
-    // pub fn zmsg_append(_self: *mut zmsg_t, frame_p: *mut *mut zframe_t)
-    //  -> ::std::os::raw::c_int;
+
+    pub fn prepend(&self, frame: ZFrame) -> Result<()> {
+        let rc = unsafe { czmq_sys::zmsg_prepend(self.zmsg, &mut frame.into_raw()) };
+
+        if rc == 0 {
+            Ok(())
+        } else {
+            Err(Error::new(ErrorKind::NonZero, ZMsgError::CmdFailed))
+        }
+    }
+
+    pub fn append(&self, frame: ZFrame) -> Result<()> {
+        let rc = unsafe { czmq_sys::zmsg_append(self.zmsg, &mut frame.into_raw()) };
+
+        if rc == 0 {
+            Ok(())
+        } else {
+            Err(Error::new(ErrorKind::NonZero, ZMsgError::CmdFailed))
+        }
+    }
 
     pub fn pop(&self) -> Option<ZFrame> {
         let ptr = unsafe { czmq_sys::zmsg_pop(self.zmsg) };
@@ -281,7 +297,7 @@ impl error::Error for ZMsgError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use {zmq, ZSock, zsys_init};
+    use {zmq, ZFrame, ZSock, zsys_init};
 
     #[test]
     fn test_sendrecv_zmq() {
@@ -335,6 +351,20 @@ mod tests {
         let msg = ZMsg::new();
         msg.addstr("123").unwrap();
         assert_eq!(msg.size(), 1);
+    }
+
+    #[test]
+    fn test_prepend() {
+        let msg = ZMsg::new();
+        msg.prepend(ZFrame::from("123").unwrap()).unwrap();
+        assert_eq!(msg.popstr().unwrap().unwrap(), "123");
+    }
+
+    #[test]
+    fn test_append() {
+        let msg = ZMsg::new();
+        msg.append(ZFrame::from("123").unwrap()).unwrap();
+        assert_eq!(msg.popstr().unwrap().unwrap(), "123");
     }
 
     #[test]
