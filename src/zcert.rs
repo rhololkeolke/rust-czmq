@@ -1,6 +1,6 @@
 //! Module: czmq-zcert
 
-use {czmq_sys, Error, ErrorKind, RawInterface, Result, Sockish, ZList, zmq};
+use {czmq_sys, Error, ErrorKind, RawInterface, Result, Sockish, zmq, ZList};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::{error, fmt, ptr, slice};
@@ -111,9 +111,9 @@ impl ZCert {
         }
     }
 
-    pub fn meta_keys<'a>(&'a self) -> ZList {
+    pub fn meta_keys(&self) -> ZList<&'static str> {
         let ptr = unsafe { czmq_sys::zcert_meta_keys(self.zcert) };
-        ZList::from_raw(ptr, true)
+        ZList::<&'static str>::from_raw(ptr)
     }
 
     pub fn save(&self, filename: &str) -> Result<()> {
@@ -280,10 +280,10 @@ mod tests {
     #[test]
     fn test_meta_keys() {
         let cert = create_cert();
-        assert!(cert.meta_keys().to_vec().len() == 0);
         cert.set_meta("moo", "cow");
-        let keys = cert.meta_keys();
-        assert_eq!(keys.to_vec().first().unwrap(), &"moo");
+
+        let mut keys = cert.meta_keys();
+        assert_eq!(keys.next().unwrap(), "moo");
     }
 
     #[test]
