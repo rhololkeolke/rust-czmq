@@ -116,6 +116,36 @@ impl ZCert {
         ZList::<&'static str>::from_raw(ptr)
     }
 
+    /// Encode certificate metadata into ZMQ wire format.
+    ///
+    /// ```no_run
+    /// # use czmq::{ZCert, ZFrame, ZSock};
+    /// # let sock = ZSock::new_rep("...").unwrap();
+    /// let cert = ZCert::new().unwrap();
+    /// cert.set_meta("key", "value");
+    ///
+    /// let encoded = cert.encode_meta();
+    /// let frame = ZFrame::new(&encoded).unwrap();
+    /// frame.send(&sock, None).unwrap();
+    /// ```
+    pub fn encode_meta(&self) -> Vec<u8> {
+        let mut encoded: Vec<u8> = Vec::new();
+
+        for metakey in self.meta_keys() {
+            if let Ok(Some(metaval)) = self.meta(metakey) {
+                encoded.push(metakey.len() as u8);
+                encoded.extend_from_slice(metakey.as_bytes());
+                encoded.push(((metaval.len() >> 24) & 0xff) as u8);
+                encoded.push(((metaval.len() >> 16) & 0xff) as u8);
+                encoded.push(((metaval.len() >> 8) & 0xff) as u8);
+                encoded.push((metaval.len() & 0xff) as u8);
+                encoded.extend_from_slice(metaval.as_bytes());
+            }
+        }
+
+        encoded
+    }
+
     pub fn save(&self, filename: &str) -> Result<()> {
         let filename_c = try!(CString::new(filename));
 
