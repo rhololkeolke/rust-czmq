@@ -3,7 +3,7 @@
 use {czmq_sys, Error, ErrorKind, RawInterface, Result, Sockish, zmq, ZList};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
-use std::{error, fmt, ptr, slice};
+use std::{error, fmt, ptr, slice, str};
 
 const KEY_SIZE: usize = 32;
 
@@ -146,6 +146,62 @@ impl ZCert {
         encoded
     }
 
+    /// Decode and set certificate metadata from ZMQ wire format.
+    ///
+    /// ```no_run
+    /// # use czmq::{ZCert, ZFrame, ZSock};
+    /// # let sock = ZSock::new_rep("...").unwrap();
+    /// let frame = ZFrame::recv(&sock).unwrap();
+    /// let encoded = match frame.data().unwrap() {
+    ///     Ok(str) => str.as_bytes(),
+    ///     Err(bytes) => bytes,
+    /// };
+    ///
+    /// let cert = ZCert::new().unwrap();
+    /// cert.decode_meta(encoded);
+    /// ```
+    pub fn decode_meta(&self, encoded: &[u8]) -> Result<()> {
+        let mut bytes_left = encoded.len();
+        let mut index = 0;
+
+        while bytes_left > 1 {
+            let name_length: usize = *try!(encoded.get(index).ok_or(Error::new(ErrorKind::InvalidArg, ZCertError::InvalidMetaEncoded))) as usize;
+            index += 1;
+            bytes_left -= 1;
+
+            if bytes_left < name_length {
+                return Err(Error::new(ErrorKind::InvalidArg, ZCertError::InvalidMetaEncoded));
+            }
+
+            let name = try!(str::from_utf8(&encoded[index..index + name_length]));
+            index += name_length;
+            bytes_left -= name_length;
+
+            if bytes_left < 4 {
+                return Err(Error::new(ErrorKind::InvalidArg, ZCertError::InvalidMetaEncoded));
+            }
+
+            let value_length = (((encoded[index] as u32) << 24) |
+                                ((encoded[index + 1] as u32) << 16) |
+                                ((encoded[index + 2] as u32) << 8) |
+                                  encoded[index + 3] as u32) as usize;
+            index += 4;
+            bytes_left -= 4;
+
+            if bytes_left < value_length {
+                return Err(Error::new(ErrorKind::InvalidArg, ZCertError::InvalidMetaEncoded));
+            }
+
+            let value = try!(str::from_utf8(&encoded[index..index + value_length]));
+            index += value_length;
+            bytes_left -= value_length;
+
+            self.set_meta(name, value);
+        }
+
+        Ok(())
+    }
+
     pub fn save(&self, filename: &str) -> Result<()> {
         let filename_c = try!(CString::new(filename));
 
@@ -230,6 +286,7 @@ impl RawInterface<czmq_sys::zcert_t> for ZCert {
 pub enum ZCertError {
     Instantiate,
     InvalidCert(String),
+    InvalidMetaEncoded,
     SavePath(String),
 }
 
@@ -238,6 +295,7 @@ impl fmt::Display for ZCertError {
         match *self {
             ZCertError::Instantiate => write!(f, "Could not instantiate new ZCert struct"),
             ZCertError::InvalidCert(ref e) => write!(f, "Could not open certificate at path: {}", e),
+            ZCertError::InvalidMetaEncoded => write!(f, "Encoded metadata is invalid"),
             ZCertError::SavePath(ref e) => write!(f, "Could not save certificate file to path: {}", e),
         }
     }
@@ -248,6 +306,7 @@ impl error::Error for ZCertError {
         match *self {
             ZCertError::Instantiate => "Could not instantiate new ZCert struct",
             ZCertError::InvalidCert(_) => "Certificate was invalid or non-existent",
+            ZCertError::InvalidMetaEncoded => "Encoded metadata is invalid",
             ZCertError::SavePath(_) => "Could not save certificate file to given path",
         }
     }
@@ -314,6 +373,22 @@ mod tests {
 
         let mut keys = cert.meta_keys();
         assert_eq!(keys.next().unwrap(), "moo");
+    }
+
+    #[test]
+    fn test_encode_decode_meta() {
+        let cert = create_cert();
+        cert.set_meta("moo", "cow");
+        cert.set_meta("foobar", "baz");
+        cert.set_meta("ka", "BOOM!!");
+        let encoded = cert.encode_meta();
+
+        let cert = create_cert();
+        cert.decode_meta(&encoded).unwrap();
+
+        assert_eq!(cert.meta("moo").unwrap().unwrap(), "cow");
+        assert_eq!(cert.meta("foobar").unwrap().unwrap(), "baz");
+        assert_eq!(cert.meta("ka").unwrap().unwrap(), "BOOM!!");
     }
 
     #[test]
