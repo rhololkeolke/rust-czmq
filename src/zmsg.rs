@@ -188,6 +188,18 @@ impl ZMsg {
         }
     }
 
+    pub fn pushbytes(&self, bytes: &[u8]) -> Result<()> {
+        let zframe = try!(ZFrame::new(bytes));
+        try!(self.prepend(zframe));
+        Ok(())
+    }
+
+    pub fn addbytes(&self, bytes: &[u8]) -> Result<()> {
+        let zframe = try!(ZFrame::new(bytes));
+        try!(self.append(zframe));
+        Ok(())
+    }
+
     pub fn popbytes(&self) -> Option<Vec<u8>> {
         let ptr = unsafe { czmq_sys::zmsg_popstr(self.zmsg) };
 
@@ -386,7 +398,7 @@ mod tests {
     }
 
     #[test]
-    fn test_pushstr() {
+    fn test_push_add_popstr() {
         let msg = ZMsg::new();
         msg.addstr("456").unwrap();
         msg.pushstr("123").unwrap();
@@ -394,16 +406,10 @@ mod tests {
     }
 
     #[test]
-    fn test_popstr() {
+    fn test_push_add_popbytes() {
         let msg = ZMsg::new();
-        msg.addstr("123").unwrap();
-        assert_eq!(msg.popstr().unwrap().unwrap(), "123");
-    }
-
-    #[test]
-    fn test_popbytes() {
-        let msg = ZMsg::new();
-        msg.addstr("123").unwrap();
+        msg.addbytes("456".as_bytes()).unwrap();
+        msg.pushbytes("123".as_bytes()).unwrap();
         assert_eq!(msg.popbytes().unwrap(), "123".as_bytes());
     }
 
