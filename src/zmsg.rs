@@ -137,9 +137,20 @@ impl ZMsg {
     //  -> ::std::os::raw::c_int;
     // pub fn zmsg_addmem(_self: *mut zmsg_t, src: *const ::std::os::raw::c_void,
     //                    size: size_t) -> ::std::os::raw::c_int;
-    // pub fn zmsg_pushstr(_self: *mut zmsg_t,
-    //                     string: *const ::std::os::raw::c_char)
-    //  -> ::std::os::raw::c_int;
+
+    pub fn pushstr(&self, string: &str) -> Result<()> {
+        let string_c = CString::new(string).unwrap_or(CString::new("").unwrap());
+        let rc = unsafe { czmq_sys::zmsg_pushstr(self.zmsg, string_c.as_ptr()) };
+
+        // Deliberately leak this memory, which will be managed by C
+        mem::forget(string_c);
+
+        if rc == -1 {
+            Err(Error::new(ErrorKind::NonZero, ZMsgError::CmdFailed))
+        } else {
+            Ok(())
+        }
+    }
 
     pub fn addstr(&self, string: &str) -> Result<()> {
         let string_c = CString::new(string).unwrap_or(CString::new("").unwrap());
@@ -372,6 +383,14 @@ mod tests {
         let msg = ZMsg::new();
         msg.addstr("123").unwrap();
         assert_eq!(msg.pop().unwrap().data().unwrap().unwrap(), "123");
+    }
+
+    #[test]
+    fn test_pushstr() {
+        let msg = ZMsg::new();
+        msg.addstr("456").unwrap();
+        msg.pushstr("123").unwrap();
+        assert_eq!(msg.popstr().unwrap().unwrap(), "123");
     }
 
     #[test]
