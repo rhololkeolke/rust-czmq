@@ -14,6 +14,7 @@ bitflags! {
     }
 }
 
+#[derive(Eq)]
 pub struct ZFrame {
     zframe: *mut czmq_sys::zframe_t,
     owned: bool,
@@ -27,6 +28,12 @@ impl Drop for ZFrame {
         if self.owned {
             unsafe { czmq_sys::zframe_destroy(&mut self.zframe) };
         }
+    }
+}
+
+impl PartialEq for ZFrame {
+    fn eq(&self, other: &ZFrame) -> bool {
+        ZFrame::eq(self, other)
     }
 }
 

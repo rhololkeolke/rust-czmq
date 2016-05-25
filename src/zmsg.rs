@@ -4,6 +4,7 @@ use {czmq_sys, Error, ErrorKind, RawInterface, Result, Sockish, ZFrame};
 use std::{error, fmt, mem, ptr, result};
 use std::ffi::{CStr, CString};
 
+#[derive(Debug, Eq)]
 pub struct ZMsg {
     zmsg: *mut czmq_sys::zmsg_t,
     owned: bool,
@@ -17,6 +18,20 @@ impl Drop for ZMsg {
         if self.owned {
             unsafe { czmq_sys::zmsg_destroy(&mut self.zmsg) };
         }
+    }
+}
+
+impl Iterator for ZMsg {
+    type Item = ZFrame;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        ZMsg::next(self)
+    }
+}
+
+impl PartialEq for ZMsg {
+    fn eq(&self, other: &ZMsg) -> bool {
+        ZMsg::eq(self, other)
     }
 }
 
@@ -211,9 +226,30 @@ impl ZMsg {
         }
     }
 
-    // pub fn zmsg_addmsg(_self: *mut zmsg_t, msg_p: *mut *mut zmsg_t)
-    //  -> ::std::os::raw::c_int;
-    // pub fn zmsg_popmsg(_self: *mut zmsg_t) -> *mut zmsg_t;
+    pub fn addmsg(&self, other: ZMsg) -> Result<()> {
+        let rc = unsafe { czmq_sys::zmsg_addmsg(self.zmsg, &mut other.into_raw()) };
+
+        if rc == -1 {
+            Err(Error::new(ErrorKind::NonZero, ZMsgError::CmdFailed))
+        } else {
+            Ok(())
+        }
+    }
+
+    pub fn popmsg(&self) -> Option<ZMsg> {
+        let ptr = unsafe { czmq_sys::zmsg_popmsg(self.zmsg) };
+
+        if ptr == ptr::null_mut() {
+            None
+        } else {
+            Some(ZMsg::from_raw(ptr, true))
+        }
+    }
+
+    pub fn remove(&self, frame: &ZFrame) {
+        unsafe { czmq_sys::zmsg_remove(self.zmsg, frame.borrow_raw()) };
+    }
+
     // pub fn zmsg_remove(_self: *mut zmsg_t, frame: *mut zframe_t);
 
     pub fn first(&self) -> Option<ZFrame> {
@@ -250,9 +286,24 @@ impl ZMsg {
 
     // pub fn zmsg_save(_self: *mut zmsg_t, file: *mut FILE)
     //  -> ::std::os::raw::c_int;
-    // pub fn zmsg_dup(_self: *mut zmsg_t) -> *mut zmsg_t;
-    // pub fn zmsg_print(_self: *mut zmsg_t);
-    // pub fn zmsg_eq(_self: *mut zmsg_t, other: *mut zmsg_t) -> u8;
+
+    pub fn dup(&self) -> Result<ZMsg> {
+        let ptr = unsafe { czmq_sys::zmsg_dup(self.zmsg) };
+
+        if ptr == ptr::null_mut() {
+            Err(Error::new(ErrorKind::NullPtr, ZMsgError::CmdFailed))
+        } else {
+            Ok(ZMsg::from_raw(ptr, true))
+        }
+    }
+
+    pub fn print(&self) {
+        unsafe { czmq_sys::zmsg_print(self.zmsg) };
+    }
+
+    pub fn eq(&self, other: &ZMsg) -> bool {
+        unsafe { czmq_sys::zmsg_eq(self.zmsg, other.borrow_raw()) == 1 }
+    }
 
     pub fn signal(&self) -> Result<u8> {
         let signal = unsafe { czmq_sys::zmsg_signal(self.zmsg) };
@@ -261,12 +312,6 @@ impl ZMsg {
         } else {
             Ok(signal as u8)
         }
-    }
-
-    // pub fn zmsg_test(verbose: u8);
-
-    pub fn borrow_raw(&self) -> *mut czmq_sys::zmsg_t {
-        self.zmsg
     }
 }
 
@@ -285,14 +330,6 @@ impl RawInterface<czmq_sys::zmsg_t> for ZMsg {
 
     fn borrow_raw(&self) -> *mut czmq_sys::zmsg_t {
         self.zmsg
-    }
-}
-
-impl Iterator for ZMsg {
-    type Item = ZFrame;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        ZMsg::next(self)
     }
 }
 
@@ -414,6 +451,24 @@ mod tests {
     }
 
     #[test]
+    fn test_add_popmsg() {
+        let child_msg = ZMsg::new();
+        child_msg.addstr("test").unwrap();
+
+        let parent_msg = ZMsg::new();
+        parent_msg.addmsg(child_msg).unwrap();
+        assert_eq!(parent_msg.popmsg().unwrap().popstr().unwrap().unwrap(), "test");
+    }
+
+    #[test]
+    fn test_remove() {
+        let frame = ZFrame::from("baa").unwrap();
+        let msg = ZMsg::new();
+        msg.append(frame).unwrap();
+        msg.remove(&msg.next().unwrap());
+    }
+
+    #[test]
     fn test_iter_fns() {
         let msg = ZMsg::new();
         msg.addstr("1").unwrap();
@@ -442,5 +497,30 @@ mod tests {
             assert_eq!(x.data().unwrap().unwrap(), i.to_string());
             i += 1;
         }
+    }
+
+    #[test]
+    fn test_dup() {
+        let msg = ZMsg::new();
+        msg.addstr("1").unwrap();
+        msg.addstr("2").unwrap();
+        msg.addstr("3").unwrap();
+
+        assert!(msg.dup().is_ok());
+    }
+
+    #[test]
+    fn test_eq() {
+        let one = ZMsg::new();
+        one.addstr("1").unwrap();
+        one.addstr("2").unwrap();
+        one.addstr("3").unwrap();
+
+        let two = ZMsg::new();
+        two.addstr("1").unwrap();
+        two.addstr("2").unwrap();
+        two.addstr("3").unwrap();
+
+        assert_eq!(one, two);
     }
 }
