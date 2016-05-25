@@ -3,7 +3,6 @@
 use {czmq_sys, Error, ErrorKind, RawInterface, Result, Sockish};
 use std::{error, fmt, ptr, result, slice};
 use std::ffi::{CStr, CString};
-use std::str::{self, Utf8Error};
 use std::os::raw::c_void;
 
 bitflags! {
@@ -116,32 +115,32 @@ impl ZFrame {
         unsafe { czmq_sys::zframe_size(self.zframe) as usize }
     }
 
-    pub fn data<'a>(&'a self) -> Result<result::Result<&'a str, &[u8]>> {
+    pub fn data(&self) -> Result<result::Result<String, Vec<u8>>> {
         let data = unsafe { czmq_sys::zframe_data(self.zframe) };
 
         if data == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZFrameError::CmdFailed))
         } else {
             let bytes = unsafe { slice::from_raw_parts(data, self.size()) };
-            match str::from_utf8(bytes) {
+            match String::from_utf8(bytes.to_vec()) {
                 Ok(s) => Ok(Ok(s)),
-                Err(_) => Ok(Err(bytes))
+                Err(_) => Ok(Err(bytes.to_vec()))
             }
         }
     }
 
-    pub fn meta<'a>(&'a self, property: &str) -> Result<Option<result::Result<&'a str, &[u8]>>> {
-        let property_c = try!(CString::new(property));
+    pub fn meta(&self, property: &str) -> Option<result::Result<String, Vec<u8>>> {
+        let property_c = CString::new(property).unwrap_or(CString::new("").unwrap());
         let meta = unsafe { czmq_sys::zframe_meta(self.zframe, property_c.as_ptr()) };
 
         if meta == ptr::null_mut() {
-            Ok(None)
+            None
         } else {
-            let c_str = unsafe { CStr::from_ptr(meta) };
-            let bytes = c_str.to_bytes();
-            match c_str.to_str() {
-                Ok(s) => Ok(Some(Ok(s))),
-                Err(_) => Ok(Some(Err(bytes))),
+            let c_string = unsafe { CStr::from_ptr(meta) }.to_owned();
+            let bytes = c_string.as_bytes().to_vec();
+            match c_string.into_string() {
+                Ok(s) => Some(Ok(s)),
+                Err(_) => Some(Err(bytes)),
             }
         }
     }
@@ -159,26 +158,32 @@ impl ZFrame {
         }
     }
 
-    pub fn strhex<'a>(&'a self) -> Result<result::Result<&'a str, Utf8Error>> {
+    pub fn strhex(&self) -> Result<result::Result<String, Vec<u8>>> {
         let hex = unsafe { czmq_sys::zframe_strhex(self.zframe) };
 
         if hex == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZFrameError::CmdFailed))
         } else {
-            Ok(unsafe { CStr::from_ptr(hex) }.to_str())
+            let c_string = unsafe { CStr::from_ptr(hex) }.to_owned();
+            let bytes = c_string.as_bytes().to_vec();
+            match c_string.into_string() {
+                Ok(s) => Ok(Ok(s)),
+                Err(_) => Ok(Err(bytes)),
+            }
         }
     }
 
-    pub fn strdup(&self) -> Result<result::Result<String, Utf8Error>> {
+    pub fn strdup(&self) -> Result<result::Result<String, Vec<u8>>> {
         let string = unsafe { czmq_sys::zframe_strdup(self.zframe) };
 
         if string == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZFrameError::CmdFailed))
         } else {
-            let cstr = unsafe { CStr::from_ptr(string) }.to_str();
-            match cstr {
-                Ok(s) => Ok(Ok(s.to_string())),
-                Err(e) => Ok(Err(e))
+            let c_string = unsafe { CStr::from_ptr(string) }.to_owned();
+            let bytes = c_string.as_bytes().to_vec();
+            match c_string.into_string() {
+                Ok(s) => Ok(Ok(s)),
+                Err(_) => Ok(Err(bytes)),
             }
         }
     }

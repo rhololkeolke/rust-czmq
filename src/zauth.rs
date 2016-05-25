@@ -252,8 +252,8 @@ mod tests {
 
         let frame = ZFrame::recv(&server).unwrap();
         assert_eq!(frame.data().unwrap().unwrap(), "test");
-        assert_eq!(frame.meta("moo").unwrap().unwrap().unwrap(), "cow");
-        assert_eq!(frame.meta("woof").unwrap().unwrap().unwrap(), "dog");
+        assert_eq!(frame.meta("moo").unwrap().unwrap(), "cow");
+        assert_eq!(frame.meta("woof").unwrap().unwrap(), "dog");
     }
 
     fn test_zcertstore() {

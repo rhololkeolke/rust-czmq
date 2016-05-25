@@ -153,12 +153,12 @@ impl ZCert {
     /// # let sock = ZSock::new_rep("...").unwrap();
     /// let frame = ZFrame::recv(&sock).unwrap();
     /// let encoded = match frame.data().unwrap() {
-    ///     Ok(str) => str.as_bytes(),
+    ///     Ok(str) => str.into_bytes(),
     ///     Err(bytes) => bytes,
     /// };
     ///
     /// let cert = ZCert::new().unwrap();
-    /// cert.decode_meta(encoded);
+    /// cert.decode_meta(&encoded);
     /// ```
     pub fn decode_meta(&self, encoded: &[u8]) -> Result<()> {
         let mut bytes_left = encoded.len();
