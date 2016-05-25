@@ -3,7 +3,7 @@
 use {czmq_sys, Error, ErrorKind, RawInterface, Result, Sockish, zmq, ZList};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
-use std::{error, fmt, ptr, slice, str};
+use std::{error, fmt, ptr, result, slice, str};
 
 const KEY_SIZE: usize = 32;
 
@@ -104,17 +104,20 @@ impl ZCert {
         unsafe { czmq_sys::zcert_set_meta(self.zcert, key_c.as_ptr(), "%s\0".as_ptr() as *const i8, value_c.as_ptr()) };
     }
 
-    pub fn meta<'a>(&'a self, key: &str) -> Result<Option<&'a str>> {
-        let key_c = try!(CString::new(key));
+    pub fn meta(&self, key: &str) -> Option<result::Result<String, Vec<u8>>> {
+        let key_c = CString::new(key).unwrap_or(CString::new("").unwrap());
 
-        let value = unsafe {
-            let ptr = czmq_sys::zcert_meta(self.zcert, key_c.as_ptr());
-            CStr::from_ptr(ptr as *const c_char)
-        };
+        let ptr = unsafe { czmq_sys::zcert_meta(self.zcert, key_c.as_ptr()) };
 
-        match value.to_str() {
-            Ok(s) => Ok(Some(s)),
-            Err(_) => Ok(None),
+        if ptr == ptr::null_mut() {
+            None
+        } else {
+            let c_string = unsafe { CStr::from_ptr(ptr).to_owned() };
+            let bytes = c_string.as_bytes().to_vec();
+            match c_string.into_string() {
+                Ok(s) => Some(Ok(s)),
+                Err(_) => Some(Err(bytes)),
+            }
         }
     }
 
@@ -139,7 +142,7 @@ impl ZCert {
         let mut encoded: Vec<u8> = Vec::new();
 
         for metakey in self.meta_keys() {
-            if let Ok(Some(metaval)) = self.meta(metakey) {
+            if let Some(Ok(metaval)) = self.meta(metakey) {
                 encoded.push(metakey.len() as u8);
                 encoded.extend_from_slice(metakey.as_bytes());
                 encoded.push(((metaval.len() >> 24) & 0xff) as u8);
