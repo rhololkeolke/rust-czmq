@@ -7,6 +7,7 @@ use std::{error, fmt, ptr, slice, str};
 
 const KEY_SIZE: usize = 32;
 
+#[derive(Debug, Eq)]
 pub struct ZCert {
     zcert: *mut czmq_sys::zcert_t,
     owned: bool,
@@ -20,6 +21,12 @@ impl Drop for ZCert {
         if self.owned {
             unsafe { czmq_sys::zcert_destroy(&mut self.zcert) };
         }
+    }
+}
+
+impl PartialEq for ZCert {
+    fn eq(&self, other: &ZCert) -> bool {
+        ZCert::eq(self, other)
     }
 }
 
@@ -423,7 +430,7 @@ mod tests {
     fn test_eq() {
         let c1 = create_cert();
         let c2 = create_cert();
-        assert!(c1.eq(&c2));
+        assert_eq!(c1, c2);
     }
 
     fn create_cert() -> ZCert {
