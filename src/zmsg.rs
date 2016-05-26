@@ -215,14 +215,16 @@ impl ZMsg {
         Ok(())
     }
 
-    pub fn popbytes(&self) -> Option<Vec<u8>> {
-        let ptr = unsafe { czmq_sys::zmsg_popstr(self.zmsg) };
+    pub fn popbytes(&self) -> Result<Option<Vec<u8>>> {
+        let frame = self.pop();
 
-        if ptr == ptr::null_mut() {
-            None
+        if frame.is_some() {
+            Ok(Some(match try!(frame.unwrap().data()) {
+                Ok(s) => s.into_bytes(),
+                Err(b) => b
+            }))
         } else {
-            let c_string = unsafe { CStr::from_ptr(ptr).to_owned() };
-            Some(c_string.to_bytes().to_vec())
+            Ok(None)
         }
     }
 
@@ -447,7 +449,7 @@ mod tests {
         let msg = ZMsg::new();
         msg.addbytes("456".as_bytes()).unwrap();
         msg.pushbytes("123".as_bytes()).unwrap();
-        assert_eq!(msg.popbytes().unwrap(), "123".as_bytes());
+        assert_eq!(msg.popbytes().unwrap().unwrap(), "123".as_bytes());
     }
 
     #[test]
