@@ -359,7 +359,7 @@ impl error::Error for ZMsgError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use {zmq, ZFrame, ZSock, zsys_init};
+    use {zmq, ZCert, ZFrame, ZSock, zsys_init};
 
     #[test]
     fn test_sendrecv_zmq() {
@@ -446,10 +446,14 @@ mod tests {
 
     #[test]
     fn test_push_add_popbytes() {
+        let cert = ZCert::new().unwrap();
+        cert.set_meta("key", "value");
+        let encoded = cert.encode_meta();
+
         let msg = ZMsg::new();
-        msg.addbytes("456".as_bytes()).unwrap();
-        msg.pushbytes("123".as_bytes()).unwrap();
-        assert_eq!(msg.popbytes().unwrap().unwrap(), "123".as_bytes());
+        msg.addbytes("123".as_bytes()).unwrap();
+        msg.pushbytes(&encoded).unwrap();
+        assert_eq!(msg.popbytes().unwrap().unwrap(), encoded);
     }
 
     #[test]
