@@ -38,9 +38,7 @@ impl PartialEq for ZFrame {
 
 impl ZFrame {
     pub fn new(data: &[u8]) -> Result<ZFrame> {
-        let data_c = CString::new(data).unwrap().into_raw();
-        let zframe = unsafe { czmq_sys::zframe_new(data_c as *const c_void, data.len() as u64) };
-        unsafe { CString::from_raw(data_c) };
+        let zframe = unsafe { czmq_sys::zframe_new(data.as_ptr() as *const c_void, data.len() as u64) };
 
         if zframe == ptr::null_mut() {
             return Err(Error::new(ErrorKind::NullPtr, ZFrameError::Instantiate));
