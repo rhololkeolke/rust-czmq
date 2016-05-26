@@ -168,7 +168,7 @@ impl ZCert {
     /// };
     ///
     /// let cert = ZCert::new().unwrap();
-    /// cert.decode_meta(&encoded);
+    /// cert.decode_meta(&encoded).unwrap();
     /// ```
     pub fn decode_meta(&self, encoded: &[u8]) -> Result<()> {
         let mut bytes_left = encoded.len();
