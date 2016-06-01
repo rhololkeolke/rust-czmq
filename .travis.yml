@@ -1,67 +1,59 @@
-language: rust
-sudo: true
+sudo: required
 dist: trusty
-rust:
-- stable
-- beta
-- nightly
+language: rust
+
 addons:
   apt:
     packages:
-    - libcurl4-openssl-dev
-    - libelf-dev
-    - libdw-dev
-    - make
-    - automake
-    - gcc
-    - build-essential
-    - g++
-    - cpp
-    - libc6-dev
-    - man-db
-    - autoconf
-    - pkg-config
-    - libtool
-    - git
+      - libcurl4-openssl-dev
+      - libelf-dev
+      - libdw-dev
+      - binutils-dev
+
+rust:
+  - stable
+  - beta
+  - nightly
+
 before_script:
-- |
-  pip install --upgrade pip
-  pip install 'travis-cargo<0.2' --user &&
-  export PATH=$HOME/.local/bin:$PATH &&
-  export LIBRARY_PATH=$HOME/lib &&
-  export LD_LIBRARY_PATH=$HOME/lib &&
-  export PKG_CONFIG_PATH=$HOME/lib/pkgconfig &&
-  curl -sSOL https://download.libsodium.org/libsodium/releases/libsodium-1.0.8.tar.gz &&
-  curl -sSOL https://download.libsodium.org/libsodium/releases/libsodium-1.0.8.tar.gz.sig &&
-  curl -sSOL https://download.libsodium.org/jedi.gpg.asc &&
-  gpg --import jedi.gpg.asc &&
-  gpg --verify libsodium-1.0.8.tar.gz.sig libsodium-1.0.8.tar.gz &&
-  tar zxf libsodium-1.0.8.tar.gz &&
-  cd libsodium-1.0.8 &&
-  ./configure --prefix=$HOME && make && make install &&
-  cd .. &&
-  curl -sSOL https://github.com/zeromq/zeromq4-1/archive/v4.1.4.tar.gz &&
-  tar zxf v4.1.4.tar.gz &&
-  cd zeromq4-1-4.1.4 &&
-  ./autogen.sh && ./configure --prefix=$HOME --with-libsodium && make && make install &&
-  cd .. &&
-  git clone https://github.com/zeromq/czmq &&
-  cd czmq &&
-  ./autogen.sh && ./configure --prefix=$HOME && make && make install &&
-  cd ..
-after_success: |
-  [ $TRAVIS_BRANCH = master ] &&
-  [ $TRAVIS_PULL_REQUEST = false ] &&
-  cargo doc &&
-  echo "<meta http-equiv=refresh content=0;url=czmq/index.html>" > target/doc/index.html &&
-  sudo pip install ghp-import &&
-  ghp-import -n target/doc &&
-  git push -fq https://${GH_TOKEN}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
+  - |
+      pip install 'travis-cargo<0.2' --user &&
+      export PATH=$HOME/.local/bin:$PATH &&
+      export LIBRARY_PATH=$HOME/lib &&
+      export LD_LIBRARY_PATH=$HOME/lib &&
+      export PKG_CONFIG_PATH=$HOME/lib/pkgconfig &&
+
+      curl -sSOL https://download.libsodium.org/libsodium/releases/libsodium-1.0.8.tar.gz &&
+      curl -sSOL https://download.libsodium.org/libsodium/releases/libsodium-1.0.8.tar.gz.sig &&
+      curl -sSOL https://download.libsodium.org/jedi.gpg.asc &&
+      gpg --import jedi.gpg.asc &&
+      gpg --verify libsodium-1.0.8.tar.gz.sig libsodium-1.0.8.tar.gz &&
+      tar zxf libsodium-1.0.8.tar.gz &&
+      cd libsodium-1.0.8 &&
+      ./configure --prefix=$HOME && make && make install &&
+      cd .. &&
+
+      curl -sSOL https://github.com/zeromq/zeromq4-1/archive/v4.1.4.tar.gz &&
+      tar zxf v4.1.4.tar.gz &&
+      cd zeromq4-1-4.1.4 &&
+      ./autogen.sh && ./configure --prefix=$HOME --with-libsodium && make && make install &&
+      cd .. &&
+
+      git clone https://github.com/zeromq/czmq &&
+      cd czmq &&
+      ./autogen.sh && ./configure --prefix=$HOME && make && make install &&
+      cd ..
+
 script:
-- travis-cargo build
-- travis-cargo test
-- travis-cargo bench
+  - travis-cargo build
+  - travis-cargo test
+  - travis-cargo bench
+  - travis-cargo --only stable doc
+
+after_success:
+  - travis-cargo --only stable doc-upload
+  - travis-cargo coveralls --no-sudo --verify
+
 env:
-  global:
   - TRAVIS_CARGO_NIGHTLY_FEATURE=""
   - secure: G5Oxqug4L77b5twxNicrx8tUUYf3g2yKbCnLmkxYmOWfmMOz/oLys3zB0LHo/MW+OxHqOszjO2Wa3N+vVFjaC6PnZZU4Q+InsHFs3T2H1JRTPGyOaKh5FsDcI3oF68HNop/7V5IhEGhw11W/QVH2Q0JNQvu8bZeZPjUKC/CRLKyafUHm4LZiOF2FTV8Y4za6RhiousCbrFXeoore3hPqaTaCpMREa4SiYQgCjgg3wghIyr+pLiyQjEQo6Ss2zZ3e/LHkz26N+D4c64c8JPNdUo1B7SLaHtKMjPmTNmC6TFK/q9HzdVlIp0HhSWnf/Cd+Qwjud3LZgd0L6jtoairuFxqFPrho/zy8jQBxAp+J+JAPyQ+ql6Yb0D8FhFjg2tpDVvq70xPGoCk4HLG0y/ynhZjafMi5IDysuzUkkhnlwbAdhlitFyUxrd1bxaHcQTeCGBQ5CmcXosGyQQjdbpvGz5CYXJN93HuWp1Ao402jH/XTkrjTkQ0JGj8dB9t76T5b/EN6VWgWxjSzLwIp207iVyC6EdyKXHDnt4LmPvlwTvsmE989EFrelU3TsE4yWYNsf6jtyVEJ10+ENd1SPBxSvAf4ILJjB6LCiSx/UqjlT8JCqDGJwowhBRnXQvluQZtGBeRyQfd9nTZNPr4TO3AuocHBLeQ2pOGvkr2CcLYLIj0=
