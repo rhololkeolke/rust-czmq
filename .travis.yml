@@ -53,7 +53,7 @@ script:
 
 after_success:
   - travis-cargo --only stable doc-upload
-  - travis-cargo coveralls --no-sudo --verify --exclude-pattern="/tmp/,/usr/local/"
+  - travis-cargo coveralls --no-sudo --verify --exclude-pattern="/tmp/,/usr/"
 
 env:
   global:
