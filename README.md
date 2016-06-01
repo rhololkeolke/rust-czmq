@@ -1,4 +1,4 @@
-# rust-czmq [![Build Status](https://travis-ci.org/petehayes102/rust-czmq.svg?branch=master)](https://travis-ci.org/petehayes102/rust-czmq)
+# rust-czmq [![Build Status](https://travis-ci.org/petehayes102/rust-czmq.svg?branch=master)](https://travis-ci.org/petehayes102/rust-czmq) [![Coverage Status](https://coveralls.io/repos/github/petehayes102/rust-czmq/badge.svg?branch=master)](https://coveralls.io/github/petehayes102/rust-czmq?branch=master)
 
 Rust binding for [CZMQ](http://czmq.zeromq.org). Find the docs at [https://petehayes102.github.io/rust-czmq](https://petehayes102.github.io/rust-czmq).
 
