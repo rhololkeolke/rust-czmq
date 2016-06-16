@@ -336,6 +336,14 @@ impl ZSock {
     // pub fn zsock_set_unbounded(_self: *mut ::std::os::raw::c_void);
     // pub fn zsock_signal(_self: *mut ::std::os::raw::c_void, status: byte)
     //  -> ::std::os::raw::c_int;
+    pub fn signal(&self, status: u8) -> Result<()> {
+        let rc = unsafe { czmq_sys::zsock_signal(self.zsock as *mut c_void, status) };
+        if rc == -1 {
+            Err(Error::new(ErrorKind::NonZero, ZSockError::CmdFailed))
+        } else {
+            Ok(())
+        }
+    }
 
     pub fn wait(&self) -> Result<()> {
         let rc = unsafe { czmq_sys::zsock_wait(self.zsock as *mut c_void) };
@@ -1028,14 +1036,13 @@ mod tests {
     }
 
     #[test]
-    fn test_wait() {
+    fn test_signal_wait() {
         zsys_init();
 
-        let server = ZSock::new_rep("inproc://zsock_wait").unwrap();
-        let client = ZSock::new_req("inproc://zsock_wait").unwrap();
+        let server = ZSock::new_pull("inproc://zsock_wait").unwrap();
+        let client = ZSock::new_push("inproc://zsock_wait").unwrap();
 
-        let msg = ZMsg::new_signal(1).unwrap();
-        msg.send(&client).unwrap();
+        client.signal(0).unwrap();
         assert!(server.wait().is_ok());
     }
 
