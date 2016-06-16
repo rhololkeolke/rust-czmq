@@ -260,7 +260,7 @@ impl error::Error for ZFrameError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use {zmq, ZSock, zsys_init};
+    use {zmq, ZSock, ZSys};
 
     #[test]
     fn test_sendrecv_zmq() {
@@ -284,7 +284,7 @@ mod tests {
 
     #[test]
     fn test_sendrecv_zsock() {
-        zsys_init();
+        ZSys::init();
 
         let server = ZSock::new_rep("inproc://zframe_sendrecv_zsock").unwrap();
         let client = ZSock::new_req("inproc://zframe_sendrecv_zsock").unwrap();

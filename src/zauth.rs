@@ -111,14 +111,14 @@ mod tests {
     use super::*;
     use tempdir::TempDir;
     use tempfile::NamedTempFile;
-    use {RawInterface, ZCert, ZCertStore, ZCertStoreRaw, ZFrame, ZSock, ZSockType, zsys_init};
+    use {RawInterface, ZCert, ZCertStore, ZCertStoreRaw, ZFrame, ZSock, ZSockType, ZSys};
 
     // There can only be one ZAuth instance per context as each ZAuth
     // instance binds to the same inproc endpoint. The simplest way
     // around this limitation is to run all the tests in sequence.
     #[test]
     fn test_zauth() {
-        zsys_init();
+        ZSys::init();
 
         test_verbose();
         test_allow_deny();

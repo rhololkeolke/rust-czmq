@@ -324,7 +324,7 @@ impl error::Error for ZCertError {
 
 #[cfg(test)]
 mod tests {
-    use {ZSock, zsys_init};
+    use {ZSock, ZSys};
     use super::*;
     use zmq;
 
@@ -413,7 +413,7 @@ mod tests {
 
     #[test]
     fn test_apply_zsock() {
-        zsys_init();
+        ZSys::init();
 
         let cert = create_cert();
         let sock = ZSock::new_rep("inproc://zcert_test_apply_zsock").unwrap();

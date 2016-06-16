@@ -836,11 +836,11 @@ mod tests {
     use std::thread::sleep;
     use std::time::Duration;
     use super::*;
-    use {zmq, ZFrame, ZMsg, zsys_init};
+    use {zmq, ZFrame, ZMsg, ZSys};
 
     #[test]
     fn test_new_pub() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new_pub("inproc://test_pub");
         assert!(zsock.is_ok());
@@ -848,7 +848,7 @@ mod tests {
 
     #[test]
     fn test_new_sub() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new_sub("inproc://test_sub1", None);
         assert!(zsock.is_ok());
@@ -858,7 +858,7 @@ mod tests {
 
     #[test]
     fn test_pubsub() {
-        zsys_init();
+        ZSys::init();
 
         let zpub = ZSock::new_pub("inproc://zsock_test_pubsub").unwrap();
         let zsub = ZSock::new_sub("inproc://zsock_test_pubsub", Some("moo")).unwrap();
@@ -879,7 +879,7 @@ mod tests {
 
     #[test]
     fn test_new_req() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new_req("inproc://test_req");
         assert!(zsock.is_ok());
@@ -887,7 +887,7 @@ mod tests {
 
     #[test]
     fn test_new_rep() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new_rep("inproc://test_rep");
         assert!(zsock.is_ok());
@@ -895,7 +895,7 @@ mod tests {
 
     #[test]
     fn test_new_dealer() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new_dealer("inproc://test_dealer");
         assert!(zsock.is_ok());
@@ -903,7 +903,7 @@ mod tests {
 
     #[test]
     fn test_new_router() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new_router("inproc://test_router");
         assert!(zsock.is_ok());
@@ -911,7 +911,7 @@ mod tests {
 
     #[test]
     fn test_new_push() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new_push("inproc://test_push");
         assert!(zsock.is_ok());
@@ -919,7 +919,7 @@ mod tests {
 
     #[test]
     fn test_new_pull() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new_pull("inproc://test_pull");
         assert!(zsock.is_ok());
@@ -927,7 +927,7 @@ mod tests {
 
     #[test]
     fn test_new_xpub() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new_xpub("inproc://test_xpub");
         assert!(zsock.is_ok());
@@ -935,14 +935,14 @@ mod tests {
 
     #[test]
     fn test_new_xsub() {
-        zsys_init();
+        ZSys::init();
         let zsock = ZSock::new_xsub("inproc://test_xsub");
         assert!(zsock.is_ok());
     }
 
     #[test]
     fn test_new_pair() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new_pair("inproc://test_pair");
         assert!(zsock.is_ok());
@@ -950,7 +950,7 @@ mod tests {
 
     #[test]
     fn test_new_stream() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new_stream("inproc://test_stream");
         assert!(zsock.is_ok());
@@ -958,7 +958,7 @@ mod tests {
 
     #[test]
     fn test_bind() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new(ZSockType::REP);
         assert!(zsock.bind("inproc://test_").is_ok());
@@ -966,7 +966,7 @@ mod tests {
 
     #[test]
     fn test_endpoint() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new_rep("inproc://test_endpoint").unwrap();
         assert_eq!(zsock.endpoint().unwrap(), "inproc://test_endpoint");
@@ -974,7 +974,7 @@ mod tests {
 
     #[test]
     fn test_unbind() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new_rep("inproc://test_unbind").unwrap();
         assert!(zsock.unbind("inproc://test_unbind").is_ok());
@@ -982,7 +982,7 @@ mod tests {
 
     #[test]
     fn test_connect() {
-        zsys_init();
+        ZSys::init();
 
         ZSock::new_rep("inproc://test_connect").unwrap();
         let client = ZSock::new(ZSockType::REQ);
@@ -991,7 +991,7 @@ mod tests {
 
     #[test]
     fn test_disconnect() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new_req("inproc://test_disconnect").unwrap();
         zsock.connect("inproc://test_disconnect1").unwrap();
@@ -1000,7 +1000,7 @@ mod tests {
 
     #[test]
     fn test_attach() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new(ZSockType::REP);
         let result = zsock.attach(&["inproc://test_attach1", "inproc://test_attach2", "inproc://test_attach3"], true);
@@ -1009,7 +1009,7 @@ mod tests {
 
     #[test]
     fn test_type_str() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new(ZSockType::PUB);
         assert_eq!(zsock.type_str().unwrap().unwrap(), "PUB");
@@ -1017,7 +1017,7 @@ mod tests {
 
     #[test]
     fn test_sendrecv() {
-        zsys_init();
+        ZSys::init();
 
         let server = ZSock::new_rep("inproc://test_send").unwrap();
         let client = ZSock::new_req("inproc://test_send").unwrap();
@@ -1028,7 +1028,7 @@ mod tests {
 
     #[test]
     fn test_zap_domain() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new(ZSockType::REP);
         zsock.set_zap_domain("test");
@@ -1037,7 +1037,7 @@ mod tests {
 
     #[test]
     fn test_signal_wait() {
-        zsys_init();
+        ZSys::init();
 
         let server = ZSock::new_pull("inproc://zsock_wait").unwrap();
         let client = ZSock::new_push("inproc://zsock_wait").unwrap();
@@ -1048,7 +1048,7 @@ mod tests {
 
     #[test]
     fn test_flush() {
-        zsys_init();
+        ZSys::init();
 
         let server = ZSock::new_rep("inproc://zsock_flush").unwrap();
         let client = ZSock::new_req("inproc://zsock_flush").unwrap();
@@ -1065,7 +1065,7 @@ mod tests {
 
     #[test]
     fn test_rcvtimeo() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new(ZSockType::REP);
         zsock.set_rcvtimeo(Some(2000));
@@ -1074,7 +1074,7 @@ mod tests {
 
     #[test]
     fn test_sndtimeo() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new(ZSockType::REP);
         zsock.set_sndtimeo(Some(2000));
@@ -1083,7 +1083,7 @@ mod tests {
 
     #[test]
     fn test_sndhwm() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new(ZSockType::REP);
         zsock.set_sndhwm(2000);
@@ -1092,7 +1092,7 @@ mod tests {
 
     #[test]
     fn test_rcvhwm() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new(ZSockType::REP);
         zsock.set_rcvhwm(2000);
@@ -1101,7 +1101,7 @@ mod tests {
 
     #[test]
     fn test_subscribe() {
-        zsys_init();
+        ZSys::init();
 
         let publisher = ZSock::new_pub("inproc://zsock_test_subscribe").unwrap();
         let subscriber = ZSock::new(ZSockType::SUB);
@@ -1141,7 +1141,7 @@ mod tests {
 
     #[test]
     fn test_identity() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new(ZSockType::REP);
         zsock.set_identity("moo").unwrap();
@@ -1150,7 +1150,7 @@ mod tests {
 
     #[test]
     fn test_linger() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new(ZSockType::REP);
         zsock.set_linger(2000);
@@ -1159,7 +1159,7 @@ mod tests {
 
     #[test]
     fn test_mechanism() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new(ZSockType::REP);
         assert_eq!(zsock.mechanism().unwrap(), ZSockMechanism::ZMQ_NULL);
@@ -1176,7 +1176,7 @@ mod tests {
 
     #[test]
     fn test_plain_server() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new(ZSockType::REP);
         assert!(!zsock.plain_server());
@@ -1186,7 +1186,7 @@ mod tests {
 
     #[test]
     fn test_plain_username() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new(ZSockType::REP);
         zsock.set_plain_username("jnrvicepresident");
@@ -1195,7 +1195,7 @@ mod tests {
 
     #[test]
     fn test_plain_password() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new(ZSockType::REP);
         zsock.set_plain_password("ohtheinternet'soncomputersnow");
@@ -1204,7 +1204,7 @@ mod tests {
 
     #[test]
     fn test_curve_server() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new(ZSockType::REP);
         assert!(!zsock.curve_server());
@@ -1214,7 +1214,7 @@ mod tests {
 
     #[test]
     fn test_curve_keys() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new(ZSockType::REP);
         let keypair = zmq::CurveKeypair::new().unwrap();
@@ -1237,7 +1237,7 @@ mod tests {
 
     #[test]
     fn test_monitor() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new(ZSockType::REP);
         assert!(zsock.monitor().is_ok());

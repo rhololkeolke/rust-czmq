@@ -359,7 +359,7 @@ impl error::Error for ZMsgError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use {zmq, ZCert, ZFrame, ZSock, zsys_init};
+    use {zmq, ZCert, ZFrame, ZSock, ZSys};
 
     #[test]
     fn test_sendrecv_zmq() {
@@ -381,7 +381,7 @@ mod tests {
 
     #[test]
     fn test_sendrecv_zsock() {
-        zsys_init();
+        ZSys::init();
 
         let server = ZSock::new_rep("inproc://zmsg_sendrecv_zsock").unwrap();
         let client = ZSock::new_req("inproc://zmsg_sendrecv_zsock").unwrap();

@@ -24,6 +24,7 @@ mod zmonitor;
 mod zmsg;
 mod zpoller;
 mod zsock;
+mod zsys;
 
 pub use colander::Colander;
 pub use czmq_sys::zcertstore_t as ZCertStoreRaw;
@@ -39,24 +40,12 @@ pub use zmonitor::{ZMonitor, ZMonitorEvents};
 pub use zmsg::ZMsg;
 pub use zpoller::ZPoller;
 pub use zsock::{ZSock, ZSockMechanism, ZSockType};
+pub use zsys::ZSys;
 
 use std::os::raw::c_void;
 use std::result;
-use std::sync::{Once, ONCE_INIT};
 
 pub type Result<T> = result::Result<T, Error>;
-
-// Each new ZSock calls zsys_init(), which is a non-threadsafe
-// fn. To mitigate the race condition, wrap it in a Once struct.
-// Currently this is only necessary in tests, as they are the only
-// multithreaded component.
-static INIT_ZSYS: Once = ONCE_INIT;
-
-pub fn zsys_init() {
-    INIT_ZSYS.call_once(|| {
-        unsafe { czmq_sys::zsys_init() };
-    });
-}
 
 pub trait RawInterface<P> {
     fn from_raw(ptr: *mut P, owned: bool) -> Self;

@@ -144,11 +144,11 @@ impl error::Error for ZMonitorError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use {ZSock, ZSockType, zsys_init};
+    use {ZSock, ZSockType, ZSys};
 
     #[test]
     fn test_attrs() {
-        zsys_init();
+        ZSys::init();
 
         let server = ZSock::new(ZSockType::PULL);
         let server_mon = ZMonitor::new(&server).unwrap();
@@ -169,7 +169,7 @@ mod tests {
 
     #[test]
     fn test_verbose() {
-        zsys_init();
+        ZSys::init();
 
         let zsock = ZSock::new(ZSockType::REP);
         let zmonitor = ZMonitor::new(&zsock).unwrap();

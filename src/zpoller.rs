@@ -105,7 +105,7 @@ impl error::Error for ZPollerError {
 
 #[cfg(test)]
 mod tests {
-    use {ZSock, ZSockType, zsys_init};
+    use {ZSock, ZSockType, ZSys};
     use super::*;
 
     #[test]
@@ -115,7 +115,7 @@ mod tests {
 
     #[test]
     fn test_add_remove() {
-        zsys_init();
+        ZSys::init();
 
         let sock = ZSock::new(ZSockType::PAIR);
         let mut poller = ZPoller::new().unwrap();
@@ -125,7 +125,7 @@ mod tests {
 
     #[test]
     fn test_wait() {
-        zsys_init();
+        ZSys::init();
 
         let server1 = ZSock::new_rep("inproc://zpoller_test_wait1").unwrap();
         let client1 = ZSock::new_req("inproc://zpoller_test_wait1").unwrap();

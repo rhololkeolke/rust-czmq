@@ -149,7 +149,7 @@ impl error::Error for ZCertStoreError {
 
 #[cfg(test)]
 mod tests {
-    use {czmq_sys, RawInterface, ZCertStoreRaw, ZCert};
+    use {czmq_sys, RawInterface, ZCertStoreRaw, ZCert, ZSys};
     use super::*;
     use tempdir::TempDir;
     use zmq::z85_decode;
@@ -162,6 +162,8 @@ mod tests {
 
     #[test]
     fn test_loader() {
+        ZSys::init();
+
         let store = ZCertStore::new(None).unwrap();
         assert!(store.lookup("nonexistent_key").unwrap().is_none()); // Idiot check
 
