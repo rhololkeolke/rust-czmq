@@ -51,7 +51,7 @@ impl ZPoller {
         }
     }
 
-    pub fn wait<S: Sockish>(&self, timeout: Option<u32>) -> Result<Option<S>> {
+    pub fn wait<S: Sockish>(&self, timeout: Option<u32>) -> Option<S> {
         let t = match timeout {
             Some(time) => time as c_int,
             None => -1 as c_int,
@@ -60,9 +60,9 @@ impl ZPoller {
         let ptr = unsafe { czmq_sys::zpoller_wait(self.zpoller, t) };
 
         if ptr == ptr::null_mut() {
-            Ok(None)
+            None
         } else {
-            Ok(Some(S::from_raw(ptr, false)))
+            Some(S::from_raw(ptr, false))
         }
     }
 
@@ -139,15 +139,15 @@ mod tests {
         poller.add(&server1).unwrap();
         poller.add(&server2).unwrap();
 
-        let sock: ZSock = poller.wait(Some(500)).unwrap().unwrap();
+        let sock: ZSock = poller.wait(Some(500)).unwrap();
         assert_eq!(sock.endpoint().unwrap(), "inproc://zpoller_test_wait1");
         server1.recv_str().unwrap().unwrap();
 
-        let sock: ZSock = poller.wait(Some(500)).unwrap().unwrap();
+        let sock: ZSock = poller.wait(Some(500)).unwrap();
         assert_eq!(sock.endpoint().unwrap(), "inproc://zpoller_test_wait2");
         server2.recv_str().unwrap().unwrap();
 
-        let sock: Option<ZSock> = poller.wait(Some(0)).unwrap();
+        let sock: Option<ZSock> = poller.wait(Some(0));
         assert!(sock.is_none());
         assert!(poller.expired());
         assert!(!poller.terminated());
