@@ -796,7 +796,8 @@ impl RawInterface<c_void> for ZSock {
         }
     }
 
-    fn into_raw(self) -> *mut c_void {
+    fn into_raw(mut self) -> *mut c_void {
+        self.owned = false;
         self.zsock as *mut c_void
     }
 
