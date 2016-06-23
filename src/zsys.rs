@@ -5,7 +5,7 @@ use error::{Error, ErrorKind};
 use std::{error, fmt, ptr};
 use std::os::raw::c_void;
 use std::sync::{Once, ONCE_INIT};
-use zsock::{ZSock, ZSockType};
+use zsock::ZSock;
 
 static INIT_ZSYS: Once = ONCE_INIT;
 
@@ -23,7 +23,7 @@ impl ZSys {
     /// Create a pipe, which consists of two PAIR sockets connected
     /// over inproc.
     pub fn create_pipe() -> Result<(ZSock, ZSock)> {
-        let mut backend_raw = ZSock::new(ZSockType::PAIR).into_raw() as *mut czmq_sys::zsock_t;
+        let mut backend_raw: *mut czmq_sys::zsock_t = ptr::null_mut();
         let frontend_raw = unsafe { czmq_sys::zsys_create_pipe(&mut backend_raw) };
 
         if frontend_raw == ptr::null_mut() {
@@ -66,5 +66,7 @@ mod tests {
         let (frontend, backend) = ZSys::create_pipe().unwrap();
         frontend.send_str("I changed my iPod’s name to Titanic...now it’s syncing.").unwrap();
         assert_eq!(backend.recv_str().unwrap().unwrap(), "I changed my iPod’s name to Titanic...now it’s syncing.");
+        backend.send_str("My family laughed when I told them I was going to be a comedian. Well...they aren't laughing now!").unwrap();
+        assert_eq!(frontend.recv_str().unwrap().unwrap(), "My family laughed when I told them I was going to be a comedian. Well...they aren't laughing now!");
     }
 }
