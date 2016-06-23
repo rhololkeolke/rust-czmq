@@ -4,7 +4,6 @@ use {czmq_sys, Error, ErrorKind, RawInterface, Result, Sockish, ZMonitor};
 use std::{error, fmt, mem, ptr, result};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_void;
-use std::str::{Utf8Error};
 
 // Duplicate this from rust-zmq to avoid users having to depend on
 // both libs.
@@ -288,14 +287,19 @@ impl ZSock {
         }
     }
 
-    pub fn type_str<'a>(&'a self) -> Result<result::Result<&'a str, Utf8Error>> {
+    pub fn type_str(&self) -> Result<result::Result<String, Vec<u8>>> {
         let ptr = unsafe { czmq_sys::zsock_type_str(self.zsock) };
 
         if ptr == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZSockError::CmdFailed))
         } else {
-            let type_str = unsafe { CStr::from_ptr(ptr) };
-            Ok(type_str.to_str())
+            let c_str = unsafe { CStr::from_ptr(ptr) };
+            let bytes = c_str.to_bytes();
+
+            match String::from_utf8(bytes.to_vec()) {
+                Ok(s) => Ok(Ok(s)),
+                Err(_) => Ok(Err(bytes.to_vec())),
+            }
         }
     }
 
@@ -311,13 +315,13 @@ impl ZSock {
     }
 
     pub fn recv_str(&self) -> Result<result::Result<String, Vec<u8>>> {
-        let mut data = ptr::null();
+        let mut ptr = ptr::null();
 
-        let rc = unsafe { czmq_sys::zsock_recv(self.zsock as *mut c_void, "s\0".as_ptr() as *const i8, &mut data) };
+        let rc = unsafe { czmq_sys::zsock_recv(self.zsock as *mut c_void, "s\0".as_ptr() as *const i8, &mut ptr) };
         if rc == -1 {
             Err(Error::new(ErrorKind::NonZero, ZSockError::CmdFailed))
         } else {
-            let c_str = unsafe { CStr::from_ptr(data) };
+            let c_str = unsafe { CStr::from_ptr(ptr) };
             let bytes = c_str.to_bytes();
 
             match String::from_utf8(bytes.to_vec()) {
@@ -379,13 +383,19 @@ impl ZSock {
     // pub fn zsock_set_conflate(_self: *mut ::std::os::raw::c_void,
     //                           conflate: ::std::os::raw::c_int);
 
-    pub fn zap_domain<'a>(&'a self) -> Result<result::Result<&'a str, Utf8Error>> {
+    pub fn zap_domain<'a>(&'a self) -> Result<result::Result<String, Vec<u8>>> {
         let domain = unsafe { czmq_sys::zsock_zap_domain(self.zsock as *mut c_void) };
 
         if domain == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZSockError::CmdFailed))
         } else {
-            Ok(unsafe { CStr::from_ptr(domain) }.to_str())
+            let c_str = unsafe { CStr::from_ptr(domain) };
+            let bytes = c_str.to_bytes();
+
+            match String::from_utf8(bytes.to_vec()) {
+                Ok(s) => Ok(Ok(s)),
+                Err(_) => Ok(Err(bytes.to_vec())),
+            }
         }
     }
 
@@ -421,13 +431,19 @@ impl ZSock {
         unsafe { czmq_sys::zsock_set_plain_server(self.zsock as *mut c_void, if plain { 1 } else { 0 }) };
     }
 
-    pub fn plain_username<'a>(&'a self) -> Result<result::Result<&'a str, Utf8Error>> {
+    pub fn plain_username<'a>(&'a self) -> Result<result::Result<String, Vec<u8>>> {
         let username = unsafe { czmq_sys::zsock_plain_username(self.zsock as *mut c_void) };
 
         if username == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZSockError::CmdFailed))
         } else {
-            Ok(unsafe { CStr::from_ptr(username) }.to_str())
+            let c_str = unsafe { CStr::from_ptr(username) };
+            let bytes = c_str.to_bytes();
+
+            match String::from_utf8(bytes.to_vec()) {
+                Ok(s) => Ok(Ok(s)),
+                Err(_) => Ok(Err(bytes.to_vec())),
+            }
         }
     }
 
@@ -439,13 +455,19 @@ impl ZSock {
         }
     }
 
-    pub fn plain_password<'a>(&'a self) -> Result<result::Result<&'a str, Utf8Error>> {
+    pub fn plain_password<'a>(&'a self) -> Result<result::Result<String, Vec<u8>>> {
         let password = unsafe { czmq_sys::zsock_plain_password(self.zsock as *mut c_void) };
 
         if password == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZSockError::CmdFailed))
         } else {
-            Ok(unsafe { CStr::from_ptr(password) }.to_str())
+            let c_str = unsafe { CStr::from_ptr(password) };
+            let bytes = c_str.to_bytes();
+
+            match String::from_utf8(bytes.to_vec()) {
+                Ok(s) => Ok(Ok(s)),
+                Err(_) => Ok(Err(bytes.to_vec())),
+            }
         }
     }
 
@@ -465,13 +487,19 @@ impl ZSock {
         unsafe { czmq_sys::zsock_set_curve_server(self.zsock as *mut c_void, if curve { 1 } else { 0 }) };
     }
 
-    pub fn curve_publickey<'a>(&'a self) -> Result<result::Result<&'a str, Utf8Error>> {
+    pub fn curve_publickey<'a>(&'a self) -> Result<result::Result<String, Vec<u8>>> {
         let key = unsafe { czmq_sys::zsock_curve_publickey(self.zsock as *mut c_void) };
 
         if key == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZSockError::CmdFailed))
         } else {
-            Ok(unsafe { CStr::from_ptr(key) }.to_str())
+            let c_str = unsafe { CStr::from_ptr(key) };
+            let bytes = c_str.to_bytes();
+
+            match String::from_utf8(bytes.to_vec()) {
+                Ok(s) => Ok(Ok(s)),
+                Err(_) => Ok(Err(bytes.to_vec())),
+            }
         }
     }
 
@@ -487,13 +515,19 @@ impl ZSock {
         unsafe { czmq_sys::zsock_set_curve_publickey_bin(self.zsock as *mut c_void, key.as_ptr()) };
     }
 
-    pub fn curve_secretkey<'a>(&'a self) -> Result<result::Result<&'a str, Utf8Error>> {
+    pub fn curve_secretkey<'a>(&'a self) -> Result<result::Result<String, Vec<u8>>> {
         let key = unsafe { czmq_sys::zsock_curve_secretkey(self.zsock as *mut c_void) };
 
         if key == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZSockError::CmdFailed))
         } else {
-            Ok(unsafe { CStr::from_ptr(key) }.to_str())
+            let c_str = unsafe { CStr::from_ptr(key) };
+            let bytes = c_str.to_bytes();
+
+            match String::from_utf8(bytes.to_vec()) {
+                Ok(s) => Ok(Ok(s)),
+                Err(_) => Ok(Err(bytes.to_vec())),
+            }
         }
     }
 
@@ -509,13 +543,19 @@ impl ZSock {
         unsafe { czmq_sys::zsock_set_curve_secretkey_bin(self.zsock as *mut c_void, key.as_ptr()) };
     }
 
-    pub fn curve_serverkey<'a>(&'a self) -> Result<result::Result<&'a str, Utf8Error>> {
+    pub fn curve_serverkey<'a>(&'a self) -> Result<result::Result<String, Vec<u8>>> {
         let key = unsafe { czmq_sys::zsock_curve_serverkey(self.zsock as *mut c_void) };
 
         if key == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZSockError::CmdFailed))
         } else {
-            Ok(unsafe { CStr::from_ptr(key) }.to_str())
+            let c_str = unsafe { CStr::from_ptr(key) };
+            let bytes = c_str.to_bytes();
+
+            match String::from_utf8(bytes.to_vec()) {
+                Ok(s) => Ok(Ok(s)),
+                Err(_) => Ok(Err(bytes.to_vec())),
+            }
         }
     }
 
@@ -1221,19 +1261,19 @@ mod tests {
         let keypair = zmq::CurveKeypair::new().unwrap();
 
         zsock.set_curve_publickey(&keypair.public_key);
-        assert_eq!(zsock.curve_publickey().unwrap().unwrap(), &keypair.public_key);
+        assert_eq!(&zsock.curve_publickey().unwrap().unwrap(), &keypair.public_key);
         zsock.set_curve_publickey_bin(&zmq::z85_decode(&keypair.public_key));
-        assert_eq!(zsock.curve_publickey().unwrap().unwrap(), &keypair.public_key);
+        assert_eq!(&zsock.curve_publickey().unwrap().unwrap(), &keypair.public_key);
 
         zsock.set_curve_secretkey(&keypair.secret_key);
-        assert_eq!(zsock.curve_secretkey().unwrap().unwrap(), &keypair.secret_key);
+        assert_eq!(&zsock.curve_secretkey().unwrap().unwrap(), &keypair.secret_key);
         zsock.set_curve_secretkey_bin(&zmq::z85_decode(&keypair.secret_key));
-        assert_eq!(zsock.curve_secretkey().unwrap().unwrap(), &keypair.secret_key);
+        assert_eq!(&zsock.curve_secretkey().unwrap().unwrap(), &keypair.secret_key);
 
         zsock.set_curve_serverkey(&keypair.secret_key);
-        assert_eq!(zsock.curve_serverkey().unwrap().unwrap(), &keypair.secret_key);
+        assert_eq!(&zsock.curve_serverkey().unwrap().unwrap(), &keypair.secret_key);
         zsock.set_curve_serverkey_bin(&zmq::z85_decode(&keypair.secret_key));
-        assert_eq!(zsock.curve_serverkey().unwrap().unwrap(), &keypair.secret_key);
+        assert_eq!(&zsock.curve_serverkey().unwrap().unwrap(), &keypair.secret_key);
     }
 
     #[test]
