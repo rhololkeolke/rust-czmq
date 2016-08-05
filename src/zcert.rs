@@ -56,12 +56,12 @@ impl ZCert {
         ZCert::from_keys(&zmq::z85_decode(public_txt), &zmq::z85_decode(secret_txt))
     }
 
-    pub fn load(filename: &str) -> Result<ZCert> {
-        let filename_c = try!(CString::new(filename));
-        let zcert = unsafe { czmq_sys::zcert_load(filename_c.as_ptr()) };
+    pub fn load<P: AsRef<Path>>(path: P) -> Result<ZCert> {
+        let path_c = try!(CString::new(path.as_ref().to_str().unwrap()));
+        let zcert = unsafe { czmq_sys::zcert_load(path_c.as_ptr()) };
 
         if zcert == ptr::null_mut() {
-            return Err(Error::new(ErrorKind::NullPtr, ZCertError::InvalidCert(filename_c.into_string().unwrap())));
+            return Err(Error::new(ErrorKind::NullPtr, ZCertError::InvalidCert(path_c.into_string().unwrap())));
         }
 
         Ok(ZCert {
