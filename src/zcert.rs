@@ -3,6 +3,7 @@
 use {czmq_sys, Error, ErrorKind, RawInterface, Result, Sockish, zmq, ZList};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
+use std::path::Path;
 use std::{error, fmt, ptr, result, slice, str};
 
 const KEY_SIZE: usize = 32;
@@ -212,39 +213,39 @@ impl ZCert {
         Ok(())
     }
 
-    pub fn save(&self, filename: &str) -> Result<()> {
-        let filename_c = try!(CString::new(filename));
+    pub fn save<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+        let path_c = try!(CString::new(path.as_ref().to_str().unwrap()));
 
         unsafe {
-            let rc = czmq_sys::zcert_save(self.zcert, filename_c.as_ptr());
+            let rc = czmq_sys::zcert_save(self.zcert, path_c.as_ptr());
             if rc == -1 {
-                Err(Error::new(ErrorKind::NonZero, ZCertError::SavePath(filename_c.into_string().unwrap())))
+                Err(Error::new(ErrorKind::NonZero, ZCertError::SavePath(path_c.into_string().unwrap())))
             } else {
                 Ok(())
             }
         }
     }
 
-    pub fn save_public(&self, filename: &str) -> Result<()> {
-        let filename_c = try!(CString::new(filename));
+    pub fn save_public<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+        let path_c = try!(CString::new(path.as_ref().to_str().unwrap()));
 
         unsafe {
-            let rc = czmq_sys::zcert_save_public(self.zcert, filename_c.as_ptr());
+            let rc = czmq_sys::zcert_save_public(self.zcert, path_c.as_ptr());
             if rc == -1 {
-                Err(Error::new(ErrorKind::NonZero, ZCertError::SavePath(filename_c.into_string().unwrap())))
+                Err(Error::new(ErrorKind::NonZero, ZCertError::SavePath(path_c.into_string().unwrap())))
             } else {
                 Ok(())
             }
         }
     }
 
-    pub fn save_secret(&self, filename: &str) -> Result<()> {
-        let filename_c = try!(CString::new(filename));
+    pub fn save_secret<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+        let path_c = try!(CString::new(path.as_ref().to_str().unwrap()));
 
         unsafe {
-            let rc = czmq_sys::zcert_save_secret(self.zcert, filename_c.as_ptr());
+            let rc = czmq_sys::zcert_save_secret(self.zcert, path_c.as_ptr());
             if rc == -1 {
-                Err(Error::new(ErrorKind::NonZero, ZCertError::SavePath(filename_c.into_string().unwrap())))
+                Err(Error::new(ErrorKind::NonZero, ZCertError::SavePath(path_c.into_string().unwrap())))
             } else {
                 Ok(())
             }
