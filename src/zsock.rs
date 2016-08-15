@@ -770,8 +770,10 @@ impl ZSock {
         unsafe { czmq_sys::zsock_set_sndtimeo(self.zsock as *mut c_void, timeout.unwrap_or(-1)) };
     }
 
-    // pub fn zsock_set_xpub_verbose(_self: *mut ::std::os::raw::c_void,
-    //                               xpub_verbose: ::std::os::raw::c_int);
+    pub fn set_xpub_verbose(&self, verbose: bool) {
+        unsafe { czmq_sys::zsock_set_xpub_verbose(self.zsock as *mut c_void, if verbose { 1 } else { 0 }) };
+    }
+
     // pub fn zsock_tcp_keepalive(_self: *mut ::std::os::raw::c_void)
     //  -> ::std::os::raw::c_int;
     // pub fn zsock_set_tcp_keepalive(_self: *mut ::std::os::raw::c_void,
@@ -1274,6 +1276,38 @@ mod tests {
         assert_eq!(&zsock.curve_serverkey().unwrap().unwrap(), &keypair.secret_key);
         zsock.set_curve_serverkey_bin(&zmq::z85_decode(&keypair.secret_key));
         assert_eq!(&zsock.curve_serverkey().unwrap().unwrap(), &keypair.secret_key);
+    }
+
+    #[test]
+    fn test_xpub_verbose() {
+        ZSys::init();
+
+        let xpub = ZSock::new(ZSockType::XPUB);
+        xpub.set_rcvtimeo(Some(10));
+        xpub.bind("inproc://zsock_test_xpub_verbose_broken").unwrap();
+        let _sub1 = ZSock::new_sub("inproc://zsock_test_xpub_verbose_broken", Some("a")).unwrap();
+        let _sub2 = ZSock::new_sub("inproc://zsock_test_xpub_verbose_broken", Some("a")).unwrap();
+
+        let mut x = 0;
+        while xpub.recv_str().is_ok() {
+            x += 1;
+        }
+
+        assert_eq!(x, 1);
+
+        let xpub = ZSock::new(ZSockType::XPUB);
+        xpub.set_rcvtimeo(Some(10));
+        xpub.set_xpub_verbose(true);
+        xpub.bind("inproc://zsock_test_xpub_verbose").unwrap();
+        let _sub1 = ZSock::new_sub("inproc://zsock_test_xpub_verbose", Some("a")).unwrap();
+        let _sub2 = ZSock::new_sub("inproc://zsock_test_xpub_verbose", Some("a")).unwrap();
+
+        let mut x = 0;
+        while xpub.recv_str().is_ok() {
+            x += 1;
+        }
+
+        assert_eq!(x, 2);
     }
 
     #[test]
