@@ -32,6 +32,10 @@ impl ZSys {
             Ok((ZSock::from_raw(frontend_raw as *mut c_void, true), ZSock::from_raw(backend_raw as *mut c_void, true)))
         }
     }
+
+    pub fn is_interrupted() -> bool {
+        unsafe { czmq_sys::zsys_interrupted == 1 }
+    }
 }
 
 #[derive(Debug)]
@@ -68,5 +72,12 @@ mod tests {
         assert_eq!(backend.recv_str().unwrap().unwrap(), "I changed my iPod’s name to Titanic...now it’s syncing.");
         backend.send_str("My family laughed when I told them I was going to be a comedian. Well...they aren't laughing now!").unwrap();
         assert_eq!(frontend.recv_str().unwrap().unwrap(), "My family laughed when I told them I was going to be a comedian. Well...they aren't laughing now!");
+    }
+
+    #[test]
+    fn test_is_interrupted() {
+        // This test is half hearted as we can't test the interrupt
+        // case.
+        assert!(!ZSys::is_interrupted());
     }
 }
