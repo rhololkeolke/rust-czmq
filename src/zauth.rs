@@ -25,7 +25,7 @@ impl ZAuth {
             Err(Error::new(ErrorKind::NullPtr, ZAuthError::Instantiate))
         } else {
             Ok(ZAuth {
-                zactor: ZActor::from_raw(zactor as *mut c_void, true),
+                zactor: unsafe { ZActor::from_raw(zactor as *mut c_void, true) },
             })
         }
     }
@@ -201,18 +201,18 @@ mod tests {
     fn test_curve() {
         let zauth = ZAuth::new(None).unwrap();
 
-        let server = ZSock::new(ZSockType::PULL);
+        let mut server = ZSock::new(ZSockType::PULL);
         let server_cert = ZCert::new().unwrap();
-        server_cert.apply(&server);
+        server_cert.apply(&mut server);
         server.set_zap_domain("sky.net");
         server.set_curve_server(true);
         server.set_rcvtimeo(Some(100));
         let port = server.bind("tcp://127.0.0.1:*[60000-]").unwrap();
 
         let endpoint = format!("tcp://127.0.0.1:{}", port);
-        let client = ZSock::new_push(&endpoint).unwrap();
+        let mut client = ZSock::new_push(&endpoint).unwrap();
         let client_cert = ZCert::new().unwrap();
-        client_cert.apply(&client);
+        client_cert.apply(&mut client);
         client.set_curve_serverkey(server_cert.public_txt());
         client.set_linger(100);
         client.set_sndtimeo(Some(100));
@@ -231,7 +231,7 @@ mod tests {
         client.send_str("test").unwrap();
         assert_eq!(server.recv_str().unwrap().unwrap(), "test");
 
-        let auth_client = ZSock::new(ZSockType::PUSH);
+        let mut auth_client = ZSock::new(ZSockType::PUSH);
         auth_client.set_curve_serverkey(server_cert.public_txt());
         auth_client.set_linger(100);
         auth_client.set_sndtimeo(Some(100));
@@ -240,7 +240,7 @@ mod tests {
         let auth_client_cert = ZCert::new().unwrap();
         auth_client_cert.set_meta("moo", "cow");
         auth_client_cert.set_meta("woof", "dog");
-        auth_client_cert.apply(&auth_client);
+        auth_client_cert.apply(&mut auth_client);
         auth_client_cert.save_public(&format!("{}/testcert.txt", dir.path().to_str().unwrap())).unwrap();
 
         zauth.load_curve(dir.path().to_str()).unwrap();
@@ -250,7 +250,7 @@ mod tests {
 
         auth_client.send_str("test").unwrap();
 
-        let frame = ZFrame::recv(&server).unwrap();
+        let frame = ZFrame::recv(&mut server).unwrap();
         assert_eq!(frame.data().unwrap().unwrap(), "test");
         assert_eq!(frame.meta("moo").unwrap().unwrap(), "cow");
         assert_eq!(frame.meta("woof").unwrap().unwrap(), "dog");
@@ -272,18 +272,18 @@ mod tests {
                            132, 149 ];
         let cert = ZCert::from_keys(&public_key, &secret_key);
 
-        let server = ZSock::new(ZSockType::PULL);
+        let mut server = ZSock::new(ZSockType::PULL);
         server.set_zap_domain("sky.net");
         server.set_curve_server(true);
         server.set_rcvtimeo(Some(100));
-        cert.apply(&server);
+        cert.apply(&mut server);
         let port = server.bind("tcp://127.0.0.1:*[60000-]").unwrap();
 
-        let client = ZSock::new(ZSockType::PUSH);
+        let mut client = ZSock::new(ZSockType::PUSH);
         client.set_curve_serverkey(cert.public_txt());
         client.set_linger(100);
         client.set_sndtimeo(Some(100));
-        cert.apply(&client);
+        cert.apply(&mut client);
         client.connect(&format!("tcp://127.0.0.1:{}", port)).unwrap();
 
         sleep(Duration::from_millis(200));

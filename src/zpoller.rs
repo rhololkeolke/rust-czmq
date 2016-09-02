@@ -31,8 +31,8 @@ impl ZPoller {
         })
     }
 
-    pub fn add<S: Sockish>(&mut self, reader: &S) -> Result<()> {
-        let rc = unsafe { czmq_sys::zpoller_add(self.zpoller, reader.borrow_raw()) };
+    pub fn add<S: Sockish>(&mut self, reader: &mut S) -> Result<()> {
+        let rc = unsafe { czmq_sys::zpoller_add(self.zpoller, reader.as_mut_ptr()) };
 
         if rc == -1 {
             Err(Error::new(ErrorKind::NonZero, ZPollerError::CmdFailed))
@@ -41,8 +41,8 @@ impl ZPoller {
         }
     }
 
-    pub fn remove<S: Sockish>(&mut self, reader: &S) -> Result<()> {
-        let rc = unsafe { czmq_sys::zpoller_remove(self.zpoller, reader.borrow_raw()) };
+    pub fn remove<S: Sockish>(&mut self, reader: &mut S) -> Result<()> {
+        let rc = unsafe { czmq_sys::zpoller_remove(self.zpoller, reader.as_mut_ptr()) };
 
         if rc == -1 {
             Err(Error::new(ErrorKind::NonZero, ZPollerError::CmdFailed))
@@ -62,7 +62,7 @@ impl ZPoller {
         if ptr == ptr::null_mut() {
             None
         } else {
-            Some(S::from_raw(ptr, false))
+            Some(unsafe { S::from_raw(ptr, false) })
         }
     }
 
@@ -117,27 +117,27 @@ mod tests {
     fn test_add_remove() {
         ZSys::init();
 
-        let sock = ZSock::new(ZSockType::PAIR);
+        let mut sock = ZSock::new(ZSockType::PAIR);
         let mut poller = ZPoller::new().unwrap();
-        assert!(poller.add(&sock).is_ok());
-        assert!(poller.remove(&sock).is_ok());
+        assert!(poller.add(&mut sock).is_ok());
+        assert!(poller.remove(&mut sock).is_ok());
     }
 
     #[test]
     fn test_wait() {
         ZSys::init();
 
-        let server1 = ZSock::new_rep("inproc://zpoller_test_wait1").unwrap();
+        let mut server1 = ZSock::new_rep("inproc://zpoller_test_wait1").unwrap();
         let client1 = ZSock::new_req("inproc://zpoller_test_wait1").unwrap();
         client1.send_str("moo").unwrap();
 
-        let server2 = ZSock::new_rep("inproc://zpoller_test_wait2").unwrap();
+        let mut server2 = ZSock::new_rep("inproc://zpoller_test_wait2").unwrap();
         let client2 = ZSock::new_req("inproc://zpoller_test_wait2").unwrap();
         client2.send_str("cow").unwrap();
 
         let mut poller = ZPoller::new().unwrap();
-        poller.add(&server1).unwrap();
-        poller.add(&server2).unwrap();
+        poller.add(&mut server1).unwrap();
+        poller.add(&mut server2).unwrap();
 
         let sock: ZSock = poller.wait(Some(500)).unwrap();
         assert_eq!(sock.endpoint().unwrap(), "inproc://zpoller_test_wait1");

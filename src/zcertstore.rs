@@ -59,7 +59,11 @@ impl ZCertStore {
         let public_key_c = try!(CString::new(public_key));
         let zcert = unsafe { czmq_sys::zcertstore_lookup(self.zcertstore, public_key_c.as_ptr()) };
 
-        if zcert == ptr::null_mut() { Ok(None) } else { Ok(Some(ZCert::from_raw(zcert, false))) }
+        if zcert == ptr::null_mut() {
+            Ok(None)
+        } else {
+            Ok(Some(unsafe { ZCert::from_raw(zcert, false) }))
+        }
     }
 
     pub fn insert(&self, zcert: ZCert) {
@@ -94,7 +98,7 @@ impl ZCertStore {
         // This also should never be null
         assert!(internal.certs != ptr::null_mut());
 
-        ZHashX::from_raw(internal.certs, false)
+        unsafe { ZHashX::from_raw(internal.certs, false) }
     }
 
     pub fn print(&self) {
@@ -103,7 +107,7 @@ impl ZCertStore {
 }
 
 impl RawInterface<czmq_sys::zcertstore_t> for ZCertStore {
-    fn from_raw(ptr: *mut czmq_sys::zcertstore_t, owned: bool) -> ZCertStore {
+    unsafe fn from_raw(ptr: *mut czmq_sys::zcertstore_t, owned: bool) -> ZCertStore {
         ZCertStore {
             zcertstore: ptr,
             owned: owned,
@@ -115,7 +119,7 @@ impl RawInterface<czmq_sys::zcertstore_t> for ZCertStore {
         self.zcertstore
     }
 
-    fn borrow_raw(&self) -> *mut czmq_sys::zcertstore_t {
+    fn as_mut_ptr(&mut self) -> *mut czmq_sys::zcertstore_t {
         self.zcertstore
     }
 }
@@ -238,7 +242,7 @@ mod tests {
         store.insert(cert);
 
         let certs = store.get_certs();
-        let cert = ZCert::from_raw(certs.lookup::<czmq_sys::zcert_t>(cert_c.public_txt()).unwrap().into_raw(), false);
+        let cert = unsafe { ZCert::from_raw(certs.lookup::<czmq_sys::zcert_t>(cert_c.public_txt()).unwrap().into_raw(), false) };
         assert_eq!(cert.secret_key(), cert_c.secret_key());
     }
 
@@ -251,8 +255,8 @@ mod tests {
         store.empty();
         store.insert(ZCert::new().unwrap());
 
-        let public_key = z85_decode("abcdefghijklmnopqrstuvwxyzabcdefghijklmn");
-        let secret_key = z85_decode("abcdefghijklmnopqrstuvwxyzabcdefghijklmn");
+        let public_key = z85_decode("abcdefghijklmnopqrstuvwxyzabcdefghijklmn").unwrap();
+        let secret_key = z85_decode("abcdefghijklmnopqrstuvwxyzabcdefghijklmn").unwrap();
 
         let cert = ZCert::from_keys(&public_key, &secret_key);
         store.insert(cert);

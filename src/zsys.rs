@@ -29,7 +29,7 @@ impl ZSys {
         if frontend_raw == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZSysError::CreatePipe))
         } else {
-            Ok((ZSock::from_raw(frontend_raw as *mut c_void, true), ZSock::from_raw(backend_raw as *mut c_void, true)))
+            Ok(unsafe { (ZSock::from_raw(frontend_raw as *mut c_void, true), ZSock::from_raw(backend_raw as *mut c_void, true)) })
         }
     }
 }

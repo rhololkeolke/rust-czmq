@@ -73,14 +73,14 @@ pub struct ZMonitor {
 unsafe impl Send for ZMonitor {}
 
 impl ZMonitor {
-    pub fn new<S: Sockish>(zsock: &S) -> Result<ZMonitor> {
-        let zactor = unsafe { czmq_sys::zactor_new(czmq_sys::zmonitor, zsock.borrow_raw()) };
+    pub fn new<S: Sockish>(zsock: &mut S) -> Result<ZMonitor> {
+        let zactor = unsafe { czmq_sys::zactor_new(czmq_sys::zmonitor, zsock.as_mut_ptr()) };
 
         if zactor == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZMonitorError::Instantiate))
         } else {
             Ok(ZMonitor {
-                zactor: ZActor::from_raw(zactor as *mut c_void, true),
+                zactor: unsafe { ZActor::from_raw(zactor as *mut c_void, true) },
             })
         }
     }
@@ -95,8 +95,8 @@ impl ZMonitor {
         self.zactor.send(msg)
     }
 
-    pub fn get_attr(&self) -> Result<result::Result<ZMonitorEvents, Vec<u8>>> {
-        let msg = try!(ZMsg::recv(&self.zactor));
+    pub fn get_attr(&mut self) -> Result<result::Result<ZMonitorEvents, Vec<u8>>> {
+        let msg = try!(ZMsg::recv(&mut self.zactor));
 
         match msg.popstr() {
             Some(result) => match result {
@@ -150,13 +150,13 @@ mod tests {
     fn test_attrs() {
         ZSys::init();
 
-        let server = ZSock::new(ZSockType::PULL);
-        let server_mon = ZMonitor::new(&server).unwrap();
+        let mut server = ZSock::new(ZSockType::PULL);
+        let mut server_mon = ZMonitor::new(&mut server).unwrap();
         server_mon.set_attrs(&[ZMonitorEvents::All]).unwrap();
         server_mon.start().unwrap();
 
-        let client = ZSock::new(ZSockType::PUSH);
-        let client_mon = ZMonitor::new(&client).unwrap();
+        let mut client = ZSock::new(ZSockType::PUSH);
+        let mut client_mon = ZMonitor::new(&mut client).unwrap();
         client_mon.set_attrs(&[ZMonitorEvents::All]).unwrap();
         client_mon.start().unwrap();
 
@@ -171,8 +171,8 @@ mod tests {
     fn test_verbose() {
         ZSys::init();
 
-        let zsock = ZSock::new(ZSockType::REP);
-        let zmonitor = ZMonitor::new(&zsock).unwrap();
+        let mut zsock = ZSock::new(ZSockType::REP);
+        let zmonitor = ZMonitor::new(&mut zsock).unwrap();
         assert!(zmonitor.verbose().is_ok());
     }
 }

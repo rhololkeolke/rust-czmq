@@ -338,8 +338,7 @@ impl ZSock {
     //                    picture: *const ::std::os::raw::c_char, ...)
     //  -> ::std::os::raw::c_int;
     // pub fn zsock_set_unbounded(_self: *mut ::std::os::raw::c_void);
-    // pub fn zsock_signal(_self: *mut ::std::os::raw::c_void, status: byte)
-    //  -> ::std::os::raw::c_int;
+
     pub fn signal(&self, status: u8) -> Result<()> {
         let rc = unsafe { czmq_sys::zsock_signal(self.zsock as *mut c_void, status) };
         if rc == -1 {
@@ -809,7 +808,7 @@ impl ZSock {
     // pub fn zsock_last_endpoint(_self: *mut ::std::os::raw::c_void)
     //  -> *mut ::std::os::raw::c_char;
 
-    pub fn monitor(&self) -> Result<ZMonitor> {
+    pub fn monitor(&mut self) -> Result<ZMonitor> {
         ZMonitor::new(self)
     }
 
@@ -831,19 +830,18 @@ impl ZSock {
 }
 
 impl RawInterface<c_void> for ZSock {
-    fn from_raw(ptr: *mut c_void, owned: bool) -> ZSock {
+    unsafe fn from_raw(ptr: *mut c_void, owned: bool) -> ZSock {
         ZSock {
             zsock: ptr as *mut czmq_sys::zsock_t,
             owned: owned,
         }
     }
 
-    fn into_raw(mut self) -> *mut c_void {
-        self.owned = false;
-        self.zsock as *mut c_void
+    fn into_raw(self) -> *mut c_void {
+        unimplemented!();
     }
 
-    fn borrow_raw(&self) -> *mut c_void {
+    fn as_mut_ptr(&mut self) -> *mut c_void {
         self.zsock as *mut c_void
     }
 }
@@ -903,19 +901,19 @@ mod tests {
     fn test_pubsub() {
         ZSys::init();
 
-        let zpub = ZSock::new_pub("inproc://zsock_test_pubsub").unwrap();
-        let zsub = ZSock::new_sub("inproc://zsock_test_pubsub", Some("moo")).unwrap();
+        let mut zpub = ZSock::new_pub("inproc://zsock_test_pubsub").unwrap();
+        let mut zsub = ZSock::new_sub("inproc://zsock_test_pubsub", Some("moo")).unwrap();
 
         sleep(Duration::from_millis(200));
 
         let outgoing = ZMsg::new();
         outgoing.addstr("moo").unwrap();
         outgoing.addstr("cow").unwrap();
-        outgoing.send(&zpub).unwrap();
+        outgoing.send(&mut zpub).unwrap();
 
         sleep(Duration::from_millis(200));
 
-        let incoming = ZMsg::recv(&zsub).unwrap();
+        let incoming = ZMsg::recv(&mut zsub).unwrap();
         assert_eq!(incoming.popstr().unwrap().unwrap(), "moo");
         assert_eq!(incoming.popstr().unwrap().unwrap(), "cow");
     }
@@ -1093,15 +1091,15 @@ mod tests {
     fn test_flush() {
         ZSys::init();
 
-        let server = ZSock::new_rep("inproc://zsock_flush").unwrap();
-        let client = ZSock::new_req("inproc://zsock_flush").unwrap();
+        let mut server = ZSock::new_rep("inproc://zsock_flush").unwrap();
+        let mut client = ZSock::new_req("inproc://zsock_flush").unwrap();
 
         let msg = ZMsg::new();
         msg.addstr("one").unwrap();
         msg.addstr("two").unwrap();
-        msg.send(&client).unwrap();
+        msg.send(&mut client).unwrap();
 
-        ZFrame::recv(&server).unwrap();
+        ZFrame::recv(&mut server).unwrap();
         server.flush();
         assert!(server.recv_str().is_err());
     }
@@ -1146,7 +1144,7 @@ mod tests {
     fn test_subscribe() {
         ZSys::init();
 
-        let publisher = ZSock::new_pub("inproc://zsock_test_subscribe").unwrap();
+        let mut publisher = ZSock::new_pub("inproc://zsock_test_subscribe").unwrap();
         let subscriber = ZSock::new(ZSockType::SUB);
         subscriber.set_rcvtimeo(Some(200));
         subscriber.connect("inproc://zsock_test_subscribe").unwrap();
@@ -1159,7 +1157,7 @@ mod tests {
 
         let msg = ZMsg::new();
         msg.addstr("moo").unwrap();
-        msg.send(&publisher).unwrap();
+        msg.send(&mut publisher).unwrap();
 
         assert_eq!(subscriber.recv_str().unwrap().unwrap(), "moo");
 
@@ -1168,7 +1166,7 @@ mod tests {
 
         let msg = ZMsg::new();
         msg.addstr("moo").unwrap();
-        msg.send(&publisher).unwrap();
+        msg.send(&mut publisher).unwrap();
 
         assert!(subscriber.recv_str().is_err());
 
@@ -1177,7 +1175,7 @@ mod tests {
 
         let msg = ZMsg::new();
         msg.addstr("moo").unwrap();
-        msg.send(&publisher).unwrap();
+        msg.send(&mut publisher).unwrap();
 
         assert_eq!(subscriber.recv_str().unwrap().unwrap(), "moo");
     }
@@ -1260,21 +1258,21 @@ mod tests {
         ZSys::init();
 
         let zsock = ZSock::new(ZSockType::REP);
-        let keypair = zmq::CurveKeypair::new().unwrap();
+        let keypair = zmq::CurveKeyPair::new().unwrap();
 
         zsock.set_curve_publickey(&keypair.public_key);
         assert_eq!(&zsock.curve_publickey().unwrap().unwrap(), &keypair.public_key);
-        zsock.set_curve_publickey_bin(&zmq::z85_decode(&keypair.public_key));
+        zsock.set_curve_publickey_bin(&zmq::z85_decode(&keypair.public_key).unwrap());
         assert_eq!(&zsock.curve_publickey().unwrap().unwrap(), &keypair.public_key);
 
         zsock.set_curve_secretkey(&keypair.secret_key);
         assert_eq!(&zsock.curve_secretkey().unwrap().unwrap(), &keypair.secret_key);
-        zsock.set_curve_secretkey_bin(&zmq::z85_decode(&keypair.secret_key));
+        zsock.set_curve_secretkey_bin(&zmq::z85_decode(&keypair.secret_key).unwrap());
         assert_eq!(&zsock.curve_secretkey().unwrap().unwrap(), &keypair.secret_key);
 
         zsock.set_curve_serverkey(&keypair.secret_key);
         assert_eq!(&zsock.curve_serverkey().unwrap().unwrap(), &keypair.secret_key);
-        zsock.set_curve_serverkey_bin(&zmq::z85_decode(&keypair.secret_key));
+        zsock.set_curve_serverkey_bin(&zmq::z85_decode(&keypair.secret_key).unwrap());
         assert_eq!(&zsock.curve_serverkey().unwrap().unwrap(), &keypair.secret_key);
     }
 
@@ -1314,7 +1312,7 @@ mod tests {
     fn test_monitor() {
         ZSys::init();
 
-        let zsock = ZSock::new(ZSockType::REP);
+        let mut zsock = ZSock::new(ZSockType::REP);
         assert!(zsock.monitor().is_ok());
     }
 }

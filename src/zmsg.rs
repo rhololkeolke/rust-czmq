@@ -43,8 +43,8 @@ impl ZMsg {
         }
     }
 
-    pub fn recv<S: Sockish>(source: &S) -> Result<ZMsg> {
-        let zmsg = unsafe { czmq_sys::zmsg_recv(source.borrow_raw()) };
+    pub fn recv<S: Sockish>(source: &mut S) -> Result<ZMsg> {
+        let zmsg = unsafe { czmq_sys::zmsg_recv(source.as_mut_ptr()) };
 
         if zmsg == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZMsgError::CmdFailed))
@@ -66,12 +66,12 @@ impl ZMsg {
         if zframe == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZMsgError::CmdFailed))
         } else {
-            Ok(ZFrame::from_raw(zframe, true))
+            Ok(unsafe { ZFrame::from_raw(zframe, true) })
         }
     }
 
-    pub fn decode(frame: &ZFrame) -> Result<ZMsg> {
-        let zmsg = unsafe { czmq_sys::zmsg_decode(frame.borrow_raw()) };
+    pub fn decode(frame: &mut ZFrame) -> Result<ZMsg> {
+        let zmsg = unsafe { czmq_sys::zmsg_decode(frame.as_mut_ptr()) };
 
         if zmsg == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZMsgError::CmdFailed))
@@ -96,10 +96,10 @@ impl ZMsg {
         }
     }
 
-    pub fn send<D: Sockish>(self, dest: &D) -> Result<()> {
+    pub fn send<D: Sockish>(self, dest: &mut D) -> Result<()> {
         let mut zmsg = self;
 
-        let rc = unsafe { czmq_sys::zmsg_send(&mut zmsg.zmsg, dest.borrow_raw()) };
+        let rc = unsafe { czmq_sys::zmsg_send(&mut zmsg.zmsg, dest.as_mut_ptr()) };
         if rc == -1 {
             Err(Error::new(ErrorKind::NonZero, ZMsgError::CmdFailed))
         } else {
@@ -143,7 +143,7 @@ impl ZMsg {
         if ptr == ptr::null_mut() {
             None
         } else {
-            Some(ZFrame::from_raw(ptr, true))
+            Some(unsafe { ZFrame::from_raw(ptr, true) })
         }
     }
 
@@ -244,12 +244,12 @@ impl ZMsg {
         if ptr == ptr::null_mut() {
             None
         } else {
-            Some(ZMsg::from_raw(ptr, true))
+            Some(unsafe { ZMsg::from_raw(ptr, true) })
         }
     }
 
-    pub fn remove(&self, frame: &ZFrame) {
-        unsafe { czmq_sys::zmsg_remove(self.zmsg, frame.borrow_raw()) };
+    pub fn remove(&self, frame: &mut ZFrame) {
+        unsafe { czmq_sys::zmsg_remove(self.zmsg, frame.as_mut_ptr()) };
     }
 
     // pub fn zmsg_remove(_self: *mut zmsg_t, frame: *mut zframe_t);
@@ -260,7 +260,7 @@ impl ZMsg {
         if ptr == ptr::null_mut() {
             None
         } else {
-            Some(ZFrame::from_raw(ptr, false))
+            Some(unsafe { ZFrame::from_raw(ptr, false) })
         }
     }
 
@@ -270,7 +270,7 @@ impl ZMsg {
         if ptr == ptr::null_mut() {
             None
         } else {
-            Some(ZFrame::from_raw(ptr, false))
+            Some(unsafe { ZFrame::from_raw(ptr, false) })
         }
     }
 
@@ -282,7 +282,7 @@ impl ZMsg {
         if ptr == ptr::null_mut() {
             None
         } else {
-            Some(ZFrame::from_raw(ptr, false))
+            Some(unsafe { ZFrame::from_raw(ptr, false) })
         }
     }
 
@@ -295,7 +295,7 @@ impl ZMsg {
         if ptr == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZMsgError::CmdFailed))
         } else {
-            Ok(ZMsg::from_raw(ptr, true))
+            Ok(unsafe { ZMsg::from_raw(ptr, true) })
         }
     }
 
@@ -304,7 +304,7 @@ impl ZMsg {
     }
 
     pub fn eq(&self, other: &ZMsg) -> bool {
-        unsafe { czmq_sys::zmsg_eq(self.zmsg, other.borrow_raw()) == 1 }
+        unsafe { czmq_sys::zmsg_eq(self.zmsg, other.zmsg) == 1 }
     }
 
     pub fn signal(&self) -> Result<u8> {
@@ -318,7 +318,7 @@ impl ZMsg {
 }
 
 impl RawInterface<czmq_sys::zmsg_t> for ZMsg {
-    fn from_raw(ptr: *mut czmq_sys::zmsg_t, owned: bool) -> ZMsg {
+    unsafe fn from_raw(ptr: *mut czmq_sys::zmsg_t, owned: bool) -> ZMsg {
         ZMsg {
             zmsg: ptr,
             owned: owned,
@@ -330,7 +330,7 @@ impl RawInterface<czmq_sys::zmsg_t> for ZMsg {
         self.zmsg
     }
 
-    fn borrow_raw(&self) -> *mut czmq_sys::zmsg_t {
+    fn as_mut_ptr(&mut self) -> *mut czmq_sys::zmsg_t {
         self.zmsg
     }
 }
@@ -373,9 +373,9 @@ mod tests {
 
         let zmsg = ZMsg::new();
         zmsg.addstr("Hello world!").unwrap();
-        zmsg.send(&client).unwrap();
+        zmsg.send(&mut client).unwrap();
 
-        let zmsg_recv = ZMsg::recv(&server).unwrap();
+        let zmsg_recv = ZMsg::recv(&mut server).unwrap();
         assert_eq!(zmsg_recv.popstr().unwrap().unwrap(), "Hello world!");
     }
 
@@ -383,14 +383,14 @@ mod tests {
     fn test_sendrecv_zsock() {
         ZSys::init();
 
-        let server = ZSock::new_rep("inproc://zmsg_sendrecv_zsock").unwrap();
-        let client = ZSock::new_req("inproc://zmsg_sendrecv_zsock").unwrap();
+        let mut server = ZSock::new_rep("inproc://zmsg_sendrecv_zsock").unwrap();
+        let mut client = ZSock::new_req("inproc://zmsg_sendrecv_zsock").unwrap();
 
         let zmsg = ZMsg::new();
         zmsg.addstr("Hello world!").unwrap();
-        zmsg.send(&client).unwrap();
+        zmsg.send(&mut client).unwrap();
 
-        let msg = ZMsg::recv(&server).unwrap();
+        let msg = ZMsg::recv(&mut server).unwrap();
         assert_eq!(msg.popstr().unwrap().unwrap(), "Hello world!");
     }
 
@@ -398,7 +398,7 @@ mod tests {
     fn test_encode_decode() {
         let msg = ZMsg::new();
         msg.addstr("moo").unwrap();
-        let msg_decoded = ZMsg::decode(&msg.encode().unwrap()).unwrap();
+        let msg_decoded = ZMsg::decode(&mut msg.encode().unwrap()).unwrap();
         assert_eq!(msg_decoded.popstr().unwrap().unwrap(), "moo");
     }
 
@@ -471,7 +471,7 @@ mod tests {
         let frame = ZFrame::from("baa").unwrap();
         let msg = ZMsg::new();
         msg.append(frame).unwrap();
-        msg.remove(&msg.next().unwrap());
+        msg.remove(&mut msg.next().unwrap());
     }
 
     #[test]

@@ -10,7 +10,7 @@ homepage = "https://petehayes102.github.io/rust-czmq"
 [dependencies]
 bitflags = "0.5.*"
 czmq-sys = { version = "0.0.3", path = "czmq-sys" }
-zmq = { git = "https://github.com/petehayes102/rust-zmq.git", branch = "tmp-master" }
+zmq = { git = "https://github.com/petehayes102/rust-zmq.git" }
 
 [dev-dependencies]
 tempdir = "0.3"

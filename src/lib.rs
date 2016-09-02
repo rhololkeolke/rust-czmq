@@ -48,9 +48,9 @@ use std::result;
 pub type Result<T> = result::Result<T, Error>;
 
 pub trait RawInterface<P> {
-    fn from_raw(ptr: *mut P, owned: bool) -> Self;
+    unsafe fn from_raw(ptr: *mut P, owned: bool) -> Self;
     fn into_raw(self) -> *mut P;
-    fn borrow_raw(&self) -> *mut P;
+    fn as_mut_ptr(&mut self) -> *mut P;
 }
 
 pub trait Sockish : RawInterface<c_void> {}

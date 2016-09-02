@@ -124,7 +124,7 @@ impl ZHashX {
 }
 
 impl RawInterface<czmq_sys::zhashx_t> for ZHashX {
-    fn from_raw(ptr: *mut czmq_sys::zhashx_t, owned: bool) -> ZHashX {
+    unsafe fn from_raw(ptr: *mut czmq_sys::zhashx_t, owned: bool) -> ZHashX {
         ZHashX {
             zhashx: ptr,
             owned: owned,
@@ -136,7 +136,7 @@ impl RawInterface<czmq_sys::zhashx_t> for ZHashX {
         self.zhashx
     }
 
-    fn borrow_raw(&self) -> *mut czmq_sys::zhashx_t {
+    fn as_mut_ptr(&mut self) -> *mut czmq_sys::zhashx_t {
         self.zhashx
     }
 }

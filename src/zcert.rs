@@ -1,10 +1,10 @@
 //! Module: czmq-zcert
 
 use {czmq_sys, Error, ErrorKind, RawInterface, Result, Sockish, zmq, ZList};
+use std::{convert, error, fmt, ptr, result, slice, str};
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
 use std::path::Path;
-use std::{error, fmt, ptr, result, slice, str};
 
 const KEY_SIZE: usize = 32;
 
@@ -52,8 +52,10 @@ impl ZCert {
         }
     }
 
-    pub fn from_txt(public_txt: &str, secret_txt: &str) -> ZCert {
-        ZCert::from_keys(&zmq::z85_decode(public_txt), &zmq::z85_decode(secret_txt))
+    pub fn from_txt(public_txt: &str, secret_txt: &str) -> Result<ZCert> {
+        let public_key = try!(zmq::z85_decode(public_txt));
+        let secret_key = try!(zmq::z85_decode(secret_txt));
+        Ok(ZCert::from_keys(&public_key, &secret_key))
     }
 
     pub fn load<P: AsRef<Path>>(path: P) -> Result<ZCert> {
@@ -131,13 +133,13 @@ impl ZCert {
     ///
     /// ```no_run
     /// # use czmq::{ZCert, ZFrame, ZSock};
-    /// # let sock = ZSock::new_rep("...").unwrap();
+    /// # let mut sock = ZSock::new_rep("...").unwrap();
     /// let cert = ZCert::new().unwrap();
     /// cert.set_meta("key", "value");
     ///
     /// let encoded = cert.encode_meta();
     /// let frame = ZFrame::new(&encoded).unwrap();
-    /// frame.send(&sock, None).unwrap();
+    /// frame.send(&mut sock, None).unwrap();
     /// ```
     pub fn encode_meta(&self) -> Vec<u8> {
         let mut encoded: Vec<u8> = Vec::new();
@@ -161,8 +163,8 @@ impl ZCert {
     ///
     /// ```no_run
     /// # use czmq::{ZCert, ZFrame, ZSock};
-    /// # let sock = ZSock::new_rep("...").unwrap();
-    /// let frame = ZFrame::recv(&sock).unwrap();
+    /// # let mut sock = ZSock::new_rep("...").unwrap();
+    /// let frame = ZFrame::recv(&mut sock).unwrap();
     /// let encoded = match frame.data().unwrap() {
     ///     Ok(str) => str.into_bytes(),
     ///     Err(bytes) => bytes,
@@ -252,8 +254,8 @@ impl ZCert {
         }
     }
 
-    pub fn apply<S: Sockish>(&self, sock: &S) {
-        unsafe { czmq_sys::zcert_apply(self.zcert, sock.borrow_raw()) };
+    pub fn apply<S: Sockish>(&self, sock: &mut S) {
+        unsafe { czmq_sys::zcert_apply(self.zcert, sock.as_mut_ptr()) };
     }
 
     pub fn dup(&self) -> ZCert {
@@ -276,7 +278,7 @@ impl ZCert {
 }
 
 impl RawInterface<czmq_sys::zcert_t> for ZCert {
-    fn from_raw(ptr: *mut czmq_sys::zcert_t, owned: bool) -> ZCert {
+    unsafe fn from_raw(ptr: *mut czmq_sys::zcert_t, owned: bool) -> ZCert {
         ZCert {
             zcert: ptr,
             owned: owned,
@@ -288,7 +290,7 @@ impl RawInterface<czmq_sys::zcert_t> for ZCert {
         self.zcert
     }
 
-    fn borrow_raw(&self) -> *mut czmq_sys::zcert_t {
+    fn as_mut_ptr(&mut self) -> *mut czmq_sys::zcert_t {
         self.zcert
     }
 }
@@ -299,6 +301,7 @@ pub enum ZCertError {
     InvalidCert(String),
     InvalidMetaEncoded,
     SavePath(String),
+    ZmqDecode(zmq::DecodeError),
 }
 
 impl fmt::Display for ZCertError {
@@ -308,6 +311,7 @@ impl fmt::Display for ZCertError {
             ZCertError::InvalidCert(ref e) => write!(f, "Could not open certificate at path: {}", e),
             ZCertError::InvalidMetaEncoded => write!(f, "Encoded metadata is invalid"),
             ZCertError::SavePath(ref e) => write!(f, "Could not save certificate file to path: {}", e),
+            ZCertError::ZmqDecode(ref e) => write!(f, "Could not decode Z85 string: {}", e),
         }
     }
 }
@@ -319,7 +323,14 @@ impl error::Error for ZCertError {
             ZCertError::InvalidCert(_) => "Certificate was invalid or non-existent",
             ZCertError::InvalidMetaEncoded => "Encoded metadata is invalid",
             ZCertError::SavePath(_) => "Could not save certificate file to given path",
+            ZCertError::ZmqDecode(_) => "Could not decode Z85 string",
         }
+    }
+}
+
+impl convert::From<zmq::DecodeError> for Error {
+    fn from(e: zmq::DecodeError) -> Error {
+        Error::new(ErrorKind::StringConversion, ZCertError::ZmqDecode(e))
     }
 }
 
@@ -336,7 +347,7 @@ mod tests {
     fn test_public_key() {
         let cert = create_cert();
         let key = cert.public_key();
-        let test_key = zmq::z85_decode(PUBLIC_TXT);
+        let test_key = zmq::z85_decode(PUBLIC_TXT).unwrap();
 
         let mut iter = 0;
         for _ in key.iter() {
@@ -349,7 +360,7 @@ mod tests {
     fn test_secret_key() {
         let cert = create_cert();
         let key = cert.secret_key();
-        let test_key = zmq::z85_decode(SECRET_TXT);
+        let test_key = zmq::z85_decode(SECRET_TXT).unwrap();
 
         let mut iter = 0;
         for _ in key.iter() {
@@ -406,8 +417,8 @@ mod tests {
     fn test_apply_zmq() {
         let cert = create_cert();
         let mut ctx = zmq::Context::new();
-        let sock = ctx.socket(zmq::REQ).unwrap();
-        cert.apply(&sock);
+        let mut sock = ctx.socket(zmq::REQ).unwrap();
+        cert.apply(&mut sock);
         assert_eq!(sock.get_curve_publickey().unwrap().unwrap(), PUBLIC_TXT);
         assert_eq!(sock.get_curve_secretkey().unwrap().unwrap(), SECRET_TXT);
     }
@@ -417,8 +428,8 @@ mod tests {
         ZSys::init();
 
         let cert = create_cert();
-        let sock = ZSock::new_rep("inproc://zcert_test_apply_zsock").unwrap();
-        cert.apply(&sock);
+        let mut sock = ZSock::new_rep("inproc://zcert_test_apply_zsock").unwrap();
+        cert.apply(&mut sock);
         assert_eq!(sock.curve_publickey().unwrap().unwrap(), PUBLIC_TXT);
         assert_eq!(sock.curve_secretkey().unwrap().unwrap(), SECRET_TXT);
     }
@@ -438,6 +449,6 @@ mod tests {
     }
 
     fn create_cert() -> ZCert {
-        ZCert::from_txt(PUBLIC_TXT, SECRET_TXT)
+        ZCert::from_txt(PUBLIC_TXT, SECRET_TXT).unwrap()
     }
 }

@@ -54,17 +54,17 @@ impl ZActor {
         if zmsg_ptr == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZActorError::CmdFailed))
         } else {
-            Ok(ZMsg::from_raw(zmsg_ptr, true))
+            unsafe { Ok(ZMsg::from_raw(zmsg_ptr, true)) }
         }
     }
 
     pub fn sock(&self) -> ZSock {
-        ZSock::from_raw(unsafe { czmq_sys::zactor_sock(self.zactor) } as *mut c_void, false)
+        unsafe { ZSock::from_raw(czmq_sys::zactor_sock(self.zactor) as *mut c_void, false) }
     }
 }
 
 impl RawInterface<c_void> for ZActor {
-    fn from_raw(ptr: *mut c_void, owned: bool) -> ZActor {
+    unsafe fn from_raw(ptr: *mut c_void, owned: bool) -> ZActor {
         ZActor {
             zactor: ptr as *mut czmq_sys::zactor_t,
             owned: owned,
@@ -75,7 +75,7 @@ impl RawInterface<c_void> for ZActor {
         self.zactor as *mut c_void
     }
 
-    fn borrow_raw(&self) -> *mut c_void {
+    fn as_mut_ptr(&mut self) -> *mut c_void {
         self.zactor as *mut c_void
     }
 }
