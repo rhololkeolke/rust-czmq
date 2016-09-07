@@ -417,7 +417,7 @@ impl ZSock {
                 1 => Ok(ZSockMechanism::ZMQ_PLAIN),
                 2 => Ok(ZSockMechanism::ZMQ_CURVE),
                 3 => Ok(ZSockMechanism::ZMQ_GSSAPI),
-                _ => unimplemented!(),
+                _ => unreachable!(),
             }
         }
     }
