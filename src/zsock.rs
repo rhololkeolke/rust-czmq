@@ -388,7 +388,7 @@ impl ZSock {
                 1 => Ok(Mechanism::ZMQ_PLAIN),
                 2 => Ok(Mechanism::ZMQ_CURVE),
                 3 => Ok(Mechanism::ZMQ_GSSAPI),
-                _ => unimplemented!(),
+                _ => unreachable!(),
             }
         }
     }
@@ -808,8 +808,9 @@ impl RawInterface<c_void> for ZSock {
         }
     }
 
-    fn into_raw(self) -> *mut c_void {
-        unimplemented!();
+    fn into_raw(mut self) -> *mut c_void {
+        self.owned = false;
+        self.zsock as *mut c_void
     }
 
     fn as_mut_ptr(&mut self) -> *mut c_void {
