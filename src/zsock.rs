@@ -583,8 +583,26 @@ impl ZSock {
     //                                              *mut ::std::os::raw::c_void,
     //                                          delay_attach_on_connect:
     //                                              ::std::os::raw::c_int);
-    // pub fn zsock_type(_self: *mut ::std::os::raw::c_void)
-    //  -> ::std::os::raw::c_int;
+
+    pub fn zsock_type(&self) -> SocketType {
+        let stype = unsafe { czmq_sys::zsock_type(self.zsock as *mut c_void) };
+
+        match stype {
+            0 => SocketType::PAIR,
+            1 => SocketType::PUB,
+            2 => SocketType::SUB,
+            3 => SocketType::REQ,
+            4 => SocketType::REP,
+            5 => SocketType::DEALER,
+            6 => SocketType::ROUTER,
+            7 => SocketType::PULL,
+            8 => SocketType::PUSH,
+            9 => SocketType::XPUB,
+            10 => SocketType::XSUB,
+            11 => unimplemented!(), // STREAM is missing from upstream SocketType :(
+            _ => unreachable!(),
+        }
+    }
 
     pub fn sndhwm(&self) -> Result<i32> {
         let sndhwm = unsafe { czmq_sys::zsock_sndhwm(self.zsock as *mut c_void) };
