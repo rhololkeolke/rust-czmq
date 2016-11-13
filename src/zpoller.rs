@@ -105,7 +105,7 @@ impl error::Error for ZPollerError {
 
 #[cfg(test)]
 mod tests {
-    use {ZSock, ZSockType, ZSys};
+    use {ZSock, SocketType, ZSys};
     use super::*;
 
     #[test]
@@ -117,7 +117,7 @@ mod tests {
     fn test_add_remove() {
         ZSys::init();
 
-        let mut sock = ZSock::new(ZSockType::PAIR);
+        let mut sock = ZSock::new(SocketType::PAIR);
         let mut poller = ZPoller::new().unwrap();
         assert!(poller.add(&mut sock).is_ok());
         assert!(poller.remove(&mut sock).is_ok());

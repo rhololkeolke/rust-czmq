@@ -144,18 +144,18 @@ impl error::Error for ZMonitorError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use {ZSock, ZSockType, ZSys};
+    use {ZSock, SocketType, ZSys};
 
     #[test]
     fn test_attrs() {
         ZSys::init();
 
-        let mut server = ZSock::new(ZSockType::PULL);
+        let mut server = ZSock::new(SocketType::PULL);
         let mut server_mon = ZMonitor::new(&mut server).unwrap();
         server_mon.set_attrs(&[ZMonitorEvents::All]).unwrap();
         server_mon.start().unwrap();
 
-        let mut client = ZSock::new(ZSockType::PUSH);
+        let mut client = ZSock::new(SocketType::PUSH);
         let mut client_mon = ZMonitor::new(&mut client).unwrap();
         client_mon.set_attrs(&[ZMonitorEvents::All]).unwrap();
         client_mon.start().unwrap();
@@ -171,7 +171,7 @@ mod tests {
     fn test_verbose() {
         ZSys::init();
 
-        let mut zsock = ZSock::new(ZSockType::REP);
+        let mut zsock = ZSock::new(SocketType::REP);
         let zmonitor = ZMonitor::new(&mut zsock).unwrap();
         assert!(zmonitor.verbose().is_ok());
     }

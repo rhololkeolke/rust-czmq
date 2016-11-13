@@ -37,9 +37,10 @@ pub use zframe::{ZFrame, ZFRAME_MORE, ZFRAME_REUSE, ZFRAME_DONTWAIT};
 pub use zhashx::ZHashX;
 pub use zlist::ZList;
 pub use zmonitor::{ZMonitor, ZMonitorEvents};
+pub use zmq::{Mechanism, SocketType};
 pub use zmsg::ZMsg;
 pub use zpoller::ZPoller;
-pub use zsock::{ZSock, ZSockMechanism, ZSockType};
+pub use zsock::ZSock;
 pub use zsys::ZSys;
 
 use std::os::raw::c_void;

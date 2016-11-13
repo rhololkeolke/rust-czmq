@@ -111,7 +111,7 @@ mod tests {
     use super::*;
     use tempdir::TempDir;
     use tempfile::NamedTempFile;
-    use {RawInterface, ZCert, ZCertStore, ZCertStoreRaw, ZFrame, ZSock, ZSockType, ZSys};
+    use {RawInterface, ZCert, ZCertStore, ZCertStoreRaw, ZFrame, ZSock, SocketType, ZSys};
 
     // There can only be one ZAuth instance per context as each ZAuth
     // instance binds to the same inproc endpoint. The simplest way
@@ -133,11 +133,11 @@ mod tests {
     }
 
     fn test_allow_deny() {
-        let server = ZSock::new(ZSockType::PULL);
+        let server = ZSock::new(SocketType::PULL);
         server.set_zap_domain("compuglobalhypermega.net");
         server.set_rcvtimeo(Some(100));
 
-        let client = ZSock::new(ZSockType::PUSH);
+        let client = ZSock::new(SocketType::PUSH);
         client.set_linger(100);
         client.set_sndtimeo(Some(100));
 
@@ -167,13 +167,13 @@ mod tests {
     fn test_plain() {
         let zauth = ZAuth::new(None).unwrap();
 
-        let server = ZSock::new(ZSockType::PULL);
+        let server = ZSock::new(SocketType::PULL);
         server.set_zap_domain("sky.net");
         server.set_plain_server(true);
         server.set_rcvtimeo(Some(100));
         let port = server.bind("tcp://127.0.0.1:*[60000-]").unwrap();
 
-        let client = ZSock::new(ZSockType::PUSH);
+        let client = ZSock::new(SocketType::PUSH);
         client.set_plain_username("moo");
         client.set_plain_password("cow");
         client.set_linger(100);
@@ -201,7 +201,7 @@ mod tests {
     fn test_curve() {
         let zauth = ZAuth::new(None).unwrap();
 
-        let mut server = ZSock::new(ZSockType::PULL);
+        let mut server = ZSock::new(SocketType::PULL);
         let server_cert = ZCert::new().unwrap();
         server_cert.apply(&mut server);
         server.set_zap_domain("sky.net");
@@ -231,7 +231,7 @@ mod tests {
         client.send_str("test").unwrap();
         assert_eq!(server.recv_str().unwrap().unwrap(), "test");
 
-        let mut auth_client = ZSock::new(ZSockType::PUSH);
+        let mut auth_client = ZSock::new(SocketType::PUSH);
         auth_client.set_curve_serverkey(server_cert.public_txt());
         auth_client.set_linger(100);
         auth_client.set_sndtimeo(Some(100));
@@ -272,14 +272,14 @@ mod tests {
                            132, 149 ];
         let cert = ZCert::from_keys(&public_key, &secret_key);
 
-        let mut server = ZSock::new(ZSockType::PULL);
+        let mut server = ZSock::new(SocketType::PULL);
         server.set_zap_domain("sky.net");
         server.set_curve_server(true);
         server.set_rcvtimeo(Some(100));
         cert.apply(&mut server);
         let port = server.bind("tcp://127.0.0.1:*[60000-]").unwrap();
 
-        let mut client = ZSock::new(ZSockType::PUSH);
+        let mut client = ZSock::new(SocketType::PUSH);
         client.set_curve_serverkey(cert.public_txt());
         client.set_linger(100);
         client.set_sndtimeo(Some(100));
