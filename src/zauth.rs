@@ -111,7 +111,9 @@ mod tests {
     use super::*;
     use tempdir::TempDir;
     use tempfile::NamedTempFile;
-    use {RawInterface, ZCert, ZCertStore, ZCertStoreRaw, ZFrame, ZSock, SocketType, ZSys};
+    use {ZCert, ZFrame, ZSock, SocketType, ZSys};
+    #[cfg(feature = "draft")]
+    use {RawInterface, ZCertStore, ZCertStoreRaw};
 
     // There can only be one ZAuth instance per context as each ZAuth
     // instance binds to the same inproc endpoint. The simplest way
@@ -256,6 +258,11 @@ mod tests {
         assert_eq!(frame.meta("woof").unwrap().unwrap(), "dog");
     }
 
+    #[cfg(not(feature = "draft"))]
+    fn test_zcertstore() {
+    }
+
+    #[cfg(feature = "draft")]
     fn test_zcertstore() {
         let certstore = ZCertStore::new(None).unwrap();
         certstore.set_loader(test_loader_fn);
@@ -292,6 +299,7 @@ mod tests {
         assert_eq!(server.recv_str().unwrap().unwrap(), "test");
     }
 
+    #[cfg(feature = "draft")]
     unsafe extern "C" fn test_loader_fn(raw: *mut ZCertStoreRaw) {
         let store = ZCertStore::from_raw(raw, false);
         store.empty();

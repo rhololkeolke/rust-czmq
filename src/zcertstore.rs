@@ -2,8 +2,10 @@
 
 use {czmq_sys, Colander, Error, ErrorKind, RawInterface, Result, ZCert, ZHashX};
 use std::{error, fmt, mem, ptr};
+#[cfg(feature = "draft")]
 use std::any::Any;
 use std::ffi::CString;
+#[cfg(feature = "draft")]
 use std::os::raw::c_void;
 
 pub struct ZCertStore {
@@ -42,10 +44,12 @@ impl ZCertStore {
         })
     }
 
+    #[cfg(feature = "draft")]
     pub fn set_loader(&self, loader: czmq_sys::zcertstore_loader) {
         unsafe { czmq_sys::zcertstore_set_loader(self.zcertstore, loader, default_destructor, ptr::null_mut::<c_void>()) };
     }
 
+    #[cfg(feature = "draft")]
     pub fn set_loader_with_state(&self, loader: czmq_sys::zcertstore_loader, state: Box<Any>, destructor: Option<czmq_sys::zcertstore_destructor>) {
         let destructor_ptr = match destructor {
             Some(d) => d,
@@ -70,6 +74,7 @@ impl ZCertStore {
         unsafe { czmq_sys::zcertstore_insert(self.zcertstore, &mut zcert.into_raw()); }
     }
 
+    #[cfg(feature = "draft")]
     pub fn empty(&self) {
         unsafe { czmq_sys::zcertstore_empty(self.zcertstore) };
     }
@@ -124,6 +129,7 @@ impl RawInterface<czmq_sys::zcertstore_t> for ZCertStore {
     }
 }
 
+#[cfg(feature = "draft")]
 unsafe extern "C" fn default_destructor(state: *mut *mut c_void) {
     if state != ptr::null_mut() && *state != ptr::null_mut() {
         Box::from_raw(*state);
@@ -153,9 +159,12 @@ impl error::Error for ZCertStoreError {
 
 #[cfg(test)]
 mod tests {
-    use {czmq_sys, RawInterface, ZCertStoreRaw, ZCert, ZSys};
+    use {czmq_sys, RawInterface, ZCert};
+    #[cfg(feature = "draft")]
+    use {ZCertStoreRaw, ZSys};
     use super::*;
     use tempdir::TempDir;
+    #[cfg(feature = "draft")]
     use zmq::z85_decode;
 
     #[test]
@@ -164,6 +173,7 @@ mod tests {
         assert!(ZCertStore::new(Some(dir.path().to_str().unwrap())).is_ok());
     }
 
+    #[cfg(feature = "draft")]
     #[test]
     fn test_loader() {
         ZSys::init();
@@ -177,6 +187,7 @@ mod tests {
         assert_eq!(store.lookup(public_key).unwrap().unwrap().public_txt(), public_key);
     }
 
+    #[cfg(feature = "draft")]
     #[test]
     fn test_loader_with_state_default() {
         let store = ZCertStore::new(None).unwrap();
@@ -218,6 +229,7 @@ mod tests {
         assert_eq!(store.lookup(&public_txt).unwrap().unwrap().public_txt(), public_txt);
     }
 
+    #[cfg(feature = "draft")]
     #[test]
     fn test_empty() {
         let dir = TempDir::new("zcertstore").unwrap();
@@ -246,10 +258,12 @@ mod tests {
         assert_eq!(cert.secret_key(), cert_c.secret_key());
     }
 
+    #[cfg(feature = "draft")]
     struct TestState {
         index: u32,
     }
 
+    #[cfg(feature = "draft")]
     unsafe extern "C" fn test_loader_fn(raw: *mut ZCertStoreRaw) {
         let store = ZCertStore::from_raw(raw, false);
         store.empty();
