@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `czmq_sys` crate.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, czmq_sys">
+
+    <title>czmq_sys - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'></p><script>window.sidebarCurrent = {name: 'czmq_sys', ty: 'mod', relpath: '../'};</script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content mod">
+<h1 class='fqn'><span class='in-band'>Crate <a class='mod' href=''>czmq_sys</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-0' class='srclink' href='../src/czmq_sys/czmq-sys/src/lib.rs.html#1-348' title='goto source code'>[src]</a></span></h1>
+<h2 id='reexports' class='section-header'><a href="#reexports">Reexports</a></h2>
+<table><tr><td><code>pub use ffi::{zactor_new, zactor_destroy, zactor_send, zactor_recv, zactor_is, zactor_resolve, zactor_sock, zauth, zcert_new, zcert_new_from, zcert_load, zcert_destroy, zcert_public_key, zcert_secret_key, zcert_public_txt, zcert_secret_txt, zcert_set_meta, zcert_meta, zcert_meta_keys, zcert_save, zcert_save_public, zcert_save_secret, zcert_apply, zcert_dup, zcert_eq, zcert_print, zcert_fprint, zcertstore_new, zcertstore_destroy, zcertstore_set_loader, zcertstore_lookup, zcertstore_insert, zcertstore_empty, zcertstore_print, zcertstore_fprint, zcertstore_test, zframe_new, zframe_new_empty, zframe_from, zframe_recv, zframe_destroy, zframe_send, zframe_size, zframe_data, zframe_meta, zframe_dup, zframe_strhex, zframe_strdup, zframe_streq, zframe_more, zframe_set_more, zframe_eq, zframe_reset, zframe_print, zhashx_new, zhashx_unpack, zhashx_destroy, zhashx_insert, zhashx_update, zhashx_delete, zhashx_purge, zhashx_lookup, zhashx_rename, zhashx_freefn, zhashx_size, zhashx_keys, zhashx_values, zhashx_first, zhashx_next, zhashx_cursor, zhashx_comment, zhashx_save, zhashx_load, zhashx_refresh, zhashx_pack, zhashx_dup, zhashx_set_destructor, zhashx_set_duplicator, zhashx_set_key_destructor, zhashx_set_key_duplicator, zhashx_set_key_comparator, zhashx_set_key_hasher, zhashx_autofree, zhashx_foreach, zlist_new, zlist_append, zlist_destroy, zlist_next, zlist_size, zmonitor, zmsg_new, zmsg_recv, zmsg_load, zmsg_decode, zmsg_new_signal, zmsg_destroy, zmsg_send, zmsg_sendm, zmsg_size, zmsg_content_size, zmsg_prepend, zmsg_append, zmsg_pop, zmsg_pushmem, zmsg_addmem, zmsg_pushstr, zmsg_addstr, zmsg_pushstrf, zmsg_addstrf, zmsg_popstr, zmsg_addmsg, zmsg_popmsg, zmsg_remove, zmsg_first, zmsg_next, zmsg_last, zmsg_save, zmsg_encode, zmsg_dup, zmsg_print, zmsg_eq, zmsg_signal, zmsg_is, zmsg_test, zmsg_unwrap, zmsg_recv_nowait, zmsg_wrap, zmsg_push, zmsg_add, zmsg_fprint, zpoller_new, zpoller_destroy, zpoller_add, zpoller_remove, zpoller_wait, zpoller_expired, zpoller_terminated, zpoller_set_nonstop, zsock_new, zsock_new_pub, zsock_new_sub, zsock_new_req, zsock_new_rep, zsock_new_dealer, zsock_new_router, zsock_new_push, zsock_new_pull, zsock_new_xpub, zsock_new_xsub, zsock_new_pair, zsock_new_stream, zsock_destroy, zsock_bind, zsock_endpoint, zsock_unbind, zsock_connect, zsock_disconnect, zsock_attach, zsock_type_str, zsock_send, zsock_recv, zsock_bsend, zsock_brecv, zsock_set_unbounded, zsock_signal, zsock_wait, zsock_flush, zsock_is, zsock_resolve, zsock_tos, zsock_set_tos, zsock_set_router_handover, zsock_set_router_mandatory, zsock_set_probe_router, zsock_set_req_relaxed, zsock_set_req_correlate, zsock_set_conflate, zsock_zap_domain, zsock_set_zap_domain, zsock_mechanism, zsock_plain_server, zsock_set_plain_server, zsock_plain_username, zsock_set_plain_username, zsock_plain_password, zsock_set_plain_password, zsock_curve_server, zsock_set_curve_server, zsock_curve_publickey, zsock_set_curve_publickey, zsock_set_curve_publickey_bin, zsock_curve_secretkey, zsock_set_curve_secretkey, zsock_set_curve_secretkey_bin, zsock_curve_serverkey, zsock_set_curve_serverkey, zsock_set_curve_serverkey_bin, zsock_gssapi_server, zsock_set_gssapi_server, zsock_gssapi_plaintext, zsock_set_gssapi_plaintext, zsock_gssapi_principal, zsock_set_gssapi_principal, zsock_gssapi_service_principal, zsock_set_gssapi_service_principal, zsock_ipv6, zsock_set_ipv6, zsock_immediate, zsock_set_immediate, zsock_set_router_raw, zsock_ipv4only, zsock_set_ipv4only, zsock_set_delay_attach_on_connect, zsock_type, zsock_sndhwm, zsock_set_sndhwm, zsock_rcvhwm, zsock_set_rcvhwm, zsock_affinity, zsock_set_affinity, zsock_set_subscribe, zsock_set_unsubscribe, zsock_identity, zsock_set_identity, zsock_rate, zsock_set_rate, zsock_recovery_ivl, zsock_set_recovery_ivl, zsock_sndbuf, zsock_set_sndbuf, zsock_rcvbuf, zsock_set_rcvbuf, zsock_linger, zsock_set_linger, zsock_reconnect_ivl, zsock_set_reconnect_ivl, zsock_reconnect_ivl_max, zsock_set_reconnect_ivl_max, zsock_backlog, zsock_set_backlog, zsock_maxmsgsize, zsock_set_maxmsgsize, zsock_multicast_hops, zsock_set_multicast_hops, zsock_rcvtimeo, zsock_set_rcvtimeo, zsock_sndtimeo, zsock_set_sndtimeo, zsock_set_xpub_verbose, zsock_tcp_keepalive, zsock_set_tcp_keepalive, zsock_tcp_keepalive_idle, zsock_set_tcp_keepalive_idle, zsock_tcp_keepalive_cnt, zsock_set_tcp_keepalive_cnt, zsock_tcp_keepalive_intvl, zsock_set_tcp_keepalive_intvl, zsock_tcp_accept_filter, zsock_set_tcp_accept_filter, zsock_rcvmore, zsock_fd, zsock_events, zsock_last_endpoint, zstr_recv, zstr_recvx, zstr_send, zstr_sendm, zstr_sendf, zstr_sendfm, zstr_sendx, zstr_free, zstr_recv_nowait, zsys_init, zsys_create_pipe, zsys_interrupted};</code></td></tr></table><h2 id='types' class='section-header'><a href="#types">Type Definitions</a></h2>
+<table>
+                       <tr class=' module-item'>
+                           <td><a class='type' href='type.zactor_fn.html'
+                                  title='czmq_sys::zactor_fn'>zactor_fn</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='type' href='type.zactor_t.html'
+                                  title='czmq_sys::zactor_t'>zactor_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='type' href='type.zcert_t.html'
+                                  title='czmq_sys::zcert_t'>zcert_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='type' href='type.zcertstore_destructor.html'
+                                  title='czmq_sys::zcertstore_destructor'>zcertstore_destructor</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='type' href='type.zcertstore_loader.html'
+                                  title='czmq_sys::zcertstore_loader'>zcertstore_loader</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='type' href='type.zcertstore_t.html'
+                                  title='czmq_sys::zcertstore_t'>zcertstore_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='type' href='type.zframe_t.html'
+                                  title='czmq_sys::zframe_t'>zframe_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='type' href='type.zhashx_t.html'
+                                  title='czmq_sys::zhashx_t'>zhashx_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='type' href='type.zlist_t.html'
+                                  title='czmq_sys::zlist_t'>zlist_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='type' href='type.zmsg_t.html'
+                                  title='czmq_sys::zmsg_t'>zmsg_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='type' href='type.zpoller_t.html'
+                                  title='czmq_sys::zpoller_t'>zpoller_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='type' href='type.zsock_t.html'
+                                  title='czmq_sys::zsock_t'>zsock_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr>
+                       <tr class=' module-item'>
+                           <td><a class='type' href='type.zstr_t.html'
+                                  title='czmq_sys::zstr_t'>zstr_t</a></td>
+                           <td class='docblock-short'>
+                                
+                           </td>
+                       </tr></table></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "czmq_sys";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script defer src="../search-index.js"></script>
+</body>
+</html>
