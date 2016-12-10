@@ -416,7 +416,7 @@ mod tests {
     #[test]
     fn test_apply_zmq() {
         let cert = create_cert();
-        let mut ctx = zmq::Context::new();
+        let ctx = zmq::Context::new();
         let mut sock = ctx.socket(zmq::REQ).unwrap();
         cert.apply(&mut sock);
         assert_eq!(sock.get_curve_publickey().unwrap().unwrap(), PUBLIC_TXT);

@@ -363,7 +363,7 @@ mod tests {
 
     #[test]
     fn test_sendrecv_zmq() {
-        let mut ctx = zmq::Context::new();
+        let ctx = zmq::Context::new();
 
         let mut server = ctx.socket(zmq::REP).unwrap();
         server.bind("inproc://zmsg_sendrecv_zmq").unwrap();
