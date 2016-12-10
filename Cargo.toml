@@ -1,6 +1,6 @@
 [package]
 name = "czmq"
-version = "0.0.5"
+version = "0.1.0"
 authors = ["Pete Hayes <pete@hayes.id.au>"]
 license = "MIT/Apache-2.0"
 description = "High-level bindings to the CZMQ library"
@@ -15,8 +15,8 @@ draft = []
 
 [dependencies]
 bitflags = "0.5.*"
-czmq-sys = { version = "0.0.3", path = "czmq-sys" }
-zmq = { git = "https://github.com/petehayes102/rust-zmq.git" }
+czmq-sys = { version = "0.1.0", path = "czmq-sys" }
+zmq = "0.8"
 
 [dev-dependencies]
 tempdir = "0.3"
