@@ -11,7 +11,8 @@ homepage = "https://petehayes102.github.io/rust-czmq"
 # CZMQ uses the concept of "draft" implementations of immature RFCs.
 # If you're linking against a version of CZMQ with drafts enabled,
 # this feature will compile in bindings for them.
-draft = []
+draft = ["czmq-sys/draft"]
+buildtime_bindgen = ["czmq-sys/buildtime_bindgen"]
 
 [dependencies]
 bitflags = "0.5.*"

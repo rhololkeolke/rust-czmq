@@ -15,7 +15,13 @@ mod bindings {
 
     pub fn write_to_out_dir() {
         let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
-        let in_path = Path::new("bindgen-bindings/bindgen.rs");
+
+        let in_path = if cfg!(feature = "draft") {
+            Path::new("bindgen-bindings/bindgen-draft.rs")
+        } else {
+            Path::new("bindgen-bindings/bindgen.rs")
+        };
+
         fs::copy(in_path, out_path).expect("Could not copy bindings to output directory");
     }
 }
@@ -23,19 +29,23 @@ mod bindings {
 #[cfg(feature = "buildtime_bindgen")]
 mod bindings {
     extern crate bindgen;
-    
+
     use std::env;
     use std::path::PathBuf;
 
     pub fn write_to_out_dir() {
-        let bindings = bindgen::Builder::default()
+        let mut builder = bindgen::Builder::default()
             .no_unstable_rust()
             .header("bindgen.h")
             .opaque_type("zmq_msg_t")
             .hide_type("IPPORT_RESERVED")
-            .hide_type("max_align_t") // https://github.com/servo/rust-bindgen/issues/550
-            .generate()
-            .expect("Unable to generate bindings");
+            .hide_type("max_align_t"); // https://github.com/servo/rust-bindgen/issues/550
+
+        if cfg!(feature = "draft") {
+            builder = builder.clang_arg("-DCZMQ_BUILD_DRAFT_API=1");
+        }
+
+        let bindings = builder.generate().expect("Unable to generate bindings");
 
         let out_path = PathBuf::from(env::var("OUT_DIR").unwrap()).join("bindings.rs");
         bindings

@@ -46,14 +46,10 @@ pub use ffi::{
     // ZCertstore
     //
     zcertstore_t,
-    zcertstore_loader,
-    zcertstore_destructor,
     zcertstore_new,
     zcertstore_destroy,
-    zcertstore_set_loader,
     zcertstore_lookup,
     zcertstore_insert,
-    zcertstore_empty,
     zcertstore_print,
     zcertstore_test,
 
@@ -69,7 +65,6 @@ pub use ffi::{
     zframe_send,
     zframe_size,
     zframe_data,
-    zframe_meta,
     zframe_dup,
     zframe_strhex,
     zframe_strdup,
@@ -184,7 +179,6 @@ pub use ffi::{
     zpoller_wait,
     zpoller_expired,
     zpoller_terminated,
-    zpoller_set_nonstop,
 
     //
     // ZSock
@@ -338,7 +332,28 @@ pub use ffi::{
     zsys_interrupted,
 };
 
-#[allow(dead_code, non_camel_case_types, non_snake_case)]
+#[cfg(feature = "draft")]
+pub use ffi::{
+    //
+    // ZCertstore
+    //
+    zcertstore_loader,
+    zcertstore_destructor,
+    zcertstore_set_loader,
+    zcertstore_empty,
+
+    //
+    // ZFrame
+    //
+    zframe_meta,
+
+    //
+    // ZPoller
+    //
+    zpoller_set_nonstop,
+};
+
+#[allow(dead_code, non_camel_case_types, non_snake_case, non_upper_case_globals)]
 mod ffi {
     include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 }
