@@ -47,7 +47,7 @@ impl ZCert {
 
     pub fn from_keys(public_key: &[u8], secret_key: &[u8]) -> ZCert {
         ZCert {
-            zcert: unsafe { czmq_sys::zcert_new_from(public_key.as_ptr(), secret_key.as_ptr()) },
+            zcert: unsafe { czmq_sys::zcert_new_from(public_key.as_mut_ptr(), secret_key.as_mut_ptr()) },
             owned: true,
         }
     }
@@ -268,8 +268,7 @@ impl ZCert {
     }
 
     pub fn eq(&self, cert: &ZCert) -> bool {
-        let result = unsafe { czmq_sys::zcert_eq(self.zcert, cert.zcert) };
-        result == 1
+        unsafe { czmq_sys::zcert_eq(self.zcert, cert.zcert) }
     }
 
     pub fn print(&self) {

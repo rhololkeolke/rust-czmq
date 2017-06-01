@@ -41,7 +41,6 @@ pub use ffi::{
     zcert_dup,
     zcert_eq,
     zcert_print,
-    zcert_fprint,
 
     //
     // ZCertstore
@@ -56,7 +55,6 @@ pub use ffi::{
     zcertstore_insert,
     zcertstore_empty,
     zcertstore_print,
-    zcertstore_fprint,
     zcertstore_test,
 
     //
@@ -114,8 +112,6 @@ pub use ffi::{
     zhashx_set_key_duplicator,
     zhashx_set_key_comparator,
     zhashx_set_key_hasher,
-    zhashx_autofree,
-    zhashx_foreach,
 
     //
     // ZList

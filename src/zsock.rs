@@ -250,7 +250,7 @@ impl ZSock {
     pub fn attach(&self, endpoints: &[&str], serverish: bool) -> Result<()> {
         let endpoints_c = CString::new(Self::concat_endpoints(endpoints)).unwrap_or(CString::new("").unwrap());
 
-        let rc = unsafe { czmq_sys::zsock_attach(self.zsock, endpoints_c.as_ptr(), if serverish { 1 } else { 0 }) };
+        let rc = unsafe { czmq_sys::zsock_attach(self.zsock, endpoints_c.as_ptr(), serverish) };
         if rc == -1 {
             Err(Error::new(ErrorKind::NonZero, ZSockError::CmdFailed))
         } else {

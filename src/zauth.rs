@@ -19,7 +19,7 @@ impl ZAuth {
         } else {
             ptr::null_mut()
         };
-        let zactor = unsafe { czmq_sys::zactor_new(czmq_sys::zauth, ptr as *mut c_void) };
+        let zactor = unsafe { czmq_sys::zactor_new(Some(czmq_sys::zauth), ptr as *mut c_void) };
 
         if zactor == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZAuthError::Instantiate))

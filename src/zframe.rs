@@ -38,7 +38,7 @@ impl PartialEq for ZFrame {
 
 impl ZFrame {
     pub fn new(data: &[u8]) -> Result<ZFrame> {
-        let zframe = unsafe { czmq_sys::zframe_new(data.as_ptr() as *const c_void, data.len() as u64) };
+        let zframe = unsafe { czmq_sys::zframe_new(data.as_ptr() as *const c_void, data.len()) };
 
         if zframe == ptr::null_mut() {
             return Err(Error::new(ErrorKind::NullPtr, ZFrameError::Instantiate));
@@ -127,6 +127,7 @@ impl ZFrame {
         }
     }
 
+    #[cfg(feature = "draft")]
     pub fn meta(&self, property: &str) -> Option<result::Result<String, Vec<u8>>> {
         let property_c = CString::new(property).unwrap_or(CString::new("").unwrap());
         let meta = unsafe { czmq_sys::zframe_meta(self.zframe, property_c.as_ptr()) };
@@ -187,7 +188,7 @@ impl ZFrame {
     }
 
     pub fn streq(&self, string: &str) -> bool {
-        unsafe { czmq_sys::zframe_streq(self.zframe, CString::new(string).unwrap_or(CString::new("").unwrap()).as_ptr()) == 1 }
+        unsafe { czmq_sys::zframe_streq(self.zframe, CString::new(string).unwrap_or(CString::new("").unwrap()).as_ptr()) }
     }
 
     pub fn more(&self) -> bool {
@@ -199,11 +200,11 @@ impl ZFrame {
     }
 
     pub fn eq(&self, other: &ZFrame) -> bool {
-        unsafe { czmq_sys::zframe_eq(self.zframe, other.zframe) == 1 }
+        unsafe { czmq_sys::zframe_eq(self.zframe, other.zframe) }
     }
 
     pub fn reset(&self, data: &[u8]) {
-        unsafe { czmq_sys::zframe_reset(self.zframe, data.as_ptr() as *const c_void, data.len() as u64) };
+        unsafe { czmq_sys::zframe_reset(self.zframe, data.as_ptr() as *const c_void, data.len()) };
     }
 
     pub fn print(&self, prefix: Option<&str>) {

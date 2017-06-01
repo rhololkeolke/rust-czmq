@@ -74,7 +74,7 @@ unsafe impl Send for ZMonitor {}
 
 impl ZMonitor {
     pub fn new<S: Sockish>(zsock: &mut S) -> Result<ZMonitor> {
-        let zactor = unsafe { czmq_sys::zactor_new(czmq_sys::zmonitor, zsock.as_mut_ptr()) };
+        let zactor = unsafe { czmq_sys::zactor_new(Some(czmq_sys::zmonitor), zsock.as_mut_ptr()) };
 
         if zactor == ptr::null_mut() {
             Err(Error::new(ErrorKind::NullPtr, ZMonitorError::Instantiate))

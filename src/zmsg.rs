@@ -304,7 +304,7 @@ impl ZMsg {
     }
 
     pub fn eq(&self, other: &ZMsg) -> bool {
-        unsafe { czmq_sys::zmsg_eq(self.zmsg, other.zmsg) == 1 }
+        unsafe { czmq_sys::zmsg_eq(self.zmsg, other.zmsg)}
     }
 
     pub fn signal(&self) -> Result<u8> {

@@ -67,13 +67,14 @@ impl ZPoller {
     }
 
     pub fn expired(&self) -> bool {
-        unsafe { czmq_sys::zpoller_expired(self.zpoller) == 1 }
+        unsafe { czmq_sys::zpoller_expired(self.zpoller)}
     }
 
     pub fn terminated(&self) -> bool {
-        unsafe { czmq_sys::zpoller_terminated(self.zpoller) == 1 }
+        unsafe { czmq_sys::zpoller_terminated(self.zpoller)}
     }
 
+    #[cfg(feature = "draft")]
     pub fn set_nonstop(&self, nonstop: bool) {
         unsafe { czmq_sys::zpoller_set_nonstop(self.zpoller, if nonstop { 1 } else { 0 }) }
     }
