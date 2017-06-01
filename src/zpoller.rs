@@ -76,7 +76,7 @@ impl ZPoller {
 
     #[cfg(feature = "draft")]
     pub fn set_nonstop(&self, nonstop: bool) {
-        unsafe { czmq_sys::zpoller_set_nonstop(self.zpoller, if nonstop { 1 } else { 0 }) }
+        unsafe { czmq_sys::zpoller_set_nonstop(self.zpoller, nonstop) }
     }
 }
 

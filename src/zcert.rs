@@ -47,7 +47,7 @@ impl ZCert {
 
     pub fn from_keys(public_key: &[u8], secret_key: &[u8]) -> ZCert {
         ZCert {
-            zcert: unsafe { czmq_sys::zcert_new_from(public_key.as_mut_ptr(), secret_key.as_mut_ptr()) },
+            zcert: unsafe { czmq_sys::zcert_new_from(public_key.as_ptr(), secret_key.as_ptr()) },
             owned: true,
         }
     }

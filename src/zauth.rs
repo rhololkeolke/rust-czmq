@@ -254,8 +254,12 @@ mod tests {
 
         let frame = ZFrame::recv(&mut server).unwrap();
         assert_eq!(frame.data().unwrap().unwrap(), "test");
-        assert_eq!(frame.meta("moo").unwrap().unwrap(), "cow");
-        assert_eq!(frame.meta("woof").unwrap().unwrap(), "dog");
+
+        #[cfg(feature = "draft")]
+        {
+            assert_eq!(frame.meta("moo").unwrap().unwrap(), "cow");
+            assert_eq!(frame.meta("woof").unwrap().unwrap(), "dog");
+        }
     }
 
     #[cfg(not(feature = "draft"))]
@@ -265,7 +269,7 @@ mod tests {
     #[cfg(feature = "draft")]
     fn test_zcertstore() {
         let certstore = ZCertStore::new(None).unwrap();
-        certstore.set_loader(test_loader_fn);
+        certstore.set_loader(Some(test_loader_fn));
 
         let _zauth = ZAuth::new(Some(certstore)).unwrap();
 

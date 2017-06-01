@@ -1,15 +1,7 @@
 //! Module: czmq-zcertstore
 
 use {czmq_sys, Error, ErrorKind, RawInterface, Result, ZCert};
-
-#[cfg(feature = "draft")]
-use {Colander, ZHashX};
-
 use std::{error, fmt, ptr};
-
-#[cfg(feature = "draft")]
-use std::mem;
-
 #[cfg(feature = "draft")]
 use std::any::Any;
 use std::ffi::CString;
@@ -54,15 +46,12 @@ impl ZCertStore {
 
     #[cfg(feature = "draft")]
     pub fn set_loader(&self, loader: czmq_sys::zcertstore_loader) {
-        unsafe { czmq_sys::zcertstore_set_loader(self.zcertstore, loader, default_destructor, ptr::null_mut::<c_void>()) };
+        unsafe { czmq_sys::zcertstore_set_loader(self.zcertstore, loader, Some(default_destructor), ptr::null_mut::<c_void>()) };
     }
 
     #[cfg(feature = "draft")]
     pub fn set_loader_with_state(&self, loader: czmq_sys::zcertstore_loader, state: Box<Any>, destructor: Option<czmq_sys::zcertstore_destructor>) {
-        let destructor_ptr = match destructor {
-            Some(d) => d,
-            None => default_destructor as czmq_sys::zcertstore_destructor,
-        };
+        let destructor_ptr = destructor.or(Some(Some(default_destructor))).unwrap();
 
         unsafe { czmq_sys::zcertstore_set_loader(self.zcertstore, loader, destructor_ptr, Box::into_raw(state) as *mut c_void) };
     }
@@ -85,35 +74,6 @@ impl ZCertStore {
     #[cfg(feature = "draft")]
     pub fn empty(&self) {
         unsafe { czmq_sys::zcertstore_empty(self.zcertstore) };
-    }
-
-    #[cfg(feature = "draft")]
-    pub fn get_state<S>(&self) -> Option<Colander<S>> {
-        // The underlying pointer should never be null, but just to
-        // be sure...
-        assert!(self.zcertstore != ptr::null_mut());
-
-        let internal = unsafe { ptr::read(self.zcertstore) };
-
-        if internal.state != ptr::null_mut() {
-            Some(unsafe { mem::transmute(Colander::from_raw(internal.state)) })
-        } else {
-            None
-        }
-    }
-
-    #[cfg(feature = "draft")]
-    pub fn get_certs(&self) -> ZHashX {
-        // The underlying pointer should never be null, but just to
-        // be sure...
-        assert!(self.zcertstore != ptr::null_mut());
-
-        let internal = unsafe { ptr::read(self.zcertstore) };
-
-        // This also should never be null
-        assert!(internal.certs != ptr::null_mut());
-
-        unsafe { ZHashX::from_raw(internal.certs, false) }
     }
 
     pub fn print(&self) {
@@ -169,7 +129,7 @@ impl error::Error for ZCertStoreError {
 
 #[cfg(test)]
 mod tests {
-    use {czmq_sys, RawInterface, ZCert};
+    use ZCert;
     #[cfg(feature = "draft")]
     use {ZCertStoreRaw, ZSys};
     use super::*;
@@ -191,28 +151,10 @@ mod tests {
         let store = ZCertStore::new(None).unwrap();
         assert!(store.lookup("nonexistent_key").unwrap().is_none()); // Idiot check
 
-        store.set_loader(test_loader_fn);
+        store.set_loader(Some(test_loader_fn));
 
         let public_key = "abcdefghijklmnopqrstuvwxyzabcdefghijklmn";
         assert_eq!(store.lookup(public_key).unwrap().unwrap().public_txt(), public_key);
-    }
-
-    #[cfg(feature = "draft")]
-    #[test]
-    fn test_loader_with_state_default() {
-        let store = ZCertStore::new(None).unwrap();
-        assert!(store.lookup("nonexistent_key").unwrap().is_none()); // Idiot check
-
-        let test_state = TestState {
-            index: 0,
-        };
-        store.set_loader_with_state(test_loader_fn, Box::new(test_state), None);
-
-        let public_key = "abcdefghijklmnopqrstuvwxyzabcdefghijklmn";
-        assert_eq!(store.lookup(public_key).unwrap().unwrap().public_txt(), public_key);
-
-        let state = store.get_state::<TestState>().unwrap();
-        assert_eq!(state.index, 2);
     }
 
     #[test]
@@ -255,19 +197,6 @@ mod tests {
         assert!(store.lookup(&public_txt).unwrap().is_none());
     }
 
-    #[test]
-    fn test_get_certs() {
-        let cert = ZCert::new().unwrap();
-        let cert_c = ZCert::from_keys(cert.public_key(), cert.secret_key());
-
-        let store = ZCertStore::new(None).unwrap();
-        store.insert(cert);
-
-        let certs = store.get_certs();
-        let cert = unsafe { ZCert::from_raw(certs.lookup::<czmq_sys::zcert_t>(cert_c.public_txt()).unwrap().into_raw(), false) };
-        assert_eq!(cert.secret_key(), cert_c.secret_key());
-    }
-
     #[cfg(feature = "draft")]
     struct TestState {
         index: u32,
@@ -285,8 +214,8 @@ mod tests {
         let cert = ZCert::from_keys(&public_key, &secret_key);
         store.insert(cert);
 
-        if let Some(mut state) = store.get_state::<TestState>() {
-            state.index += 1;
-        }
+        // if let Some(mut state) = store.get_state::<TestState>() {
+        //     state.index += 1;
+        // }
     }
 }
