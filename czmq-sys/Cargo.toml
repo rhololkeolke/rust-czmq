@@ -9,6 +9,15 @@ homepage = "https://petehayes102.github.io/rust-czmq"
 exclude = [
   "bindgen.h"
 ]
+build = "build.rs"
+
+[features]
+default = []
+buildtime_bindgen = ["bindgen"]
+
+[build-dependencies]
+bindgen = { version = "0.25", optional = true }
+pkg-config = "0.3.*"
 
 [dependencies]
 libc = "0.2.*"
