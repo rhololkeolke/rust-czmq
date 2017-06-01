@@ -1,7 +1,15 @@
 //! Module: czmq-zcertstore
 
-use {czmq_sys, Colander, Error, ErrorKind, RawInterface, Result, ZCert, ZHashX};
-use std::{error, fmt, mem, ptr};
+use {czmq_sys, Error, ErrorKind, RawInterface, Result, ZCert};
+
+#[cfg(feature = "draft")]
+use {Colander, ZHashX};
+
+use std::{error, fmt, ptr};
+
+#[cfg(feature = "draft")]
+use std::mem;
+
 #[cfg(feature = "draft")]
 use std::any::Any;
 use std::ffi::CString;
@@ -79,6 +87,7 @@ impl ZCertStore {
         unsafe { czmq_sys::zcertstore_empty(self.zcertstore) };
     }
 
+    #[cfg(feature = "draft")]
     pub fn get_state<S>(&self) -> Option<Colander<S>> {
         // The underlying pointer should never be null, but just to
         // be sure...
@@ -93,6 +102,7 @@ impl ZCertStore {
         }
     }
 
+    #[cfg(feature = "draft")]
     pub fn get_certs(&self) -> ZHashX {
         // The underlying pointer should never be null, but just to
         // be sure...
