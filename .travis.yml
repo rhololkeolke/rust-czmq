@@ -42,10 +42,10 @@ before_script:
       make && make install
       cd ..
 
-      curl -sSOL https://github.com/zeromq/czmq/releases/download/v4.0.1/czmq-4.0.1.tar.gz
-      tar zxf czmq-4.0.1.tar.gz
-      cd czmq-4.0.1
-      ./configure --prefix=$HOME --silent
+      curl -sSOL https://github.com/zeromq/czmq/releases/download/v4.0.2/czmq-4.0.2.tar.gz
+      tar zxf czmq-4.0.2.tar.gz
+      cd czmq-4.0.2
+      ./configure --prefix=$HOME --enable-drafts=yes --silent
       make && make install
       cd $TRAVIS_BUILD_DIR
 
@@ -53,6 +53,15 @@ script:
   - travis-cargo build
   - travis-cargo test
   - travis-cargo bench
+  - travis-cargo build -- --features draft
+  - travis-cargo test -- --features draft
+  - travis-cargo bench -- --features draft
+  - travis-cargo build -- --features buildtime_bindgen
+  - travis-cargo test -- --features buildtime_bindgen
+  - travis-cargo bench -- --features buildtime_bindgen
+  - travis-cargo build -- --features "buildtime_bindgen draft"
+  - travis-cargo test -- --features "buildtime_bindgen draft"
+  - travis-cargo bench -- --features "buildtime_bindgen draft"
   - travis-cargo --only stable doc
 
 after_success:
