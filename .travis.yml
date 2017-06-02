@@ -56,12 +56,12 @@ script:
   - travis-cargo build -- --features draft
   - travis-cargo test -- --features draft
   - travis-cargo bench -- --features draft
-  - travis-cargo build -- --features buildtime_bindgen
-  - travis-cargo test -- --features buildtime_bindgen
-  - travis-cargo bench -- --features buildtime_bindgen
-  - travis-cargo build -- --features "buildtime_bindgen draft"
-  - travis-cargo test -- --features "buildtime_bindgen draft"
-  - travis-cargo bench -- --features "buildtime_bindgen draft"
+  - CZMQ_INCLUDE_DIR=$HOME/include travis-cargo build -- --features buildtime_bindgen
+  - CZMQ_INCLUDE_DIR=$HOME/include travis-cargo test -- --features buildtime_bindgen
+  - CZMQ_INCLUDE_DIR=$HOME/include travis-cargo bench -- --features buildtime_bindgen
+  - CZMQ_INCLUDE_DIR=$HOME/include travis-cargo build -- --features "buildtime_bindgen draft"
+  - CZMQ_INCLUDE_DIR=$HOME/include travis-cargo test -- --features "buildtime_bindgen draft"
+  - CZMQ_INCLUDE_DIR=$HOME/include travis-cargo bench -- --features "buildtime_bindgen draft"
   - travis-cargo --only stable doc
 
 after_success:
